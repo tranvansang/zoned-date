@@ -1,3 +1,3 @@
-# zdate - Timezone-aware better Javascript Date
+# djz - Timezone-aware better Javascript Date
 
 Placeholder for future release
