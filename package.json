@@ -1,0 +1,22 @@
+{
+  "name": "jzdate",
+  "version": "0.0.1",
+  "description": "Timezone-aware better Javascript Date",
+  "main": "index.cjs",
+  "exports": {
+    ".": {
+      "require": "./index.cjs",
+      "import": "./index.mjs",
+      "types": "./index.d.ts"
+    }
+  },
+  "files": [
+    "index.cjs",
+    "index.mjs",
+    "index.d.ts"
+  ],
+  "repository": "github.com:tranvansang/zdate",
+  "author": "Sang Tran <t@sang.jp>",
+  "license": "MIT",
+  "packageManager": "yarn@3.6.3"
+}
