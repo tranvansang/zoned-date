@@ -15,7 +15,7 @@
     "index.mjs",
     "index.d.ts"
   ],
-  "repository": "github.com:tranvansang/zdate",
+  "repository": "github.com:tranvansang/jzdate",
   "author": "Sang Tran <t@sang.jp>",
   "license": "MIT",
   "packageManager": "yarn@3.6.3"
