@@ -1,5 +1,5 @@
 {
-  "name": "jzdate",
+  "name": "djz",
   "version": "0.0.1",
   "description": "Timezone-aware better Javascript Date",
   "main": "index.cjs",
@@ -15,7 +15,7 @@
     "index.mjs",
     "index.d.ts"
   ],
-  "repository": "github.com:tranvansang/jzdate",
+  "repository": "github.com:tranvansang/djz",
   "author": "Sang Tran <t@sang.jp>",
   "license": "MIT",
   "packageManager": "yarn@3.6.3"

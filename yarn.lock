@@ -4,8 +4,8 @@
 __metadata:
   version: 6
 
-"jzdate@workspace:.":
+"djz@workspace:.":
   version: 0.0.0-use.local
-  resolution: "jzdate@workspace:."
+  resolution: "djz@workspace:."
   languageName: unknown
   linkType: soft
