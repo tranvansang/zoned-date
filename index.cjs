@@ -1,1 +1,1 @@
-module.exports = class ZDate {}
+exports.Dateo = require('./dateo.cjs')

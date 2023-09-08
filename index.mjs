@@ -1,1 +1,2 @@
-export default class ZDate {}
+import Dateo from './dateo.mjs'
+export {Dateo}
