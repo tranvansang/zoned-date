@@ -1,6 +1,6 @@
 {
   "name": "djz",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Timezone-aware better Javascript Date",
   "main": "index.cjs",
   "type": "module",

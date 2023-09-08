@@ -24,60 +24,25 @@ module.exports = class Dateo extends Date {
 			|| (args.length === 1 && typeof args[0] === 'number') // new Date(time)
 		) super(...args)
 		else if (typeof args[0] === 'string') { // new Date(dateString)
-			/* supported format: [<Date>][[T]<Time><Zone>]
-			- <Date>
-			- <Date>T<Time>
-			- <Date>T<Time><Zone>
-			- T<Time>
-			- T<Time><Zone>
-			- <Time>
-			- <Time><Zone>
-
-			instead of following the standard, we strictly limit (and also extend) the format to:
-			- <Date>: YYYY-MM-DD, YYYY-MM, YYYY.
-			- <Time>: HH:mm:ss.sss, HH:mm:ss, HH:mm.
-			- <Zone>: Z, +HH, -HH, +HH:mm, -HH:mm, +HHmm, -HHmm.
-
-			If some fields are missing, they are assumed to be 0 for time fields, and current date for date fields.
-
-			Examples: following are all valid. "Z" can be omitted or replaced in other formats in any example.
-			- 2021-09-04T05:19:52.000Z
-			- 2021-09-04T05:19:52Z
-			- 2021-09-04T05:19Z
-			- 2021-09-04T05Z
-			- 2021-09-04
-			- 2021-09T05:19:52.000Z
-			- 2021-09T05:19:52Z
-			- 2021-09T05:19Z
-			- 2021-09T05Z
-			- 2021-09
-			- 2021T05:19:52.000Z
-			- 2021T05:19:52Z
-			- 2021T05:19Z
-			- 2021T05Z
-			- 2021
-			- T05:19:52.000Z
-			- T05:19:52Z
-			- T05:19Z
-			- 05:19:52.000Z
-			- 05:19:52Z
-			- 05:19Z
+			/* Read description in README.md for more information.
+			Additional info for implementation:
 
 			Some rules for implementation:
 			- Date-only does not have time zone.
-			- Time can start with T or not.
-			- Timezone part can start with Z or + or -.
+			- Time-only can start with T or not.
+			- Timezone part must start with Z or + or -.
 
 			Implementation:
+			Step 0: pre-processing
 			- Convert to uppercase.
+			- If first char is T, remove this char.
 
 			Step 1: determine parts
-			- If first char is T, remove this char.
 			- Split by T. Must have 1 or 2 parts.
 			- If 2 part, first part is date, second part is time.
 			- Otherwise, (have 1 part)
-				- If have colon, it is time.
-				- Otherwise, it is date.
+				- If match /^\d{4}/, it is date.
+				- Otherwise, it is time.
 
 			Step 2: parse date
 			- Split by -.
@@ -101,16 +66,21 @@ module.exports = class Dateo extends Date {
 			- Parse hours by 2 digits from left and remove them.
 			- If still have something, parse minutes by 2 digits from left.
 			*/
+
+			// step 0
 			let str = args[0].toUpperCase()
 			if (str.startsWith('T')) str = str.slice(1)
+
+			// step 1
 			const parts = str.split('T')
 			if (parts.length > 2) throw new Error('Invalid date string')
 			let dateStr, timeAndZoneStr
 			if (parts.length === 2) {
 				dateStr = parts[0]
 				timeAndZoneStr = parts[1]
-			} else if (str.includes(':')) timeAndZoneStr = str
-			else dateStr = str
+			}
+			else if (/^\d{4}/.test(str)) dateStr = str
+			else timeAndZoneStr = str
 
 			// parse date
 			let year, month, date
@@ -125,11 +95,10 @@ module.exports = class Dateo extends Date {
 					else if (i === 2) date = num
 					else throw new Error('Invalid date string')
 				}
-				if (year === undefined) throw new Error('Invalid date string')
 			}
 
 			// parse time
-			let hours, minutes, seconds = 0, milliseconds = 0, parsedOffset = offset
+			let hours = 0, minutes = 0, seconds = 0, milliseconds = 0, parsedOffset = offset
 			if (timeAndZoneStr !== undefined) {
 				let timeStr, zoneStr
 				const zoneIndex = timeAndZoneStr.search(/[Z+-]/)
@@ -140,7 +109,7 @@ module.exports = class Dateo extends Date {
 				}
 
 				// timeStr is always defined
-				const timeParts = timeAndZoneStr.split(':')
+				const timeParts = timeStr.split(':')
 				for (let i = 0; i < timeParts.length; i++) {
 					const timePart = timeParts[i]
 					const num = i <= 1 ? parseInt(timePart, 10) : parseFloat(timePart)
@@ -153,7 +122,6 @@ module.exports = class Dateo extends Date {
 					} else throw new Error('Invalid date string')
 				}
 				if (hours === undefined) throw new Error('Invalid date string')
-				if (minutes === undefined) throw new Error('Invalid date string')
 
 				if (zoneStr !== undefined) {
 					if (zoneStr === 'Z') parsedOffset = 0
@@ -162,8 +130,8 @@ module.exports = class Dateo extends Date {
 						zoneStr = zoneStr.slice(1).replace(/:/g, '')
 
 						const hoursStr = zoneStr.slice(0, 2)
-						const hours = parseInt(hoursStr, 10)
-						if (isNaN(hours) || !isFinite(hours)) throw new Error('Invalid date string')
+						const tzHours = parseInt(hoursStr, 10)
+						if (isNaN(tzHours) || !isFinite(tzHours)) throw new Error('Invalid date string')
 
 						const minutesStr = zoneStr.slice(2)
 						let minutes = 0
@@ -172,13 +140,14 @@ module.exports = class Dateo extends Date {
 							if (isNaN(minutes) || !isFinite(minutes)) throw new Error('Invalid date string')
 						}
 
-						parsedOffset = (sign === '-' ? -1 : 1) * (hours + minutes / 60)
+						parsedOffset = (sign === '-' ? -1 : 1) * (tzHours + minutes / 60)
 					}
 				}
 			}
 
-			if (month === undefined || date === undefined) {
+			if (year === undefined || month === undefined || date === undefined) {
 				const utcWallclock = new Date(Date.now() + offset * ONE_HOUR)
+				if (year === undefined) year = utcWallclock.getUTCFullYear()
 				if (month === undefined) month = utcWallclock.getUTCMonth()
 				if (date === undefined) date = utcWallclock.getUTCDate()
 			}

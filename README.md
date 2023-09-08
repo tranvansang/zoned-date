@@ -14,12 +14,12 @@ import Dateo from 'djz/Dateo'
 
 # API
 
-`Dateo` is a sub-class of Date. It has all the methods of Date, some of them are overrided to be timezone-aware, and some of them are added for convenience.
+`Dateo` is a sub-class of Date. It has all the methods of Date, some of them are overrided to be timezone-aware, and some methods are added for convenience.
 
 ## List of overrided and new methods:
 
 ### Static method
-- `set/get Date.defaultOffset`: set/get the default timezone offset in hour (no sign reverse. For example: GMT+9 is 9). The default value is 0.
+- `set/get Dateo.defaultOffset`: set/get the default timezone offset in hour (no sign reverse. For example: GMT+9 is 9). The default value is 0.
 
 ### Wallclock methods
 
@@ -29,11 +29,11 @@ These methods manipulate the wallclock time with respect to a particular timezon
 - `get wallclock`: `wallclock = date.wallclock`.
 - `set wallclock`: `date.wallclock = wallclock`. The value can be the new value, or a function that takes the old value and returns the new value or undefined to skip setting.
 
-For example: `date.setFullYear(year => year + 1)`, `date.setFullYear(2020)`, `date.setFullYear()`, `date.setFullYear(() => undefined)`.
+For example: `date.fullYear = y => y + 1`, `date.fullYear = 2020`, `date.fullYear = undefined`, `date.fullYear = () => undefined`.
 
 - `getWallclock()`
 - `setWallclock()`: set the wallclock and return the Dateo instance. Example: `date.setMonth(x => x + 1).setDate(1) === date`.
-- `withWallclock()`: return a new Dateo instance with the wallclock set. Example: `date.withWallclock({month: 1, date: 1}) !== date`.
+- `withWallclock()`: return a new Dateo instance with the wallclock set. Example: `date.withWallclock(wallclock) !== date`.
 
 Besides, `day` wallclock is get only.
 - `get day`.
@@ -66,7 +66,7 @@ For example: GMT+9 returns 9.
 
 ### Constructor
 All constructors support the last optional `options` argument. The `options` is an object with the following properties:
-- `offset`: timezone offset. If not specified, `Date.defaultOffset` is used.
+- `offset`: timezone offset. If not specified, `Dateo.defaultOffset` is used.
 
 The following constructors are supported.
 - `new Dateo()`: same as `new Dateo(Date.now())`.
@@ -78,7 +78,7 @@ The following constructors are supported.
 
 We manually implement the date parser for `new Dateo(stringTime)`.
 It is stricter than the native `Date` constructor, but more consistent.
-The supported formats are:
+The supported formats are: `[<Date>][[T]<Time><Zone>]`. Specifically:
 - `<Date>`
 - `<Date>T<Time>`
 - `<Date>T<Time><Zone>`
@@ -89,7 +89,7 @@ The supported formats are:
 
 Instead of following the standard, we strictly limit (and also extend) the format to:
 - `<Date>`: `YYYY-MM-DD`, `YYYY-MM`, `YYYY`.
-- `<Time>`: `HH:mm:ss.sss`, `HH:mm:ss`, `HH:mm`.
+- `<Time>`: `HH:mm:ss.sss`, `HH:mm:ss`, `HH:mm`, `HH`.
 - `<Zone>`: `Z`, `+HH`, `-HH`, `+HH:mm`, `-HH:mm`, `+HHmm`, `-HHmm`.
 
 If some fields are missing, they are assumed to be 0 for time fields, and current date for date fields.
@@ -113,9 +113,11 @@ Examples: followings are all valid. "Z" can be omitted or replaced in other form
 - `T05:19:52.000Z`
 - `T05:19:52Z`
 - `T05:19Z`
+- `T05Z`
 - `05:19:52.000Z`
 - `05:19:52Z`
 - `05:19Z`
+- `05Z`
 
 The timezone offset specified in the string argument determines the absolute time of the argument, it does not affect the value of the timezone of Dateo instance.
 
