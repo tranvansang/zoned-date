@@ -122,7 +122,7 @@ Examples: followings are all valid. "Z" can be omitted or replaced in other form
 The timezone offset specified in the string argument determines the absolute time of the argument, it does not affect the value of the timezone of Dateo instance.
 
 If timezone is not specified in the string argument, it falls back to the timezone of Dateo instance.
-If month, date are missing, they fall back to the current month, date taken at the timezone of Dateo instance, NOT the timezone specified in the string argument or the timezone of the runtime.
+If year, month, or date are missing, they fall back to the current year, month, date taken at the timezone of Dateo instance, NOT the timezone specified in the string argument or the timezone of the runtime.
 
 
 ## TODO
