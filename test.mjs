@@ -82,6 +82,8 @@ test('string parser', () => {
 				// note: defaultOffset, not zoneOffset
 				// must design a test case that fails if defaultOffset is not used
 				const nowInUtcView = new Date(Date.now() + defaultOffset * 60 * 60 * 1000)
+				// must have at least one test fails with the following uncommented
+				// const nowInUtcView = new Date(Date.now() + (zoneOffset ?? defaultOffset) * 60 * 60 * 1000)
 
 				const expected = Date.UTC(
 					info.fullYear ?? nowInUtcView.getUTCFullYear(),
@@ -115,4 +117,9 @@ test('string parser', () => {
 			}
 		}
 	}
+})
+
+test('special cases', () => {
+	assert.strictEqual(new Dateo('28:30').hours, 4)
+	assert.strictEqual(new Dateo('28:30').minutes, 30)
 })
