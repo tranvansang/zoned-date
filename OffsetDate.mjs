@@ -5,6 +5,13 @@ export default class OffsetDate extends Date {
 	#offset
 
 	constructor(...args) {
+		if (args[0] instanceof OffsetDate) { // new Date(offsetDate)
+			super(args[0].getTime())
+			if (typeof args[1] === 'object' && args[1].offset !== undefined) this.#offset = args[1].offset
+			else this.#offset = args[0].#offset
+			return
+		}
+
 		const lastArg = args[args.length - 1]
 
 		let offset = OffsetDate.defaultOffset
@@ -13,12 +20,7 @@ export default class OffsetDate extends Date {
 			if (lastArg.offset !== null && lastArg.offset !== undefined) offset = lastArg.offset
 		}
 
-		if (args[0] instanceof OffsetDate) { // new Date(offsetDate)
-			super(args[0].getTime())
-			// to avoid confuse, we do not allow changing offset of existing OffsetDate object (e.g., via option)
-			// so, we always assign offset here
-			offset = args[0].#offset
-		} else if (args.length === 0) super() // new Date()
+		if (args.length === 0) super() // new Date()
 		else if (
 			args[0] instanceof Date // new Date(date)
 			|| (args.length === 1 && typeof args[0] === 'number') // new Date(time)
@@ -169,10 +171,6 @@ export default class OffsetDate extends Date {
 	#withUtcWallclock(utcWallclock) {
 		return new OffsetDate(utcWallclock.getTime() - this.#offset * ONE_HOUR, {offset: this.#offset})
 	}
-	#clone() {
-		return new OffsetDate(this.getTime(), {offset: this.#offset})
-	}
-
 	get fullYear() {
 		return this.#utcWallclock.getUTCFullYear()
 	}
@@ -204,7 +202,7 @@ export default class OffsetDate extends Date {
 	withFullYear(year) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof year === 'function') year = year(utcWallclock.getUTCFullYear())
-		if (year === undefined) return this.#clone()
+		if (year === undefined) return new OffsetDate(this)
 		utcWallclock.setUTCFullYear(year)
 		return this.#withUtcWallclock(utcWallclock)
 	}
@@ -240,7 +238,7 @@ export default class OffsetDate extends Date {
 	withMonth(month) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof month === 'function') month = month(utcWallclock.getUTCMonth())
-		if (month === undefined) return this.#clone()
+		if (month === undefined) return new OffsetDate(this)
 		utcWallclock.setUTCMonth(month)
 		return this.#withUtcWallclock(utcWallclock)
 	}
@@ -276,7 +274,7 @@ export default class OffsetDate extends Date {
 	withDate(date) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof date === 'function') date = date(utcWallclock.getUTCDate())
-		if (date === undefined) return this.#clone()
+		if (date === undefined) return new OffsetDate(this)
 		utcWallclock.setUTCDate(date)
 		return this.#withUtcWallclock(utcWallclock)
 	}
@@ -313,7 +311,7 @@ export default class OffsetDate extends Date {
 	withHours(hours) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof hours === 'function') hours = hours(utcWallclock.getUTCHours())
-		if (hours === undefined) return this.#clone()
+		if (hours === undefined) return new OffsetDate(this)
 		utcWallclock.setUTCHours(hours)
 		return this.#withUtcWallclock(utcWallclock)
 	}
@@ -349,7 +347,7 @@ export default class OffsetDate extends Date {
 	withMinutes(minutes) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof minutes === 'function') minutes = minutes(utcWallclock.getUTCMinutes())
-		if (minutes === undefined) return this.#clone()
+		if (minutes === undefined) return new OffsetDate(this)
 		utcWallclock.setUTCMinutes(minutes)
 		return this.#withUtcWallclock(utcWallclock)
 	}
@@ -385,7 +383,7 @@ export default class OffsetDate extends Date {
 	withSeconds(seconds) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof seconds === 'function') seconds = seconds(utcWallclock.getUTCSeconds())
-		if (seconds === undefined) return this.#clone()
+		if (seconds === undefined) return new OffsetDate(this)
 		utcWallclock.setUTCSeconds(seconds)
 		return this.#withUtcWallclock(utcWallclock)
 	}
@@ -421,7 +419,7 @@ export default class OffsetDate extends Date {
 	withMilliseconds(milliseconds) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof milliseconds === 'function') milliseconds = milliseconds(utcWallclock.getUTCMilliseconds())
-		if (milliseconds === undefined) return this.#clone()
+		if (milliseconds === undefined) return new OffsetDate(this)
 		utcWallclock.setUTCMilliseconds(milliseconds)
 		return this.#withUtcWallclock(utcWallclock)
 	}
@@ -454,7 +452,7 @@ export default class OffsetDate extends Date {
 	 */
 	withTimezoneOffset(offset) {
 		if (typeof offset === 'function') offset = offset(this.timezoneOffset)
-		if (offset === undefined) return this.#clone()
+		if (offset === undefined) return new OffsetDate(this)
 		return new OffsetDate(this.getTime(), {offset: -offset / 60})
 	}
 
@@ -486,7 +484,7 @@ export default class OffsetDate extends Date {
 	 */
 	withOffset(offset) {
 		if (typeof offset === 'function') offset = offset(this.#offset)
-		if (offset === undefined) return this.#clone()
+		if (offset === undefined) return new OffsetDate(this)
 		return new OffsetDate(this.getTime(), {offset})
 	}
 
@@ -523,7 +521,7 @@ export default class OffsetDate extends Date {
 	 */
 	withTime(time) {
 		if (typeof time === 'function') time = time(this.getTime())
-		if (time === undefined) return this.#clone()
+		if (time === undefined) return new OffsetDate(this)
 		return new OffsetDate(time, {offset: this.#offset})
 	}
 }

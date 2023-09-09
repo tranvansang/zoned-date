@@ -1,8 +1,10 @@
+// Generated content. Do not edit.
+
 import OffsetDate from './OffsetDate.mjs'
 
 const ONE_HOUR = 60 * 60_000
 
-export default class ZonedDate {
+module.exports = class ZonedDate {
 	static UTC = Date.UTC
 	static now = Date.now
 	static parse = Date.parse
@@ -48,6 +50,7 @@ export default class ZonedDate {
 			const offset = this.#getOffset(new Date())
 			const offsetDate = new OffsetDate(args[0], {offset})
 			this.#utc = new Date(offsetDate.fullYear, offsetDate.month, offsetDate.date, offsetDate.hours, offsetDate.minutes, offsetDate.seconds, offsetDate.milliseconds)
+			if (parsedOffset === undefined) this.#utc = new Date(Date.UTC(year, month, date, hours, minutes, seconds, milliseconds))
 		} else this.#utc = new Date(Date.UTC(...args)) // new Date(year, month, date, hours, minutes, seconds, ms)
 	}
 
@@ -254,7 +257,7 @@ export default class ZonedDate {
 	 */
 	withUTCFullYear(year) {
 		if (typeof year === 'function') year = year(this.utcFullYear)
-		if (year === undefined) return new ZonedDate(this)
+		if (year === undefined) return ZonedDate(this)
 		const date = this.#date
 		date.setUTCFullYear(year)
 		return this.#withTime(date.getTime())
@@ -293,41 +296,6 @@ export default class ZonedDate {
 		utc.setUTCMonth(month)
 		return this.#withUtc(utc)
 	}
-	get utcMonth() {
-		return this.#date.getUTCMonth()
-	}
-	/**
-	 * @param {undefined | number | ((month: number) => number | undefined)} month
-	 */
-	set utcMonth(month) {
-		if (typeof month === 'function') month = month(this.utcMonth)
-		if (month === undefined) return
-		const date = this.#date
-		date.setUTCMonth(month)
-		this.time = date.getTime()
-	}
-	getUTCMonth() {
-		return this.utcMonth
-	}
-	/**
-	 * @param {undefined | number | ((month: number) => number | undefined)} month
-	 * @returns {ZonedDate}
-	 */
-	setUTCMonth(month) {
-		this.utcMonth = month
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((month: number) => number | undefined)} month
-	 * @returns {ZonedDate}
-	 */
-	withUTCMonth(month) {
-		if (typeof month === 'function') month = month(this.utcMonth)
-		if (month === undefined) return new ZonedDate(this)
-		const date = this.#date
-		date.setUTCMonth(month)
-		return this.#withTime(date.getTime())
-	}
 
 	get date() {
 		return this.#utc.getUTCDate()
@@ -361,41 +329,6 @@ export default class ZonedDate {
 		const utc = new Date(this.#utc)
 		utc.setUTCDate(date)
 		return this.#withUtc(utc)
-	}
-	get utcDate() {
-		return this.#date.getUTCDate()
-	}
-	/**
-	 * @param {undefined | number | ((date: number) => number | undefined)} date
-	 */
-	set utcDate(d) {
-		if (typeof d === 'function') d = d(this.utcDate)
-		if (d === undefined) return
-		const date = this.#date
-		date.setUTCDate(d)
-		this.time = date.getTime()
-	}
-	getUTCDate() {
-		return this.utcDate
-	}
-	/**
-	 * @param {undefined | number | ((date: number) => number | undefined)} date
-	 * @returns {ZonedDate}
-	 */
-	setUTCDate(date) {
-		this.utcDate = date
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((date: number) => number | undefined)} date
-	 * @returns {ZonedDate}
-	 */
-	withUTCDate(d) {
-		if (typeof d === 'function') d = d(this.utcDate)
-		if (d === undefined) return new ZonedDate(this)
-		const date = this.#date
-		date.setUTCDate(d)
-		return this.#withTime(date.getTime())
 	}
 
 	get hours() {
@@ -431,41 +364,6 @@ export default class ZonedDate {
 		utc.setUTCHours(hours)
 		return this.#withUtc(utc)
 	}
-	get utcHours() {
-		return this.#date.getUTCHours()
-	}
-	/**
-	 * @param {undefined | number | ((hours: number) => number | undefined)} hours
-	 */
-	set utcHours(hours) {
-		if (typeof hours === 'function') hours = hours(this.utcHours)
-		if (hours === undefined) return
-		const date = this.#date
-		date.setUTCHours(hours)
-		this.time = date.getTime()
-	}
-	getUTCHours() {
-		return this.utcHours
-	}
-	/**
-	 * @param {undefined | number | ((hours: number) => number | undefined)} hours
-	 * @returns {ZonedDate}
-	 */
-	setUTCHours(hours) {
-		this.utcHours = hours
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((hours: number) => number | undefined)} hours
-	 * @returns {ZonedDate}
-	 */
-	withUTCHours(hours) {
-		if (typeof hours === 'function') hours = hours(this.utcHours)
-		if (hours === undefined) return new ZonedDate(this)
-		const date = this.#date
-		date.setUTCHours(hours)
-		return this.#withTime(date.getTime())
-	}
 
 	get minutes() {
 		return this.#utc.getUTCMinutes()
@@ -499,41 +397,6 @@ export default class ZonedDate {
 		const utc = new Date(this.#utc)
 		utc.setUTCMinutes(minutes)
 		return this.#withUtc(utc)
-	}
-	get utcMinutes() {
-		return this.#date.getUTCMinutes()
-	}
-	/**
-	 * @param {undefined | number | ((minutes: number) => number | undefined)} minutes
-	 */
-	set utcMinutes(minutes) {
-		if (typeof minutes === 'function') minutes = minutes(this.utcMinutes)
-		if (minutes === undefined) return
-		const date = this.#date
-		date.setUTCMinutes(minutes)
-		this.time = date.getTime()
-	}
-	getUTCMinutes() {
-		return this.utcMinutes
-	}
-	/**
-	 * @param {undefined | number | ((minutes: number) => number | undefined)} minutes
-	 * @returns {ZonedDate}
-	 */
-	setUTCMinutes(minutes) {
-		this.utcMinutes = minutes
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((minutes: number) => number | undefined)} minutes
-	 * @returns {ZonedDate}
-	 */
-	withUTCMinutes(minutes) {
-		if (typeof minutes === 'function') minutes = minutes(this.utcMinutes)
-		if (minutes === undefined) return new ZonedDate(this)
-		const date = this.#date
-		date.setUTCMinutes(minutes)
-		return this.#withTime(date.getTime())
 	}
 
 	get seconds() {
@@ -569,41 +432,6 @@ export default class ZonedDate {
 		utc.setUTCSeconds(seconds)
 		return this.#withUtc(utc)
 	}
-	get utcSeconds() {
-		return this.#date.getUTCSeconds()
-	}
-	/**
-	 * @param {undefined | number | ((seconds: number) => number | undefined)} seconds
-	 */
-	set utcSeconds(seconds) {
-		if (typeof seconds === 'function') seconds = seconds(this.utcSeconds)
-		if (seconds === undefined) return
-		const date = this.#date
-		date.setUTCSeconds(seconds)
-		this.time = date.getTime()
-	}
-	getUTCSeconds() {
-		return this.utcSeconds
-	}
-	/**
-	 * @param {undefined | number | ((seconds: number) => number | undefined)} seconds
-	 * @returns {ZonedDate}
-	 */
-	setUTCSeconds(seconds) {
-		this.utcSeconds = seconds
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((seconds: number) => number | undefined)} seconds
-	 * @returns {ZonedDate}
-	 */
-	withUTCSeconds(seconds) {
-		if (typeof seconds === 'function') seconds = seconds(this.utcSeconds)
-		if (seconds === undefined) return new ZonedDate(this)
-		const date = this.#date
-		date.setUTCSeconds(seconds)
-		return this.#withTime(date.getTime())
-	}
 
 	get milliseconds() {
 		return this.#utc.getUTCMilliseconds()
@@ -638,41 +466,6 @@ export default class ZonedDate {
 		utc.setUTCMilliseconds(milliseconds)
 		return this.#withUtc(utc)
 	}
-	get utcMilliseconds() {
-		return this.#date.getUTCMilliseconds()
-	}
-	/**
-	 * @param {undefined | number | ((milliseconds: number) => number | undefined)} milliseconds
-	 */
-	set utcMilliseconds(milliseconds) {
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.utcMilliseconds)
-		if (milliseconds === undefined) return
-		const date = this.#date
-		date.setUTCMilliseconds(milliseconds)
-		this.time = date.getTime()
-	}
-	getUTCMilliseconds() {
-		return this.utcMilliseconds
-	}
-	/**
-	 * @param {undefined | number | ((milliseconds: number) => number | undefined)} milliseconds
-	 * @returns {ZonedDate}
-	 */
-	setUTCMilliseconds(milliseconds) {
-		this.utcMilliseconds = milliseconds
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((milliseconds: number) => number | undefined)} milliseconds
-	 * @returns {ZonedDate}
-	 */
-	withUTCMilliseconds(milliseconds) {
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.utcMilliseconds)
-		if (milliseconds === undefined) return new ZonedDate(this)
-		const date = this.#date
-		date.setUTCMilliseconds(milliseconds)
-		return this.#withTime(date.getTime())
-	}
 
 	get timezoneOffset() {
 		return -this.offset * 60
@@ -698,7 +491,7 @@ export default class ZonedDate {
 		return this.#date.getUTCDay()
 	}
 	getUTCDay() {
-		return this.utcDay
+		return this.#utcDay
 	}
 
 	get time() {

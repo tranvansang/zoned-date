@@ -1,6 +1,7 @@
 import OffsetDate from './OffsetDate.mjs'
 import assert from 'node:assert'
 import test from 'node:test'
+import ZonedDate from './ZonedDate.mjs'
 
 test('OffsetDate', () => {
 	const date = new OffsetDate(Date.UTC(2020, 1, 2, 3, 4, 5, 6), {offset: 7.5})
@@ -122,4 +123,18 @@ test('string parser', () => {
 test('special cases', () => {
 	assert.strictEqual(new OffsetDate('28:30').hours, 4)
 	assert.strictEqual(new OffsetDate('28:30').minutes, 30)
+})
+
+// below are for zoned date
+test('simple', () => {
+	const date = new ZonedDate('2021-09-04T05:19:52.001Z')
+	assert.strictEqual(date.fullYear, 2021)
+	assert.strictEqual(date.month, 8)
+	assert.strictEqual(date.date, 4)
+	assert.strictEqual(date.hours, 5)
+	assert.strictEqual(date.minutes, 19)
+	assert.strictEqual(date.seconds, 52)
+	assert.strictEqual(date.milliseconds, 1)
+	assert.strictEqual(date.timezone, 0)
+	assert.strictEqual(date.timezoneOffset, 0)
 })
