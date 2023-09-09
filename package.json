@@ -1,32 +1,10 @@
 {
-  "name": "zoned-date",
-  "version": "0.0.2",
+  "name": "djz",
+  "version": "0.0.5",
   "description": "Timezone-aware better Javascript Date",
-  "main": "index.cjs",
-  "type": "module",
-  "exports": {
-    ".": {
-      "require": "./index.cjs",
-      "import": "./index.mjs",
-      "types": "./index.d.ts"
-    },
-    "./OffsetDate": {
-      "require": "./OffsetDate.cjs",
-      "import": "./OffsetDate.mjs",
-      "types": "./OffsetDate.d.ts"
-    }
-  },
-  "scripts": {
-    "prepublish": "./build.sh",
-    "test": "node test.mjs"
-  },
+  "main": "index.js",
   "files": [
-    "index.cjs",
-    "index.mjs",
-    "index.d.ts",
-    "OffsetDate.cjs",
-    "OffsetDate.mjs",
-    "OffsetDate.d.ts"
+    "index.js"
   ],
   "repository": "github.com:tranvansang/zoned-date",
   "author": "Sang Tran <t@sang.jp>",
