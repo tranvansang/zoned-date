@@ -458,33 +458,33 @@ module.exports = class OffsetDate extends Date {
 		return new OffsetDate(this.getTime(), {offset: -offset / 60})
 	}
 
-	get timezone() {
+	get offset() {
 		return this.#offset
 	}
 	/**
 	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
 	 */
-	set timezone(offset) {
+	set offset(offset) {
 		if (typeof offset === 'function') offset = offset(this.#offset)
 		if (offset === undefined) return
 		this.#offset = offset
 	}
-	getTimezone() {
+	getOffset() {
 		return this.#offset
 	}
 	/**
 	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
 	 * @returns {OffsetDate}
 	 */
-	setTimezone(offset) {
-		this.timezone = offset
+	setOffset(offset) {
+		this.offset = offset
 		return this
 	}
 	/**
 	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
 	 * @returns {OffsetDate}
 	 */
-	withTimezone(offset) {
+	withOffset(offset) {
 		if (typeof offset === 'function') offset = offset(this.#offset)
 		if (offset === undefined) return this.#clone()
 		return new OffsetDate(this.getTime(), {offset})

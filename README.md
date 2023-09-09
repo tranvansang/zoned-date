@@ -49,13 +49,13 @@ For example: GMT+9 returns -540.
 - `setTimezoneOffset()`: set the timezone offset and return the OffsetDate instance.
 - `withTimezoneOffset()`: return a new OffsetDate instance with the timezone offset set.
 
-Timezone (no `Offset` suffix) methods return the timezone offset in hour with correct sign.
+Timezone (no `timezone` prefix) methods return the timezone offset in hour with same sign.
 For example: GMT+9 returns 9.
-- `get timezone`: always return the pre-defined timezone offset, not the runtime timezone offset.
-- `set timezone`: change the timezone offset, but keep the value of `getTime()` (epoch) unchanged. The value can be the new value, or a function that takes the old value and returns the new value or undefined to skip setting.
-- `getTimezone()`.
-- `setTimezone()`: set the timezone offset and return the OffsetDate instance.
-- `withTimezone()`: return a new OffsetDate instance with the timezone offset set.
+- `get offset`: always return the pre-defined timezone offset, not the runtime timezone offset.
+- `set offset`: change the timezone offset, but keep the value of `getTime()` (epoch) unchanged. The value can be the new value, or a function that takes the old value and returns the new value or undefined to skip setting.
+- `getOffset()`.
+- `setOffset()`: set the timezone offset and return the OffsetDate instance.
+- `withOffset()`: return a new OffsetDate instance with the timezone offset set.
 
 ### Epoch methods
 - `get time`: return the epoch time.
@@ -126,4 +126,4 @@ If year, month, or date are missing, they fall back to the current year, month, 
 
 
 ## TODO
-- [ ] Implement `Datez` class, with timezone defined by name. For example: `'Asia/Tokyo'`. Which might require `Intl` available in the runtime.
+- [ ] Implement `ZonedDate` class, with timezone defined by name. For example: `'Asia/Tokyo'`. Which might require `Intl` available at runtime.
