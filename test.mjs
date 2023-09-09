@@ -16,6 +16,13 @@ describe('OffsetDate', () => {
 		assert.strictEqual(date.offset, 7.5)
 		assert.strictEqual(date.timezoneOffset, -7.5 * 60)
 	})
+	test('utc method', () => {
+		const date = new OffsetDate(Date.UTC(2020, 1, 2, 3, 4, 5, 6), {offset: 7.5})
+		date.utcFullYear = 2000
+		assert.strictEqual(date.utcFullYear, 2000)
+		date.setUTCFullYear(2001)
+		assert.strictEqual(date.utcFullYear, 2001)
+	})
 
 	test('string parser', () => {
 		const cases = [

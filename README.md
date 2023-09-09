@@ -7,9 +7,10 @@ yanr add zoned-date
 
 # Usage
 ```javascript
-import {OffsetDate} from 'zoned-date'
+import {OffsetDate, ZonedDate} from 'zoned-date'
 // or
 import OffsetDate from 'zoned-date/OffsetDate'
+import ZonedDate from 'zoned-date/ZonedDate'
 ```
 
 # API
@@ -38,6 +39,16 @@ For example: `date.fullYear = y => y + 1`, `date.fullYear = 2020`, `date.fullYea
 Besides, `day` wallclock is get only.
 - `get day`.
 - `getDay()`.
+
+### UTC Wallclock methods
+These methods work the same as if without timezone offset defined. They have the same interface with the above wallclock methods, except that they are prefixed with `utc`.
+- `get utcWallclock`.
+- `set utcWallclock`.
+- `getUTCWallclock()`.
+- `setUTCWallclock()`.
+- `withUTCWallclock()`.
+- `get utcDay`.
+- `getUTCDay()`.
 
 ### Timezone
 TimezoneOffset methods return the timezone offset in minutes with reverse sign.
@@ -125,5 +136,58 @@ If timezone is not specified in the string argument, it falls back to the timezo
 If year, month, or date are missing, they fall back to the current year, month, date taken at the timezone of OffsetDate instance, NOT the timezone specified in the string argument or the timezone of the runtime.
 
 
-## TODO
-- [ ] Implement `ZonedDate` class, with timezone defined by name. For example: `'Asia/Tokyo'`. Which might require `Intl` available at runtime.
+## ZonedDate
+`ZonedDate` is a full-fleged class to manipulate date with timezone by name.
+
+`ZonedDate` is not a sub-class of Date, we try to implement all available methods in Date object's prototype, with some additional methods for convenient.
+
+`ZonedDate` requires associated Intl support for your specified Timezone name. You need to provide the polyfill and check the available of the timezone. If the timezone is not supported, the contrustor will throw an Error..
+
+If you know the offset, we highly recommend `OffsetDate`, which does not requires any polyfill or external library. `OffsetDate` is just math and the base Date class's methods.
+
+`ZonedDate` explicitly supports Daylight Time Saving (DST), and all Disambiguation option defined in Temporal Proposal.
+
+### Polyfill and related methods
+
+To list all supported timezones: `console.log(Intl.supportedValuesOf('timeZone'))`.
+
+To check if a timezone is supported (we internally rely on this class to derive timezone offset from timezone name):
+```javascript
+new new Intl.DateTimeFormat(undefined, { timeZone: timezoneName})
+```
+If the constructor does not throw any error, the timezone `timezoneName` is supported.
+
+### ZonedDate APIs
+
+`ZonedDate` has almost the same interface with `OffsetDate`.
+Note that: `new OffsetDate instanceof Date` returns `true`, while `new ZonedDate instanceof Date` returns `false`.
+
+`ZonedDate`'s constructor has different options, compared to `OffsetDate`.
+- `timezone` (`string`): offset name. Default value: `ZonedDate.defaultOffset`.
+- `disambiguation` (`'compatible'`, `'forward'`, `'backward'`, or, `'reject'`).
+
+In addition to `OffsetDate`, `ZonedDate` has:
+- `get/set` `timezone`.
+- `getTimezone(): string`.
+- `setTimezone(timezone?: string | ((timezone: string) => string | undefined)): this`.
+- `withTimezone(timezone?: string | ((timezone: string) => string | undefined)): ZonedDate`.
+
+Besides, `ZonedDate` does not have methods to modify offset/offsetTimezone.
+
+### Examples:
+
+```javascript
+import ZonedDate from 'zoned-date/ZonedDate'
+
+const date = new ZonedDate('2021-09-04T05:19:52.001', {timezone: 'Asia/Tokyo'}) // GMT+9
+console.log(date.hours, 5)
+
+date.timezone = 'Asia/Bangkok' // GMT+7
+console.log(date.hours, 5 - 9 + 7)
+
+date.timezone = 'UTC'
+console.log(date.hours, 5 - 9 + 24)
+
+date.timezone = 'America/New_York' // GMT-4
+console.log(date.hours, 5 - 9 + -4 + 24)
+```
