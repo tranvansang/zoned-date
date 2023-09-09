@@ -1,9 +1,9 @@
-import Dateo from './dateo.mjs'
+import OffsetDate from './OffsetDate.mjs'
 import assert from 'node:assert'
 import test from 'node:test'
 
-test('Dateo', () => {
-	const date = new Dateo(Date.UTC(2020, 1, 2, 3, 4, 5, 6), {offset: 7.5})
+test('OffsetDate', () => {
+	const date = new OffsetDate(Date.UTC(2020, 1, 2, 3, 4, 5, 6), {offset: 7.5})
 	assert.strictEqual(date.fullYear, 2020)
 	assert.strictEqual(date.month, 1)
 	assert.strictEqual(date.date, 2)
@@ -70,14 +70,14 @@ test('string parser', () => {
 	]
 
 	for (const defaultOffset of defaultOffsets) {
-		// Dateo.defaultOffset = defaultOffset
+		// OffsetDate.defaultOffset = defaultOffset
 		for (const [dateStr, info] of cases) {
 			for (let [zoneStr, zoneOffset] of zones) {
 				// we disable offset because it does not show in the date string
 				if (!dateStr.includes('Z')) zoneOffset = undefined
 
 				const str = dateStr.replace('Z', zoneStr)
-				const dateo = new Dateo(str, {offset: defaultOffset})
+				const offsetDate = new OffsetDate(str, {offset: defaultOffset})
 
 				// note: defaultOffset, not zoneOffset
 				// must design a test case that fails if defaultOffset is not used
@@ -108,18 +108,18 @@ test('string parser', () => {
 				// 	info.milliseconds ?? 0,
 				// 	zoneOffset,
 				// 	defaultOffset,
-				// 	dateo,
+				// 	offsetDate,
 				// 	new Date(expected),
 				// )
-				assert.strictEqual(dateo.time, expected)
-				assert.strictEqual(dateo.timezone, defaultOffset)
-				assert.strictEqual(dateo.timezoneOffset, -60 * defaultOffset)
+				assert.strictEqual(offsetDate.time, expected)
+				assert.strictEqual(offsetDate.timezone, defaultOffset)
+				assert.strictEqual(offsetDate.timezoneOffset, -60 * defaultOffset)
 			}
 		}
 	}
 })
 
 test('special cases', () => {
-	assert.strictEqual(new Dateo('28:30').hours, 4)
-	assert.strictEqual(new Dateo('28:30').minutes, 30)
+	assert.strictEqual(new OffsetDate('28:30').hours, 4)
+	assert.strictEqual(new OffsetDate('28:30').minutes, 30)
 })

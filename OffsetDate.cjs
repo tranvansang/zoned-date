@@ -1,21 +1,21 @@
 // Generated content. Do not edit.\n\nconst ONE_HOUR = 60 * 60_000
 
-module.exports = class Dateo extends Date {
+module.exports = class OffsetDate extends Date {
 	static defaultOffset = 0
 	#offset
 
 	constructor(...args) {
 		const lastArg = args[args.length - 1]
 
-		let offset = Dateo.defaultOffset
+		let offset = OffsetDate.defaultOffset
 		if (typeof lastArg === 'object' && !(lastArg instanceof Date)) {
 			args.pop()
 			if (lastArg.offset !== null && lastArg.offset !== undefined) offset = lastArg.offset
 		}
 
-		if (args[0] instanceof Dateo) { // new Date(dateo)
+		if (args[0] instanceof OffsetDate) { // new Date(offsetDate)
 			super(args[0].getTime())
-			// to avoid confuse, we do not allow changing offset of existing Dateo object (e.g., via option)
+			// to avoid confuse, we do not allow changing offset of existing OffsetDate object (e.g., via option)
 			// so, we always assign offset here
 			offset = args[0].#offset
 		} else if (args.length === 0) super() // new Date()
@@ -167,10 +167,10 @@ module.exports = class Dateo extends Date {
 		// Date.prototype.setTime.call(this, utcWallclock.getTime() - this.#offset * ONE_HOUR)
 	}
 	#withUtcWallclock(utcWallclock) {
-		return new Dateo(utcWallclock.getTime() - this.#offset * ONE_HOUR, {offset: this.#offset})
+		return new OffsetDate(utcWallclock.getTime() - this.#offset * ONE_HOUR, {offset: this.#offset})
 	}
 	#clone() {
-		return new Dateo(this.getTime(), {offset: this.#offset})
+		return new OffsetDate(this.getTime(), {offset: this.#offset})
 	}
 
 	get fullYear() {
@@ -191,7 +191,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((year: number) => number | undefined)} year
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	setFullYear(year) {
 		this.fullYear = year
@@ -199,7 +199,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((year: number) => number | undefined)} year
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	withFullYear(year) {
 		const utcWallclock = this.#utcWallclock
@@ -227,7 +227,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((month: number) => number | undefined)} month
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	setMonth(month) {
 		this.month = month
@@ -235,7 +235,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((month: number) => number | undefined)} month
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	withMonth(month) {
 		const utcWallclock = this.#utcWallclock
@@ -263,7 +263,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((date: number) => number | undefined)} date
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	setDate(date) {
 		this.date = date
@@ -271,7 +271,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((date: number) => number | undefined)} date
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	withDate(date) {
 		const utcWallclock = this.#utcWallclock
@@ -300,7 +300,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((hours: number) => number | undefined)} hours
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	setHours(hours) {
 		this.hours = hours
@@ -308,7 +308,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((hours: number) => number | undefined)} hours
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	withHours(hours) {
 		const utcWallclock = this.#utcWallclock
@@ -336,7 +336,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((minutes: number) => number | undefined)} minutes
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	setMinutes(minutes) {
 		this.minutes = minutes
@@ -344,7 +344,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((minutes: number) => number | undefined)} minutes
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	withMinutes(minutes) {
 		const utcWallclock = this.#utcWallclock
@@ -372,7 +372,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((seconds: number) => number | undefined)} seconds
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	setSeconds(seconds) {
 		this.seconds = seconds
@@ -380,7 +380,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((seconds: number) => number | undefined)} seconds
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	withSeconds(seconds) {
 		const utcWallclock = this.#utcWallclock
@@ -408,7 +408,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((milliseconds: number) => number | undefined)} milliseconds
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	setMilliseconds(milliseconds) {
 		this.milliseconds = milliseconds
@@ -416,7 +416,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((milliseconds: number) => number | undefined)} milliseconds
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	withMilliseconds(milliseconds) {
 		const utcWallclock = this.#utcWallclock
@@ -442,7 +442,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	setTimezoneOffset(offset) {
 		this.timezoneOffset = offset
@@ -450,12 +450,12 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	withTimezoneOffset(offset) {
 		if (typeof offset === 'function') offset = offset(this.timezoneOffset)
 		if (offset === undefined) return this.#clone()
-		return new Dateo(this.getTime(), {offset: -offset / 60})
+		return new OffsetDate(this.getTime(), {offset: -offset / 60})
 	}
 
 	get timezone() {
@@ -474,7 +474,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	setTimezone(offset) {
 		this.timezone = offset
@@ -482,12 +482,12 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	withTimezone(offset) {
 		if (typeof offset === 'function') offset = offset(this.#offset)
 		if (offset === undefined) return this.#clone()
-		return new Dateo(this.getTime(), {offset})
+		return new OffsetDate(this.getTime(), {offset})
 	}
 
 	get day() {
@@ -511,7 +511,7 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((time: number) => number | undefined)} time
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	setTime(time) {
 		this.time = time
@@ -519,11 +519,11 @@ module.exports = class Dateo extends Date {
 	}
 	/**
 	 * @param {undefined | number | ((time: number) => number | undefined)} time
-	 * @returns {Dateo}
+	 * @returns {OffsetDate}
 	 */
 	withTime(time) {
 		if (typeof time === 'function') time = time(this.getTime())
 		if (time === undefined) return this.#clone()
-		return new Dateo(time, {offset: this.#offset})
+		return new OffsetDate(time, {offset: this.#offset})
 	}
 }

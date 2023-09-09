@@ -1,6 +1,6 @@
 {
-  "name": "djz",
-  "version": "0.0.4",
+  "name": "zoned-date",
+  "version": "0.0.1",
   "description": "Timezone-aware better Javascript Date",
   "main": "index.cjs",
   "type": "module",
@@ -10,10 +10,10 @@
       "import": "./index.mjs",
       "types": "./index.d.ts"
     },
-    "./dateo": {
-      "require": "./dateo.cjs",
-      "import": "./dateo.mjs",
-      "types": "./dateo.d.ts"
+    "./OffsetDate": {
+      "require": "./OffsetDate.cjs",
+      "import": "./OffsetDate.mjs",
+      "types": "./OffsetDate.d.ts"
     }
   },
   "scripts": {
@@ -24,11 +24,11 @@
     "index.cjs",
     "index.mjs",
     "index.d.ts",
-    "dateo.cjs",
-    "dateo.mjs",
-    "dateo.d.ts"
+    "OffsetDate.cjs",
+    "OffsetDate.mjs",
+    "OffsetDate.d.ts"
   ],
-  "repository": "github.com:tranvansang/djz",
+  "repository": "github.com:tranvansang/zoned-date",
   "author": "Sang Tran <t@sang.jp>",
   "license": "MIT",
   "packageManager": "yarn@3.6.3"

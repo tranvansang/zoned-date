@@ -4,8 +4,8 @@
 __metadata:
   version: 6
 
-"djz@workspace:.":
+"zoned-date@workspace:.":
   version: 0.0.0-use.local
-  resolution: "djz@workspace:."
+  resolution: "zoned-date@workspace:."
   languageName: unknown
   linkType: soft

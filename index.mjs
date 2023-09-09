@@ -1,2 +1,2 @@
-import Dateo from './dateo.mjs'
-export {Dateo}
+import OffsetDate from './OffsetDate.mjs'
+export {OffsetDate}

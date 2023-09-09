@@ -1,1 +1,1 @@
-exports.Dateo = require('./dateo.cjs')
+exports.OffsetDate = require('./OffsetDate.cjs')

@@ -1,2 +1,2 @@
-import Dateo from './dateo'
-export {Dateo}
+import OffsetDate from './OffsetDate'
+export {OffsetDate}

@@ -1,25 +1,25 @@
-# djz - Timezone-aware better Javascript Date
+# zoned-date - Timezone-aware better Javascript Date
 
 # Install
 ```bash
-yanr add djz
+yanr add zoned-date
 ```
 
 # Usage
 ```javascript
-import {Dateo} from 'djz'
+import {OffsetDate} from 'zoned-date'
 // or
-import Dateo from 'djz/Dateo'
+import OffsetDate from 'zoned-date/OffsetDate'
 ```
 
 # API
 
-`Dateo` is a sub-class of Date. It has all the methods of Date, some of them are overrided to be timezone-aware, and some methods are added for convenience.
+`OffsetDate` is a sub-class of Date. It has all the methods of Date, some of them are overrided to be timezone-aware, and some methods are added for convenience.
 
 ## List of overrided and new methods:
 
 ### Static method
-- `set/get Dateo.defaultOffset`: set/get the default timezone offset in hour (no sign reverse. For example: GMT+9 is 9). The default value is 0.
+- `set/get OffsetDate.defaultOffset`: set/get the default timezone offset in hour (no sign reverse. For example: GMT+9 is 9). The default value is 0.
 
 ### Wallclock methods
 
@@ -32,8 +32,8 @@ These methods manipulate the wallclock time with respect to a particular timezon
 For example: `date.fullYear = y => y + 1`, `date.fullYear = 2020`, `date.fullYear = undefined`, `date.fullYear = () => undefined`.
 
 - `getWallclock()`
-- `setWallclock()`: set the wallclock and return the Dateo instance. Example: `date.setMonth(x => x + 1).setDate(1) === date`.
-- `withWallclock()`: return a new Dateo instance with the wallclock set. Example: `date.withWallclock(wallclock) !== date`.
+- `setWallclock()`: set the wallclock and return the OffsetDate instance. Example: `date.setMonth(x => x + 1).setDate(1) === date`.
+- `withWallclock()`: return a new OffsetDate instance with the wallclock set. Example: `date.withWallclock(wallclock) !== date`.
 
 Besides, `day` wallclock is get only.
 - `get day`.
@@ -46,37 +46,37 @@ For example: GMT+9 returns -540.
 - `get timezoneOffset`: always return the pre-defined timezone offset, not the runtime timezone offset.
 - `set timezoneOffset`: change the timezone offset, but keep the value of `getTime()` (epoch) unchanged. The value can be the new value, or a function that takes the old value and returns the new value or undefined to skip setting.
 - `getTimezoneOffset()`.
-- `setTimezoneOffset()`: set the timezone offset and return the Dateo instance.
-- `withTimezoneOffset()`: return a new Dateo instance with the timezone offset set.
+- `setTimezoneOffset()`: set the timezone offset and return the OffsetDate instance.
+- `withTimezoneOffset()`: return a new OffsetDate instance with the timezone offset set.
 
 Timezone (no `Offset` suffix) methods return the timezone offset in hour with correct sign.
 For example: GMT+9 returns 9.
 - `get timezone`: always return the pre-defined timezone offset, not the runtime timezone offset.
 - `set timezone`: change the timezone offset, but keep the value of `getTime()` (epoch) unchanged. The value can be the new value, or a function that takes the old value and returns the new value or undefined to skip setting.
 - `getTimezone()`.
-- `setTimezone()`: set the timezone offset and return the Dateo instance.
-- `withTimezone()`: return a new Dateo instance with the timezone offset set.
+- `setTimezone()`: set the timezone offset and return the OffsetDate instance.
+- `withTimezone()`: return a new OffsetDate instance with the timezone offset set.
 
 ### Epoch methods
 - `get time`: return the epoch time.
 - `set time`: set the epoch time. The value can be the new value, or a function that takes the old value and returns the new value or undefined to skip setting.
 - `getTime()`.
-- `setTime()`: set the epoch time and return the Dateo instance.
-- `withTime()`: return a new Dateo instance with the epoch time set.
+- `setTime()`: set the epoch time and return the OffsetDate instance.
+- `withTime()`: return a new OffsetDate instance with the epoch time set.
 
 ### Constructor
 All constructors support the last optional `options` argument. The `options` is an object with the following properties:
-- `offset`: timezone offset. If not specified, `Dateo.defaultOffset` is used.
+- `offset`: timezone offset. If not specified, `OffsetDate.defaultOffset` is used.
 
 The following constructors are supported.
-- `new Dateo()`: same as `new Dateo(Date.now())`.
-- `new Dateo(intTime)`.
-- `new Dateo(stringTime)`.
-- `new Dateo(year, month, date?, hours?, minutes?, seconds?, milliseconds?)`.
-- `new Dateo(date)`: copy constructor.
-- `new Dateo(dateo)`: copy constructor.
+- `new OffsetDate()`: same as `new OffsetDate(Date.now())`.
+- `new OffsetDate(intTime)`.
+- `new OffsetDate(stringTime)`.
+- `new OffsetDate(year, month, date?, hours?, minutes?, seconds?, milliseconds?)`.
+- `new OffsetDate(date)`: copy constructor.
+- `new OffsetDate(oDate)`: copy constructor.
 
-We manually implement the date parser for `new Dateo(stringTime)`.
+We manually implement the date parser for `new OffsetDate(stringTime)`.
 It is stricter than the native `Date` constructor, but more consistent.
 The supported formats are: `[<Date>][[T]<Time><Zone>]`. Specifically:
 - `<Date>`
@@ -119,10 +119,10 @@ Examples: followings are all valid. "Z" can be omitted or replaced in other form
 - `05:19Z`
 - `05Z`
 
-The timezone offset specified in the string argument determines the absolute time of the argument, it does not affect the value of the timezone of Dateo instance.
+The timezone offset specified in the string argument determines the absolute time of the argument, it does not affect the value of the timezone of OffsetDate instance.
 
-If timezone is not specified in the string argument, it falls back to the timezone of Dateo instance.
-If year, month, or date are missing, they fall back to the current year, month, date taken at the timezone of Dateo instance, NOT the timezone specified in the string argument or the timezone of the runtime.
+If timezone is not specified in the string argument, it falls back to the timezone of OffsetDate instance.
+If year, month, or date are missing, they fall back to the current year, month, date taken at the timezone of OffsetDate instance, NOT the timezone specified in the string argument or the timezone of the runtime.
 
 
 ## TODO
