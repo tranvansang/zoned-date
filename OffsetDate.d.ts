@@ -60,11 +60,11 @@ export default class OffsetDate extends Date {
 	setTimezoneOffset(offset?: number | ((offset: number) => number | undefined)): this
 	withTimezoneOffset(offset?: number | ((offset: number) => number | undefined)): OffsetDate
 
-	set timezone(arg: undefined | number | ((offset: number) => number | undefined))
-	get timezone(): number
-	getTimezone(): number
-	setTimezone(offset?: number | ((offset: number) => number | undefined)): this
-	withTimezone(offset?: number | ((offset: number) => number | undefined)): OffsetDate
+	set offset(arg: undefined | number | ((offset: number) => number | undefined))
+	get offset(): number
+	getOffset(): number
+	setOffset(offset?: number | ((offset: number) => number | undefined)): this
+	withOffset(offset?: number | ((offset: number) => number | undefined)): OffsetDate
 
 	get day(): number
 

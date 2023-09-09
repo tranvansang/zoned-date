@@ -26,6 +26,8 @@ export default class OffsetDate extends Date {
 			|| (args.length === 1 && typeof args[0] === 'number') // new Date(time)
 		) super(...args)
 		else if (typeof args[0] === 'string') { // new Date(dateString)
+			// same implementation is repeated in ZonedDate.mjs
+
 			/* Read description in README.md for more information.
 			Additional info for implementation:
 

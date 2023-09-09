@@ -12,7 +12,7 @@ test('OffsetDate', () => {
 	assert.strictEqual(date.minutes - 30, 4)
 	assert.strictEqual(date.seconds, 5)
 	assert.strictEqual(date.milliseconds, 6)
-	assert.strictEqual(date.timezone, 7.5)
+	assert.strictEqual(date.offset, 7.5)
 	assert.strictEqual(date.timezoneOffset, -7.5 * 60)
 })
 
@@ -113,7 +113,7 @@ test('string parser', () => {
 				// 	new Date(expected),
 				// )
 				assert.strictEqual(offsetDate.time, expected)
-				assert.strictEqual(offsetDate.timezone, defaultOffset)
+				assert.strictEqual(offsetDate.offset, defaultOffset)
 				assert.strictEqual(offsetDate.timezoneOffset, -60 * defaultOffset)
 			}
 		}
@@ -135,6 +135,83 @@ test('simple', () => {
 	assert.strictEqual(date.minutes, 19)
 	assert.strictEqual(date.seconds, 52)
 	assert.strictEqual(date.milliseconds, 1)
-	assert.strictEqual(date.timezone, 0)
-	assert.strictEqual(date.timezoneOffset, 0)
+	assert.ok(date.offset === 0) // 0 vs -0
+	assert.strictEqual(date.timezone, 'UTC')
+	assert.ok(date.timezoneOffset === 0)
+})
+
+test('with timezone', () => {
+	const abs = new Date('2021-09-04T05:19:52.001Z')
+	for (const [timezone, offset] of [
+		['Asia/Tokyo', 9],
+		['America/New_York', -4],
+	]) {
+		for (const isStr of [true, false]) {
+			const date = new ZonedDate(
+				isStr ? abs.toISOString() : abs.getTime(),
+				{timezone}
+			)
+			assert.strictEqual(date.fullYear, 2021)
+			assert.strictEqual(date.month, 8)
+			assert.strictEqual(date.date, 4)
+			assert.strictEqual(date.hours, 5 + offset)
+			assert.strictEqual(date.minutes, 19)
+			assert.strictEqual(date.seconds, 52)
+			assert.strictEqual(date.milliseconds, 1)
+			assert.strictEqual(date.offset, offset)
+			assert.strictEqual(date.timezone, timezone)
+			assert.strictEqual(date.timezoneOffset, -offset * 60)
+		}
+	}
+})
+
+test('with timezone no timezone specified in str', () => {
+	for (const [timezone, offset] of [
+		['Asia/Tokyo', 9],
+		['America/New_York', -4],
+	]) {
+		const date = new ZonedDate('2021-09-04T05:19:52.001', {timezone})
+		assert.strictEqual(date.fullYear, 2021)
+		assert.strictEqual(date.month, 8)
+		assert.strictEqual(date.date, 4)
+		assert.strictEqual(date.hours, 5)
+		assert.strictEqual(date.minutes, 19)
+		assert.strictEqual(date.seconds, 52)
+		assert.strictEqual(date.milliseconds, 1)
+		assert.strictEqual(date.offset, offset)
+		assert.strictEqual(date.timezone, timezone)
+		assert.strictEqual(date.timezoneOffset, -offset * 60)
+	}
+})
+
+test('change timezone', () => {
+	const date = new ZonedDate('2021-09-04T05:19:52.001', {timezone: 'Asia/Tokyo'})
+	assert.strictEqual(date.hours, 5)
+	date.timezone = 'Asia/Bangkok'
+	assert.strictEqual(date.hours, 5 - 9 + 7)
+	date.timezone = 'UTC'
+	assert.strictEqual(date.hours, 5 - 9 + 24)
+	date.timezone = 'America/New_York'
+	assert.strictEqual(date.hours, 5 - 9 + -4 + 24)
+})
+
+test('dst option', () => {
+	let date
+	for (const [timezone, wallclock, disambiguation, expected] of [
+		['Australia/ACT', '2023-03-02T02:00:00.000', undefined, 11],
+		['Australia/ACT', '2023-03-02T02:30:00.000', undefined, 11],
+		['Australia/ACT', '2023-03-02T02:30:00.000', 'compatible', 11],
+		['Australia/ACT', '2023-03-02T02:30:00.000', 'earlier', 11],
+		['Australia/ACT', '2023-03-02T02:30:00.000', 'later', 10],
+	]) {
+		const date = new ZonedDate(wallclock, {timezone, disambiguation})
+		assert.strictEqual(date.offset, expected)
+	}
+
+	for (const [timezone, wallclock, disambiguation, expected] of [
+		['Australia/ACT', '2023-03-02T02:30:00.000', 'rejected'],
+	]) {
+		const date = new ZonedDate(wallclock, {timezone, disambiguation})
+		assert.throws(() => date.time)
+	}
 })

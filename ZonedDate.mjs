@@ -45,9 +45,102 @@ export default class ZonedDate {
 			this.#utc = new Date()
 			this.time = args[0]
 		} else if (typeof args[0] === 'string') { // new Date(dateString)
-			const offset = this.#getOffset(new Date())
-			const offsetDate = new OffsetDate(args[0], {offset})
-			this.#utc = new Date(offsetDate.fullYear, offsetDate.month, offsetDate.date, offsetDate.hours, offsetDate.minutes, offsetDate.seconds, offsetDate.milliseconds)
+			// copied and modified from ZonedDate.mjs
+			// modified lines are marked with [modified]
+
+			// step 0
+			let str = args[0].toUpperCase()
+			if (str.startsWith('T')) str = str.slice(1)
+
+			// step 1
+			const parts = str.split('T')
+			if (parts.length > 2) throw new Error('Invalid date string')
+			let dateStr, timeAndZoneStr
+			if (parts.length === 2) {
+				dateStr = parts[0]
+				timeAndZoneStr = parts[1]
+			}
+			else if (/^\d{4}/.test(str)) dateStr = str
+			else timeAndZoneStr = str
+
+			// parse date
+			let year, month, date
+			if (dateStr !== undefined) {
+				const dateParts = dateStr.split('-')
+				for (let i = 0; i < dateParts.length; i++) {
+					const datePart = dateParts[i]
+					const num = parseInt(datePart, 10)
+					if (isNaN(num) || !isFinite(num)) throw new Error('Invalid date string')
+					if (i === 0) year = num
+					else if (i === 1) month = num - 1
+					else if (i === 2) date = num
+					else throw new Error('Invalid date string')
+				}
+			}
+
+			// parse time
+			let hours = 0, minutes = 0, seconds = 0, milliseconds = 0, parsedOffset // [modified]
+			if (timeAndZoneStr !== undefined) {
+				let timeStr, zoneStr
+				const zoneIndex = timeAndZoneStr.search(/[Z+-]/)
+				if (zoneIndex === -1) timeStr = timeAndZoneStr
+				else {
+					timeStr = timeAndZoneStr.slice(0, zoneIndex)
+					zoneStr = timeAndZoneStr.slice(zoneIndex)
+				}
+
+				// timeStr is always defined
+				const timeParts = timeStr.split(':')
+				for (let i = 0; i < timeParts.length; i++) {
+					const timePart = timeParts[i]
+					const num = i <= 1 ? parseInt(timePart, 10) : parseFloat(timePart)
+					if (isNaN(num) || !isFinite(num)) throw new Error('Invalid date string')
+					if (i === 0) hours = num
+					else if (i === 1) minutes = num
+					else if (i === 2) {
+						seconds = Math.floor(num)
+						milliseconds = Math.round((num - seconds) * 1000)
+					} else throw new Error('Invalid date string')
+				}
+				if (hours === undefined) throw new Error('Invalid date string')
+
+				if (zoneStr !== undefined) {
+					if (zoneStr === 'Z') parsedOffset = 0
+					else {
+						const sign = zoneStr[0]
+						zoneStr = zoneStr.slice(1).replace(/:/g, '')
+
+						const hoursStr = zoneStr.slice(0, 2)
+						const tzHours = parseInt(hoursStr, 10)
+						if (isNaN(tzHours) || !isFinite(tzHours)) throw new Error('Invalid date string')
+
+						const minutesStr = zoneStr.slice(2)
+						let minutes = 0
+						if (minutesStr) {
+							minutes = parseInt(minutesStr, 10)
+							if (isNaN(minutes) || !isFinite(minutes)) throw new Error('Invalid date string')
+						}
+
+						parsedOffset = (sign === '-' ? -1 : 1) * (tzHours + minutes / 60)
+					}
+				}
+			}
+
+			if (year === undefined || month === undefined || date === undefined) {
+				const utcWallclock = new Date(Date.now() + this.#getOffset(new Date()) * ONE_HOUR) // [modified]
+				if (year === undefined) year = utcWallclock.getUTCFullYear()
+				if (month === undefined) month = utcWallclock.getUTCMonth()
+				if (date === undefined) date = utcWallclock.getUTCDate()
+			}
+
+			if (parsedOffset === undefined) this.#utc = new Date(Date.UTC(
+				year, month, date, hours, minutes, seconds, milliseconds
+				)
+			)
+			else {
+				this.#utc = new Date() // arbitrary date
+				this.time = Date.UTC(year, month, date, hours, minutes, seconds, milliseconds) + parsedOffset * ONE_HOUR
+			}
 		} else this.#utc = new Date(Date.UTC(...args)) // new Date(year, month, date, hours, minutes, seconds, ms)
 	}
 
@@ -188,7 +281,7 @@ export default class ZonedDate {
 				parts[5], // second
 			]
 		}
-		return new Date(Date.UTC(...wallclock)).getTime() - date.getTime()
+		return Math.round((new Date(Date.UTC(...wallclock)).getTime() - date.getTime()) / 60_000) / 60
 	}
 
 	get fullYear() {
@@ -705,12 +798,12 @@ export default class ZonedDate {
 		const offset1 = this.#getOffset(this.#utc)
 		if (offset1 === 0) return this.#utc.getTime()
 
-		const date2 = new Date(this.#utc.getTime() + offset1 * ONE_HOUR)
+		const date2 = new Date(this.#utc.getTime() - offset1 * ONE_HOUR)
 		const offset2 = this.#getOffset(date2)
 		if (offset2 === offset1) {
 			// check clock-backwarding
-			if (offset1 > 0) {
-				if (this.#disambiguation === 'earlier' || this.#disambiguation === 'compatible') {
+			if (offset1 < 0) {
+				if (this.#_disambiguation === 'earlier' || this.#_disambiguation === 'compatible') {
 					// no need to check
 					return date2.getTime()
 				} else { // 'later' or 'reject'
@@ -718,13 +811,13 @@ export default class ZonedDate {
 					const date3 = new Date(date2.getTime() + ONE_HOUR)
 					if (this.#getOffset(date3) === offset2 - 1) {
 						// clock-backwarding. There are 2 choices for the same wallclock. The selected date2 is not the compatible one.
-						if (this.#disambiguation === 'reject') throw new RangeError('Ambiguous time')
+						if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
 						// 'later'
 						return date3.getTime()
 					}
 				}
 			} else {
-				if (this.#disambiguation === 'later') {
+				if (this.#_disambiguation === 'later') {
 					// no need to check
 					return date2.getTime()
 				} else { // 'earlier' or 'compatible' or 'reject'
@@ -732,7 +825,7 @@ export default class ZonedDate {
 					const date3 = new Date(date2.getTime() - ONE_HOUR)
 					if (this.#getOffset(date3) === offset2 + 1) {
 						// clock-backwarding. There are 2 choices for the same wallclock. The newly probed date is the compatible one.
-						if (this.#disambiguation === 'reject') throw new RangeError('Ambiguous time')
+						if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
 						// 'earlier' or 'compatible'
 						return date3.getTime()
 					}
@@ -741,14 +834,14 @@ export default class ZonedDate {
 			return date2.getTime()
 		}
 
-		const date3 = new Date(this.#utc.getTime() + offset2 * ONE_HOUR)
+		const date3 = new Date(this.#utc.getTime() - offset2 * ONE_HOUR)
 		const offset3 = this.#getOffset(date3)
 		if (offset3 === offset2) return date3.getTime()
 
 		// Clock-forwarding and we are in the forwarded (i.e., not existing) wallclock
-		if (this.#disambiguation === 'reject') throw new RangeError('Ambiguous time')
+		if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
 		return (
-			this.#disambiguation === 'earlier'
+			this.#_disambiguation === 'earlier'
 				? Math.max
 				: Math.min // 'later' or 'compatible'
 		)(date3.getTime(), date2.getTime())
@@ -760,7 +853,7 @@ export default class ZonedDate {
 		if (typeof time === 'function') time = time(this.getTime())
 		if (time === undefined) return
 		const offset = this.#getOffset(new Date(time))
-		this.#utc.setTime(time - offset * ONE_HOUR)
+		this.#utc.setTime(time + offset * ONE_HOUR)
 	}
 	getTime() {
 		return this.time
