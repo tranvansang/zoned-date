@@ -141,11 +141,14 @@ If year, month, or date are missing, they fall back to the current year, month, 
 
 `ZonedDate` is not a sub-class of Date, we try to implement all available methods in Date object's prototype, with some additional methods for convenient.
 
-`ZonedDate` requires associated Intl support for your specified Timezone name. You need to provide the polyfill and check the available of the timezone. If the timezone is not supported, the contrustor will throw an Error..
+`ZonedDate` requires associated Intl support for your specified Timezone name.
+You need to provide the polyfill and check the available of the timezone.
+If the timezone is not supported, the `ZonedDate` constructor will throw an Error.
 
-If you know the offset, we highly recommend `OffsetDate`, which does not requires any polyfill or external library. `OffsetDate` is just math and the base Date class's methods.
+If you know the offset, we highly recommend `OffsetDate`, which does not require any polyfill or external library.
+`OffsetDate` is just math and the base Date class's methods.
 
-`ZonedDate` explicitly supports Daylight Time Saving (DST), and all Disambiguation option defined in Temporal Proposal.
+`ZonedDate` explicitly supports Daylight Time Saving (DST), and all Disambiguation option defined in [Temporal Proposal](https://tc39.es/proposal-temporal/docs/ambiguity.html#resolving-time-ambiguity-in-temporal).
 
 ### Polyfill and related methods
 
@@ -153,13 +156,14 @@ To list all supported timezones: `console.log(Intl.supportedValuesOf('timeZone')
 
 To check if a timezone is supported (we internally rely on this class to derive timezone offset from timezone name):
 ```javascript
-new new Intl.DateTimeFormat(undefined, { timeZone: timezoneName})
+new Intl.DateTimeFormat(undefined, { timeZone: timezoneName})
 ```
 If the constructor does not throw any error, the timezone `timezoneName` is supported.
+You can also try initializing a `ZonedDate` instance with the timezone name, if it does not throw any error, the timezone is supported.
 
 ### ZonedDate APIs
 
-`ZonedDate` has almost the same interface with `OffsetDate`.
+`ZonedDate` has the similar interface with `OffsetDate`.
 Note that: `new OffsetDate instanceof Date` returns `true`, while `new ZonedDate instanceof Date` returns `false`.
 
 `ZonedDate`'s constructor has different options, compared to `OffsetDate`.
