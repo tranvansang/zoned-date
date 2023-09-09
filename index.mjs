@@ -1,2 +1,3 @@
 import OffsetDate from './OffsetDate.mjs'
-export {OffsetDate}
+import ZonedDate from './ZonedDate.mjs'
+export {OffsetDate, ZonedDate}

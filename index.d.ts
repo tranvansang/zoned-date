@@ -1,2 +1,3 @@
 import OffsetDate from './OffsetDate'
-export {OffsetDate}
+import ZonedDate from './ZonedDate'
+export {OffsetDate, ZonedDate}

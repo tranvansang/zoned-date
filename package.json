@@ -14,6 +14,11 @@
       "require": "./OffsetDate.cjs",
       "import": "./OffsetDate.mjs",
       "types": "./OffsetDate.d.ts"
+    },
+    "./ZonedDate": {
+      "require": "./ZonedDate.cjs",
+      "import": "./ZonedDate.mjs",
+      "types": "./ZonedDate.d.ts"
     }
   },
   "scripts": {
@@ -26,7 +31,10 @@
     "index.d.ts",
     "OffsetDate.cjs",
     "OffsetDate.mjs",
-    "OffsetDate.d.ts"
+    "OffsetDate.d.ts",
+    "ZonedDate.cjs",
+    "ZonedDate.mjs",
+    "ZonedDate.d.ts"
   ],
   "repository": "github:tranvansang/zoned-date",
   "author": "Sang Tran <t@sang.jp>",
