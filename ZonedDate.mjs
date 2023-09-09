@@ -1,5 +1,3 @@
-import OffsetDate from './OffsetDate.mjs'
-
 const ONE_HOUR = 60 * 60_000
 
 export default class ZonedDate {
@@ -32,6 +30,7 @@ export default class ZonedDate {
 			args.pop()
 			if (lastArg.timezone !== null && lastArg.timezone !== undefined) timezone = lastArg.timezone
 			if (lastArg.disambiguation !== null && lastArg.disambiguation !== undefined) this.#disambiguation = lastArg.disambiguation
+			else this.#disambiguation = ZonedDate.defaultDisambiguation
 		}
 		this.#timezone = timezone
 
@@ -254,9 +253,13 @@ export default class ZonedDate {
 		)
 	}
 
-	#getOffset(date) {
-		let wallclock = []
+	/**
+	 * @param {Date} date
+	 * @returns {[number, number, number, number, number, number]}
+	 */
+	#getWallclock(date) {
 		if (typeof this.#_dateTimeFormat.formatToParts === 'function') {
+			const wallclock = []
 			const parts = this.#_dateTimeFormat.formatToParts(date)
 			const nameToPos = {
 				year: 0,
@@ -270,9 +273,10 @@ export default class ZonedDate {
 				if (typeof nameToPos[type] === 'number') wallclock[nameToPos[type]] = parseInt(value, 10)
 				if (type === 'month') wallclock[1] -= 1
 			}
+			return wallclock
 		} else {
 			const parts = this.#_dateTimeFormat.format(date).split(/[^0-9]/).filter(Boolean).map(v => parseInt(v, 10))
-			wallclock = [
+			return [
 				parts[2], // year
 				parts[0] - 1, // month
 				parts[1], // day
@@ -281,7 +285,15 @@ export default class ZonedDate {
 				parts[5], // second
 			]
 		}
-		return Math.round((new Date(Date.UTC(...wallclock)).getTime() - date.getTime()) / 60_000) / 60
+	}
+
+	/**
+	 * get offset for a given date, regarding its epoch (NOT its wallclock)
+	 * @param {Date} date
+	 * @returns {number}
+	 */
+	#getOffset(date) {
+		return Math.round((Date.UTC(...this.#getWallclock(date)) - date.getTime()) / 60_000) / 60
 	}
 
 	get fullYear() {
@@ -775,7 +787,17 @@ export default class ZonedDate {
 	}
 
 	get offset() {
-		return this.#getOffset(new Date(this.time))
+		// const back1h = this.#getWallclock(new Date(date.getTime() - ONE_HOUR))
+		// console.log(
+		// 	wallclock,
+		// 	back1h,
+		// 	Math.round((new Date(Date.UTC(...wallclock)).getTime() - date.getTime()) / 60_000) / 60,
+		// 	[...Array(6).keys()].every(i => wallclock[i] === back1h[i]) ? 1 : 0,
+		// )
+		// + ([...Array(6).keys()].every(i => wallclock[i] === back1h[i]) ? -1 : 0)
+		// duplicated (later) wallclock while clock-backwarding.
+		const [time, offsetFix = 0] = this.#getTime()
+		return this.#getOffset(new Date(time)) + offsetFix
 	}
 	getOffset() {
 		return this.offset
@@ -794,9 +816,9 @@ export default class ZonedDate {
 		return this.utcDay
 	}
 
-	get time() {
+	#getTime() {
 		const offset1 = this.#getOffset(this.#utc)
-		if (offset1 === 0) return this.#utc.getTime()
+		if (offset1 === 0) return [this.#utc.getTime()]
 
 		const date2 = new Date(this.#utc.getTime() - offset1 * ONE_HOUR)
 		const offset2 = this.#getOffset(date2)
@@ -805,7 +827,7 @@ export default class ZonedDate {
 			if (offset1 < 0) {
 				if (this.#_disambiguation === 'earlier' || this.#_disambiguation === 'compatible') {
 					// no need to check
-					return date2.getTime()
+					return [date2.getTime()]
 				} else { // 'later' or 'reject'
 					// try forwarding 1h
 					const date3 = new Date(date2.getTime() + ONE_HOUR)
@@ -813,13 +835,13 @@ export default class ZonedDate {
 						// clock-backwarding. There are 2 choices for the same wallclock. The selected date2 is not the compatible one.
 						if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
 						// 'later'
-						return date3.getTime()
+						return [date3.getTime()]
 					}
 				}
 			} else {
 				if (this.#_disambiguation === 'later') {
 					// no need to check
-					return date2.getTime()
+					return [date2.getTime()]
 				} else { // 'earlier' or 'compatible' or 'reject'
 					// try backwarding 1h
 					const date3 = new Date(date2.getTime() - ONE_HOUR)
@@ -827,24 +849,29 @@ export default class ZonedDate {
 						// clock-backwarding. There are 2 choices for the same wallclock. The newly probed date is the compatible one.
 						if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
 						// 'earlier' or 'compatible'
-						return date3.getTime()
+						return [date3.getTime()]
 					}
 				}
 			}
-			return date2.getTime()
+			return [date2.getTime()]
 		}
 
 		const date3 = new Date(this.#utc.getTime() - offset2 * ONE_HOUR)
 		const offset3 = this.#getOffset(date3)
-		if (offset3 === offset2) return date3.getTime()
+		if (offset3 === offset2) return [date3.getTime()]
 
 		// Clock-forwarding and we are in the forwarded (i.e., not existing) wallclock
+		// it is fair for forward and backward in terms of complexity.
+		// backward: complex when getting epoch
+		// forward: complex when getting offset. See: this.offset
 		if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
-		return (
-			this.#_disambiguation === 'earlier'
-				? Math.max
-				: Math.min // 'later' or 'compatible'
-		)(date3.getTime(), date2.getTime())
+		return this.#_disambiguation === 'earlier'
+			? [Math.max(date3.getTime(), date2.getTime()), -1]
+			// 'later' or 'compatible'
+			: [Math.min(date3.getTime(), date2.getTime()), 1]
+	}
+	get time() {
+		return this.#getTime()[0]
 	}
 	/**
 	 * @param {undefined | number | ((time: number) => number | undefined)} time

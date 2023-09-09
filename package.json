@@ -23,7 +23,7 @@
   },
   "scripts": {
     "prepublish": "./build.sh",
-    "test": "node test.mjs"
+    "test": "node --test test.mjs"
   },
   "files": [
     "index.cjs",
