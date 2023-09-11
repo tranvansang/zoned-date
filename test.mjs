@@ -16,6 +16,10 @@ describe('OffsetDate', () => {
 		assert.strictEqual(date.offset, 7.5)
 		assert.strictEqual(date.timezoneOffset, -7.5 * 60)
 	})
+	test('hour', () => {
+		const date = new OffsetDate('02:00', {offset: 9})
+		assert.strictEqual(date.hours, 2)
+	})
 	test('utc method', () => {
 		const date = new OffsetDate(Date.UTC(2020, 1, 2, 3, 4, 5, 6), {offset: 7.5})
 		date.utcFullYear = 2000
@@ -102,7 +106,7 @@ describe('OffsetDate', () => {
 						info.minutes ?? 0,
 						info.seconds ?? 0,
 						info.milliseconds ?? 0,
-					) + (zoneOffset ?? defaultOffset) * 60 * 60 * 1000
+					) - (zoneOffset ?? defaultOffset) * 60 * 60 * 1000
 
 					// console.log(
 					// 	defaultOffset,

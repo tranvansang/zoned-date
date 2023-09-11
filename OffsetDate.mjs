@@ -160,7 +160,7 @@ export default class OffsetDate extends Date {
 				if (date === undefined) date = utcWallclock.getUTCDate()
 			}
 
-			super(Date.UTC(year, month, date, hours, minutes, seconds, milliseconds) + parsedOffset * ONE_HOUR)
+			super(Date.UTC(year, month, date, hours, minutes, seconds, milliseconds) - parsedOffset * ONE_HOUR)
 		}
 		else super(Date.UTC(...args) + offset * ONE_HOUR) // new Date(year, month, date, hours, minutes, seconds, ms)
 
