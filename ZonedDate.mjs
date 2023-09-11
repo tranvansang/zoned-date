@@ -170,7 +170,7 @@ export default class ZonedDate {
 			this.#utc = new Date()
 			this.time = args[0]
 		} else if (typeof args[0] === 'string') { // new Date(dateString)
-			let [year, month, date, hours, minutes, seconds, milliseconds] = parseString(args[0])
+			let [year, month, date, hours, minutes, seconds, milliseconds, parsedOffset] = parseString(args[0])
 
 			if (year === undefined || month === undefined || date === undefined) {
 				const utcWallclock = new Date(Date.now() + this.#getOffset(new Date()) * ONE_HOUR)
