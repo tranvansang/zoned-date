@@ -399,12 +399,24 @@ describe('zoned date', () => {
 	test('change timezone', () => {
 		const date = new ZonedDate('2021-09-04T05:19:52.001', {timezone: 'Asia/Tokyo'})
 		assert.strictEqual(date.hours, 5)
+
 		date.timezone = 'Asia/Bangkok'
 		assert.strictEqual(date.hours, 5 - 9 + 7)
+
 		date.timezone = 'UTC'
 		assert.strictEqual(date.hours, 5 - 9 + 24)
+
 		date.timezone = 'America/New_York'
 		assert.strictEqual(date.hours, 5 - 9 + -4 + 24)
+
+		// ['America/Caracas', -4],
+		date.timezone = 'America/Caracas'
+		assert.strictEqual(date.hours, 5 - 9 + -4 + 24)
+
+		// ['Asia/Kathmandu', 5.75],
+		date.timezone = 'Asia/Kathmandu'
+		assert.strictEqual(date.hours, 5 - 9 + 5 + 1)
+		assert.strictEqual(date.minutes, 19 + 45 - 60)
 	})
 
 	test('dst option', () => {
