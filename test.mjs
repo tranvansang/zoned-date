@@ -442,12 +442,12 @@ describe('zoned date', () => {
 		}
 
 		for (const [timezone, wallclock, disambiguation, expected] of [
-			['Australia/ACT', '2023-10-01T02:30:00.000', 'reject'],
-			['Australia/ACT', '2023-04-02T02:30:00.000', 'reject'],
-			['America/Los_Angeles', '2023-03-12T02:00:00.000', 'reject'],
-			['America/Los_Angeles', '2023-11-05T01:00:00.000', 'reject'],
+			['Australia/ACT', '2023-10-01T02:30:00.000'],
+			['Australia/ACT', '2023-04-02T02:30:00.000'],
+			['America/Los_Angeles', '2023-03-12T02:00:00.000'],
+			['America/Los_Angeles', '2023-11-05T01:00:00.000'],
 		]) {
-			const date = new ZonedDate(wallclock, {timezone, disambiguation})
+			const date = new ZonedDate(wallclock, {timezone, disambiguation: 'reject'})
 			assert.throws(() => date.time)
 		}
 	})
