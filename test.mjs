@@ -16,9 +16,165 @@ describe('OffsetDate', () => {
 		assert.strictEqual(date.offset, 7.5)
 		assert.strictEqual(date.timezoneOffset, -7.5 * 60)
 	})
-	test('hour', () => {
+	test('hour parse', () => {
 		const date = new OffsetDate('02:00', {offset: 9})
 		assert.strictEqual(date.hours, 2)
+		const todayGMT7	= new Date(Date.now() + 7 * 60 * 60 * 1000)
+		assert.strictEqual(date.date, todayGMT7.getUTCDate())
+	})
+	test('hour parse neg', () => {
+		const date = new OffsetDate('03:00Z', {offset: -3.5})
+		assert.strictEqual(date.hours, 23)
+		assert.strictEqual(date.minutes, 30)
+		const todayGMT	= new Date(Date.now() - 3.5 * 60 * 60 * 1000)
+		assert.strictEqual(date.date, todayGMT.getUTCDate())
+	})
+	test('get today: tricky', () => {
+		let date
+
+		// no timezone specified
+		date = new OffsetDate('00:00', {offset: 9})
+		assert.strictEqual(date.hours, 0)
+		assert.strictEqual(date.date, new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDate())
+
+		// z timezone
+		date = new OffsetDate('00:00Z', {offset: 9})
+		assert.strictEqual(date.hours, 9)
+		assert.strictEqual(date.date, new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDate())
+
+		// should stay in today even if 15 + 9 >= 24
+		date = new OffsetDate('15:00Z', {offset: 9})
+		assert.strictEqual(date.hours, 0)
+		assert.strictEqual(date.date, new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDate())
+
+		// tomorrow only when >= 24
+		date = new OffsetDate('24:00Z', {offset: 9})
+		assert.strictEqual(date.hours, 9)
+		assert.strictEqual(date.date, 1 + new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDate())
+		date = new OffsetDate('48:00Z', {offset: 9})
+		assert.strictEqual(date.date, 2 + new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDate())
+		date = new OffsetDate('71:00Z', {offset: 9})
+		assert.strictEqual(date.date, 2 + new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDate())
+
+		// repeat with half hour
+		// no timezone specified
+		date = new OffsetDate('00:00', {offset: 3.5})
+		assert.strictEqual(date.hours, 0)
+		assert.strictEqual(date.date, new Date(Date.now() + 3.5 * 60 * 60 * 1000).getUTCDate())
+
+		// z timezone
+		date = new OffsetDate('00:00Z', {offset: 3.5})
+		assert.strictEqual(date.hours, 3)
+		assert.strictEqual(date.minutes, 30)
+		assert.strictEqual(date.date, new Date(Date.now() + 3.5 * 60 * 60 * 1000).getUTCDate())
+
+		// should stay in today even if 15 + 3.5 >= 24
+		date = new OffsetDate('23:29Z', {offset: 3.5})
+		assert.strictEqual(date.hours, 2)
+		assert.strictEqual(date.date, new Date(Date.now() + 3.5 * 60 * 60 * 1000).getUTCDate())
+		date = new OffsetDate('23:30Z', {offset: 3.5})
+		assert.strictEqual(date.hours, 3)
+		assert.strictEqual(date.date, new Date(Date.now() + 3.5 * 60 * 60 * 1000).getUTCDate())
+
+		// tomorrow only when >= 24
+		date = new OffsetDate('24:00Z', {offset: 3.5})
+		assert.strictEqual(date.hours, 3)
+		assert.strictEqual(date.date, 1 + new Date(Date.now() + 3.5 * 60 * 60 * 1000).getUTCDate())
+		date = new OffsetDate('48:00Z', {offset: 3.5})
+		assert.strictEqual(date.date, 2 + new Date(Date.now() + 3.5 * 60 * 60 * 1000).getUTCDate())
+		date = new OffsetDate('71:00Z', {offset: 3.5})
+		assert.strictEqual(date.date, 2 + new Date(Date.now() + 3.5 * 60 * 60 * 1000).getUTCDate())
+
+		// repeat with negative timezone
+		// no timezone specified
+		date = new OffsetDate('00:00', {offset: -9})
+		assert.strictEqual(date.hours, 0)
+		assert.strictEqual(date.date, new Date(Date.now() + -9 * 60 * 60 * 1000).getUTCDate())
+
+		// z timezone
+		date = new OffsetDate('00:00Z', {offset: -9})
+		assert.strictEqual(date.hours, 15)
+		assert.strictEqual(date.date, new Date(Date.now() + -9 * 60 * 60 * 1000).getUTCDate())
+
+		// should stay in today even if 15 + 9 >= 24
+		date = new OffsetDate('08:00Z', {offset: -9})
+		assert.strictEqual(date.hours, 23)
+		assert.strictEqual(date.date, new Date(Date.now() + -9 * 60 * 60 * 1000).getUTCDate())
+
+		// tomorrow only when >= 24
+		date = new OffsetDate('24:00Z', {offset: -9})
+		assert.strictEqual(date.hours, 15)
+		assert.strictEqual(date.date, 1 + new Date(Date.now() + -9 * 60 * 60 * 1000).getUTCDate())
+		date = new OffsetDate('48:00Z', {offset: -9})
+		assert.strictEqual(date.date, 2 + new Date(Date.now() + -9 * 60 * 60 * 1000).getUTCDate())
+		date = new OffsetDate('71:00Z', {offset: -9})
+		assert.strictEqual(date.date, 2 + new Date(Date.now() + -9 * 60 * 60 * 1000).getUTCDate())
+
+		// repeat with half hour
+		// no timezone specified
+		date = new OffsetDate('00:00', {offset: -3.5})
+		assert.strictEqual(date.hours, 0)
+		assert.strictEqual(date.date, new Date(Date.now() + -3.5 * 60 * 60 * 1000).getUTCDate())
+
+		// z timezone
+		date = new OffsetDate('00:00Z', {offset: -3.5})
+		assert.strictEqual(date.hours, 20)
+		assert.strictEqual(date.minutes, 30)
+		assert.strictEqual(date.date, new Date(Date.now() + -3.5 * 60 * 60 * 1000).getUTCDate())
+
+		// should stay in today even if 15 + 3.5 >= 24
+		date = new OffsetDate('23:29Z', {offset: -3.5})
+		assert.strictEqual(date.hours, 19)
+		assert.strictEqual(date.date, new Date(Date.now() + -3.5 * 60 * 60 * 1000).getUTCDate())
+		date = new OffsetDate('23:30Z', {offset: -3.5})
+		assert.strictEqual(date.hours, 20)
+		assert.strictEqual(date.date, new Date(Date.now() + -3.5 * 60 * 60 * 1000).getUTCDate())
+
+		// tomorrow only when >= 24
+		date = new OffsetDate('24:00Z', {offset: -3.5})
+		assert.strictEqual(date.hours, 20)
+		assert.strictEqual(date.date, 1 + new Date(Date.now() + -3.5 * 60 * 60 * 1000).getUTCDate())
+		date = new OffsetDate('48:00Z', {offset: -3.5})
+		assert.strictEqual(date.date, 2 + new Date(Date.now() + -3.5 * 60 * 60 * 1000).getUTCDate())
+		date = new OffsetDate('71:00Z', {offset: -3.5})
+		assert.strictEqual(date.date, 2 + new Date(Date.now() + -3.5 * 60 * 60 * 1000).getUTCDate())
+	})
+	test('hourZ parse', () => {
+		let date
+		const offsetList = [0, 5.5, -3.5, 7, -9]
+		for (const offset of offsetList) {
+			const todayGMT	= new Date(Date.now() + offset * 60 * 60 * 1000)
+			for (const i of Array(100).keys()) {
+				for (const min of Array(1).keys()) {
+					const hours = i.toString().padStart(2, '0')
+					const mins = min.toString().padStart(2, '0')
+					const timeStr = `${hours}:${mins}`
+
+					date = new OffsetDate(`${timeStr}Z`, {offset})
+					assert.strictEqual(date.hours, ((i + Math.floor(offset)) % 24 + 24) % 24)
+					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+
+					date = new OffsetDate(timeStr, {offset})
+					assert.strictEqual(date.hours, i % 24)
+					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+
+					date = new OffsetDate(`${timeStr}${offsetToZoneStr(offset)}`, {offset})
+					assert.strictEqual(date.hours, i % 24)
+					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+
+					for (const parsedOffset of offsetList) {
+						date = new OffsetDate(`${timeStr}${offsetToZoneStr(parsedOffset)}`, {offset})
+						assert.strictEqual(date.hours, ((i + Math.floor(offset - parsedOffset)) % 24 + 24) % 24)
+						assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+					}
+				}
+			}
+		}
+		function offsetToZoneStr(offset) {
+			return offset === 0 ? 'Z' : `${offset > 0 ? '+' : '-'}${Math.abs(Math.trunc(offset)).toString().padStart(2, '0')}${Math.random() > 0.5 ? ':' : ''}${
+				((offset - Math.floor(offset)) * 60).toString().padStart(2, '0')
+			}`
+		}
 	})
 	test('utc method', () => {
 		const date = new OffsetDate(Date.UTC(2020, 1, 2, 3, 4, 5, 6), {offset: 7.5})
@@ -92,39 +248,26 @@ describe('OffsetDate', () => {
 					const str = dateStr.replace('Z', zoneStr)
 					const offsetDate = new OffsetDate(str, {offset: defaultOffset})
 
-					// note: defaultOffset, not zoneOffset
-					// must design a test case that fails if defaultOffset is not used
-					const nowInUtcView = new Date(Date.now() + defaultOffset * 60 * 60 * 1000)
-					// must have at least one test fails with the following uncommented
-					// const nowInUtcView = new Date(Date.now() + (zoneOffset ?? defaultOffset) * 60 * 60 * 1000)
-
-					const expected = Date.UTC(
-						info.fullYear ?? nowInUtcView.getUTCFullYear(),
-						info.month ?? nowInUtcView.getUTCMonth(),
-						info.date ?? nowInUtcView.getUTCDate(),
+					const expected = new Date(Date.UTC(
+						info.fullYear ?? 2000,
+						info.month ?? 0,
+						info.date ?? 1,
 						info.hours ?? 0,
 						info.minutes ?? 0,
 						info.seconds ?? 0,
 						info.milliseconds ?? 0,
-					) - (zoneOffset ?? defaultOffset) * 60 * 60 * 1000
+					) + (defaultOffset - (zoneOffset ?? defaultOffset)) * 60 * 60 * 1000)
 
-					// console.log(
-					// 	defaultOffset,
-					// 	str,
-					// 	'expected',
-					// 	info.fullYear ?? nowInUtcView.getUTCFullYear(),
-					// 	info.month ?? nowInUtcView.getUTCMonth(),
-					// 	info.date ?? nowInUtcView.getUTCDate(),
-					// 	info.hours ?? 0,
-					// 	info.minutes ?? 0,
-					// 	info.seconds ?? 0,
-					// 	info.milliseconds ?? 0,
-					// 	zoneOffset,
-					// 	defaultOffset,
-					// 	offsetDate,
-					// 	new Date(expected),
-					// )
-					assert.strictEqual(offsetDate.time, expected)
+					if (info.fullYear !== undefined && info.month !== undefined && info.date !== undefined) {
+						assert.strictEqual(offsetDate.fullYear, expected.getUTCFullYear())
+						assert.strictEqual(offsetDate.month, expected.getUTCMonth())
+						assert.strictEqual(offsetDate.date, expected.getUTCDate())
+					}
+					if (info.hours !== undefined) assert.strictEqual(offsetDate.hours, expected.getUTCHours())
+					if (info.minutes !== undefined) assert.strictEqual(offsetDate.minutes, expected.getUTCMinutes())
+					if (info.seconds !== undefined) assert.strictEqual(offsetDate.seconds, expected.getUTCSeconds())
+					if (info.milliseconds !== undefined) assert.strictEqual(offsetDate.milliseconds, expected.getUTCMilliseconds())
+
 					assert.strictEqual(offsetDate.offset, defaultOffset)
 					assert.strictEqual(offsetDate.timezoneOffset, -60 * defaultOffset)
 				}
@@ -151,6 +294,62 @@ describe('zoned date', () => {
 		assert.ok(date.offset === 0) // 0 vs -0
 		assert.strictEqual(date.timezone, 'UTC')
 		assert.ok(date.timezoneOffset === 0)
+	})
+	test('hour parse', () => {
+		const date = new ZonedDate('02:00', {timezone: 'Asia/Bangkok'})
+		assert.strictEqual(date.hours, 2)
+		const todayGMT7	= new Date(Date.now() + 7 * 60 * 60 * 1000)
+		assert.strictEqual(date.date, todayGMT7.getUTCDate())
+	})
+	test('hour parse neg', () => {
+		const date = new ZonedDate('23:00Z', {timezone: 'Asia/Bangkok'})
+		assert.strictEqual(date.hours, 6)
+		const todayGMT7	= new Date(Date.now() + 7 * 60 * 60 * 1000)
+		assert.strictEqual(date.date, todayGMT7.getUTCDate())
+	})
+	test('hourZ parse', () => {
+		let date
+		const timezoneList = [
+			['UTC', 0],
+			['Asia/Bangkok', 7],
+			// ['America/New_York', -4], // DST, so skipped
+			['Asia/Tokyo', 9],
+			['America/Caracas', -4],
+			['Asia/Kathmandu', 5.75],
+		]
+		for (const [timezone, offset] of timezoneList) {
+			const todayGMT	= new Date(Date.now() + offset * 60 * 60 * 1000)
+			for (const i of Array(100).keys()) {
+				for (const min of Array(1).keys()) {
+					const hours = i.toString().padStart(2, '0')
+					const mins = min.toString().padStart(2, '0')
+					const timeStr = `${hours}:${mins}`
+
+					date = new ZonedDate(`${timeStr}Z`, {timezone})
+					assert.strictEqual(date.hours, ((i + Math.floor(offset)) % 24 + 24) % 24)
+					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+
+					date = new ZonedDate(timeStr, {timezone})
+					assert.strictEqual(date.hours, i % 24)
+					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+
+					date = new ZonedDate(`${timeStr}${offsetToZoneStr(offset)}`, {timezone})
+					assert.strictEqual(date.hours, i % 24)
+					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+
+					for (const [parsedTimezone, parsedOffset] of timezoneList) {
+						date = new ZonedDate(`${timeStr}${offsetToZoneStr(parsedOffset)}`, {timezone})
+						assert.strictEqual(date.hours, ((i + Math.floor(offset - parsedOffset)) % 24 + 24) % 24)
+						assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+					}
+				}
+			}
+		}
+		function offsetToZoneStr(offset) {
+			return offset === 0 ? 'Z' : `${offset > 0 ? '+' : '-'}${Math.abs(Math.trunc(offset)).toString().padStart(2, '0')}${Math.random() > 0.5 ? ':' : ''}${
+				((offset - Math.floor(offset)) * 60).toString().padStart(2, '0')
+			}`
+		}
 	})
 
 	test('with timezone', () => {

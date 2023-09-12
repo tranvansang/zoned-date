@@ -175,19 +175,27 @@ module.exports = class ZonedDate {
 			let [year, month, date, hours, minutes, seconds, milliseconds, parsedOffset] = parseString(args[0])
 
 			if (year === undefined || month === undefined || date === undefined) {
-				const utcWallclock = new Date(Date.now() + this.#getOffset(new Date()) * ONE_HOUR)
-				if (year === undefined) year = utcWallclock.getUTCFullYear()
-				if (month === undefined) month = utcWallclock.getUTCMonth()
-				if (date === undefined) date = utcWallclock.getUTCDate()
+				let fixDate = 0
+				const offset = this.#getOffset(new Date())
+				const utcWallclock = new Date(Date.now() + offset * ONE_HOUR)
+				if (parsedOffset !== undefined && parsedOffset !== offset) {
+					const sample = new Date(
+						Date.UTC(2020, 0, 1, hours % 24, minutes, seconds, milliseconds)
+						+ (offset - parsedOffset) * ONE_HOUR
+					)
+					if (sample.getUTCDate() !== 1) fixDate = parsedOffset < offset ? -1 : 1
+				}
+				year ??= utcWallclock.getUTCFullYear()
+				month ??= utcWallclock.getUTCMonth()
+				date ??= utcWallclock.getUTCDate() + fixDate
 			}
 
 			if (parsedOffset === undefined) this.#utc = new Date(Date.UTC(
 				year, month, date, hours, minutes, seconds, milliseconds
-				)
-			)
+			))
 			else {
 				this.#utc = new Date() // arbitrary date
-				this.time = Date.UTC(year, month, date, hours, minutes, seconds, milliseconds) + parsedOffset * ONE_HOUR
+				this.time = Date.UTC(year, month, date, hours, minutes, seconds, milliseconds) - parsedOffset * ONE_HOUR
 			}
 		} else this.#utc = new Date(Date.UTC(...args)) // new Date(year, month, date, hours, minutes, seconds, ms)
 	}

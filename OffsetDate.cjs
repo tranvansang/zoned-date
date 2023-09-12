@@ -156,10 +156,18 @@ module.exports = class OffsetDate extends Date {
 			let [year, month, date, hours, minutes, seconds, milliseconds, parsedOffset = offset] = parseString(args[0])
 
 			if (year === undefined || month === undefined || date === undefined) {
+				let fixDate = 0
 				const utcWallclock = new Date(Date.now() + offset * ONE_HOUR)
-				if (year === undefined) year = utcWallclock.getUTCFullYear()
-				if (month === undefined) month = utcWallclock.getUTCMonth()
-				if (date === undefined) date = utcWallclock.getUTCDate()
+				if (parsedOffset !== offset) {
+					const sample = new Date(
+						Date.UTC(2020, 0, 1, hours % 24, minutes, seconds, milliseconds)
+						+ (offset - parsedOffset) * ONE_HOUR
+					)
+					if (sample.getUTCDate() !== 1) fixDate = parsedOffset < offset ? -1 : 1
+				}
+				year ??= utcWallclock.getUTCFullYear()
+				month ??= utcWallclock.getUTCMonth()
+				date ??= utcWallclock.getUTCDate() + fixDate
 			}
 
 			super(Date.UTC(year, month, date, hours, minutes, seconds, milliseconds) - parsedOffset * ONE_HOUR)
