@@ -879,6 +879,30 @@ export default class ZonedDate {
 		const offset2 = this.#getOffset(date2)
 		if (offset2 === offset1) {
 			// check clock-backwarding
+
+			// no need to check
+			if (this.#_disambiguation !== 'reject' && offset1 > 0 === (this.#_disambiguation === 'later')) return [date2.getTime()]
+
+			// offset1 > 0: 'earlier' or 'compatible' or 'reject'
+			// offset1 < 0: 'later' or 'reject'
+			const maxBackwardGap = 1 // unit: hour. This value can be increased if needed.
+
+			// try backwarding maxBackwardGap hours for offset1 > 0
+			// try forwarding maxBackwardGap hours for offset1 < 0
+			const date3 = new Date(date2.getTime() - (offset1 > 0 ? 1 : -1) * maxBackwardGap * ONE_HOUR)
+			if (this.#getOffset(date3) < offset2) {
+				const date4 = new Date(date2.getTime() + (offset2 - this.#getOffset(date3)) * ONE_HOUR)
+				if (this.#getOffset(date4) !== offset2) {
+					// There are 2 choices for the same wallclock.
+					// offset1 > 0: The newly probed date is the compatible one.
+					// offset1 < 0: The selected date2 is not the compatible one.
+					if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
+					// offset1 > 0: 'earlier' or 'compatible'
+					// offset1 < 0: 'later'
+					return [date3.getTime()]
+				}
+			}
+
 			if (offset1 < 0) {
 				if (this.#_disambiguation === 'earlier' || this.#_disambiguation === 'compatible') {
 					// no need to check
