@@ -453,14 +453,48 @@ describe('zoned date', () => {
 			assert.strictEqual(date.offset, expected)
 		}
 
-		for (const [timezone, wallclock, disambiguation, expected] of [
-			['Australia/ACT', '2023-10-01T02:30:00.000'],
-			['Australia/ACT', '2023-04-02T02:30:00.000'],
-			['America/Los_Angeles', '2023-03-12T02:00:00.000'],
-			['America/Los_Angeles', '2023-11-05T01:00:00.000'],
+		for (const [timezone, wallclock] of [
+			['Australia/ACT', '2023-10-01T02:30:00.000'], // forward, dst starts
+			['Australia/ACT', '2023-04-02T02:30:00.000'], // backward, dst ends
+			['America/Los_Angeles', '2023-03-12T02:00:00.000'], // forward, dst starts
+			['America/Los_Angeles', '2023-11-05T01:00:00.000'], // backward, dst ends
 		]) {
 			const date = new ZonedDate(wallclock, {timezone, disambiguation: 'reject'})
 			assert.throws(() => date.time)
 		}
+	})
+
+	test('DST backward', () => {
+		assert.strictEqual(new ZonedDate('2023-11-05T00:59:59.999', {timezone: 'America/Los_Angeles', disambiguation: 'reject'}).offset, -7)
+		assert.throws(() => new ZonedDate('2023-11-05T00:59:59.999', {timezone: 'America/Los_Angeles', disambiguation: 'reject'}).setTime(t => t + 1).offset)
+		assert.strictEqual(new ZonedDate('2023-11-05T00:59:59.999', {timezone: 'America/Los_Angeles', disambiguation: 'earlier'}).setTime(t => t + 1).offset, -7)
+		assert.strictEqual(new ZonedDate('2023-11-05T00:59:59.999', {timezone: 'America/Los_Angeles', disambiguation: 'compatible'}).setTime(t => t + 1).offset, -7)
+		assert.strictEqual(new ZonedDate('2023-11-05T00:59:59.999', {timezone: 'America/Los_Angeles', disambiguation: 'later'}).setTime(t => t + 1).offset, -8)
+	})
+
+	test('GMT -0456', () => {
+		// https://dev.to/yoursunny/where-does-gmt-0456-timezone-come-from-38m1
+		const eps = 1e-8
+
+		// before
+		assert.ok(Math.abs(new ZonedDate('1883-11-18T11:58:59.999', {timezone: 'America/New_York', disambiguation: 'reject'}).offset - -4.933333333333334) < eps)
+
+		// ambiguous
+		assert.throws(() => new ZonedDate('1883-11-18T12:00:00.000', {timezone: 'America/New_York', disambiguation: 'reject'}).offset)
+		assert.ok(Math.abs(new ZonedDate('1883-11-18T12:00:00.000', {timezone: 'America/New_York', disambiguation: 'earlier'}).offset - -4.933333333333334) < eps)
+		assert.strictEqual(new ZonedDate('1883-11-18T12:00:00.000', {timezone: 'America/New_York', disambiguation: 'later'}).offset, -5)
+
+		// after
+		assert.strictEqual(new ZonedDate('1883-11-18T12:04:00.000', {timezone: 'America/New_York', disambiguation: 'reject'}).offset, -5)
+
+		// try moving time
+		assert.strictEqual(
+			new ZonedDate('1883-11-18T12:04:00.000', {timezone: 'America/New_York'}).time -
+			new ZonedDate('1883-11-18T12:03:59.999', {timezone: 'America/New_York'}).time,
+			240001
+		)
+		assert.throws(() => new ZonedDate('1883-11-18T12:03:59.999', {timezone: 'America/New_York', disambiguation: 'reject'}).setTime(t => t + 1).offset)
+		assert.ok(Math.abs(new ZonedDate('1883-11-18T12:03:59.999', {timezone: 'America/New_York', disambiguation: 'earlier'}).setTime(t => t + 1).offset - -4.933333333333334) < eps)
+		assert.strictEqual(new ZonedDate('1883-11-18T12:03:59.999', {timezone: 'America/New_York', disambiguation: 'later'}).setTime(t => t + 1).offset, -5)
 	})
 })

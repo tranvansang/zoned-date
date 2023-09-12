@@ -886,11 +886,14 @@ export default class ZonedDate {
 				} else { // 'later' or 'reject'
 					// try forwarding 1h
 					const date3 = new Date(date2.getTime() + ONE_HOUR)
-					if (this.#getOffset(date3) === offset2 - 1) {
-						// clock-backwarding. There are 2 choices for the same wallclock. The selected date2 is not the compatible one.
-						if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
-						// 'later'
-						return [date3.getTime()]
+					if (this.#getOffset(date3) < offset2) {
+						const date4 = new Date(date2.getTime() + (offset2 - this.#getOffset(date3)) * ONE_HOUR)
+						if (this.#getOffset(date4) !== offset2) {
+							// clock-backwarding. There are 2 choices for the same wallclock. The selected date2 is not the compatible one.
+							if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
+							// 'later'
+							return [date3.getTime()]
+						}
 					}
 				}
 			} else {
@@ -900,11 +903,14 @@ export default class ZonedDate {
 				} else { // 'earlier' or 'compatible' or 'reject'
 					// try backwarding 1h
 					const date3 = new Date(date2.getTime() - ONE_HOUR)
-					if (this.#getOffset(date3) === offset2 + 1) {
-						// clock-backwarding. There are 2 choices for the same wallclock. The newly probed date is the compatible one.
-						if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
-						// 'earlier' or 'compatible'
-						return [date3.getTime()]
+					if (this.#getOffset(date3) > offset2) {
+						const date4 = new Date(date2.getTime() + (offset2 - this.#getOffset(date3)) * ONE_HOUR)
+						if (this.#getOffset(date4) !== offset2) {
+							// clock-backwarding. There are 2 choices for the same wallclock. The newly probed date is the compatible one.
+							if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
+							// 'earlier' or 'compatible'
+							return [date3.getTime()]
+						}
 					}
 				}
 			}
