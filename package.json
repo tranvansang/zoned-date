@@ -36,7 +36,7 @@
     "ZonedDate.mjs",
     "ZonedDate.d.ts"
   ],
-  "repository": "tranvansang/zoned-date",
+  "repository": "github:tranvansang/zoned-date",
   "author": "Sang Tran <t@sang.jp>",
   "license": "MIT",
   "packageManager": "yarn@3.6.3"
