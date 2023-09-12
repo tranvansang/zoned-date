@@ -17,7 +17,7 @@ describe('OffsetDate', () => {
 		assert.strictEqual(date.timezoneOffset, -7.5 * 60)
 	})
 	test('hour parse', () => {
-		const date = new OffsetDate('02:00', {offset: 9})
+		const date = new OffsetDate('02:00', {offset: 7})
 		assert.strictEqual(date.hours, 2)
 		const todayGMT7	= new Date(Date.now() + 7 * 60 * 60 * 1000)
 		assert.strictEqual(date.date, todayGMT7.getUTCDate())
@@ -470,6 +470,12 @@ describe('zoned date', () => {
 		assert.strictEqual(new ZonedDate('2023-11-05T00:59:59.999', {timezone: 'America/Los_Angeles', disambiguation: 'earlier'}).setTime(t => t + 1).offset, -7)
 		assert.strictEqual(new ZonedDate('2023-11-05T00:59:59.999', {timezone: 'America/Los_Angeles', disambiguation: 'compatible'}).setTime(t => t + 1).offset, -7)
 		assert.strictEqual(new ZonedDate('2023-11-05T00:59:59.999', {timezone: 'America/Los_Angeles', disambiguation: 'later'}).setTime(t => t + 1).offset, -8)
+
+		assert.strictEqual(new ZonedDate('2023-04-02T01:59:59.999', {timezone: 'Australia/ACT', disambiguation: 'reject'}).offset, 11)
+		assert.throws(() => new ZonedDate('2023-04-02T01:59:59.999', {timezone: 'Australia/ACT', disambiguation: 'reject'}).setTime(t => t + 1).offset)
+		assert.strictEqual(new ZonedDate('2023-04-02T01:59:59.999', {timezone: 'Australia/ACT', disambiguation: 'earlier'}).setTime(t => t + 1).offset, 11)
+		assert.strictEqual(new ZonedDate('2023-04-02T01:59:59.999', {timezone: 'Australia/ACT', disambiguation: 'compatible'}).setTime(t => t + 1).offset, 11)
+		assert.strictEqual(new ZonedDate('2023-04-02T01:59:59.999', {timezone: 'Australia/ACT', disambiguation: 'later'}).setTime(t => t + 1).offset, 10)
 	})
 
 	test('GMT -0456', () => {
