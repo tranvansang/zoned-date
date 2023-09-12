@@ -890,8 +890,9 @@ export default class ZonedDate {
 			// try backwarding maxBackwardGap hours for offset1 > 0
 			// try forwarding maxBackwardGap hours for offset1 < 0
 			const date3 = new Date(date2.getTime() - (offset1 > 0 ? 1 : -1) * maxBackwardGap * ONE_HOUR)
-			if (this.#getOffset(date3) < offset2) {
-				const date4 = new Date(date2.getTime() + (offset2 - this.#getOffset(date3)) * ONE_HOUR)
+			const offset3 = this.#getOffset(date3)
+			if (offset3 !== offset2 && offset3 > offset2 === offset1 > 0) {
+				const date4 = new Date(date2.getTime() + (offset2 - offset3) * ONE_HOUR)
 				if (this.#getOffset(date4) !== offset2) {
 					// There are 2 choices for the same wallclock.
 					// offset1 > 0: The newly probed date is the compatible one.
@@ -903,41 +904,6 @@ export default class ZonedDate {
 				}
 			}
 
-			if (offset1 < 0) {
-				if (this.#_disambiguation === 'earlier' || this.#_disambiguation === 'compatible') {
-					// no need to check
-					return [date2.getTime()]
-				} else { // 'later' or 'reject'
-					// try forwarding 1h
-					const date3 = new Date(date2.getTime() + ONE_HOUR)
-					if (this.#getOffset(date3) < offset2) {
-						const date4 = new Date(date2.getTime() + (offset2 - this.#getOffset(date3)) * ONE_HOUR)
-						if (this.#getOffset(date4) !== offset2) {
-							// clock-backwarding. There are 2 choices for the same wallclock. The selected date2 is not the compatible one.
-							if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
-							// 'later'
-							return [date3.getTime()]
-						}
-					}
-				}
-			} else {
-				if (this.#_disambiguation === 'later') {
-					// no need to check
-					return [date2.getTime()]
-				} else { // 'earlier' or 'compatible' or 'reject'
-					// try backwarding 1h
-					const date3 = new Date(date2.getTime() - ONE_HOUR)
-					if (this.#getOffset(date3) > offset2) {
-						const date4 = new Date(date2.getTime() + (offset2 - this.#getOffset(date3)) * ONE_HOUR)
-						if (this.#getOffset(date4) !== offset2) {
-							// clock-backwarding. There are 2 choices for the same wallclock. The newly probed date is the compatible one.
-							if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
-							// 'earlier' or 'compatible'
-							return [date3.getTime()]
-						}
-					}
-				}
-			}
 			return [date2.getTime()]
 		}
 
