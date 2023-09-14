@@ -229,6 +229,24 @@ export default class ZonedDate {
 		return new ZonedDate(this).setTimezone(timezone)
 	}
 
+	get disambiguation() {
+		return this.getDisambiguation()
+	}
+	set disambiguation(disambiguation) {
+		this.setDisambiguation(disambiguation)
+	}
+	getDisambiguation() {
+		return this.#_disambiguation
+	}
+	setDisambiguation(disambiguation) {
+		if (typeof disambiguation === 'function') disambiguation = disambiguation(this.#_disambiguation)
+		if (disambiguation !== undefined) this.#disambiguation = disambiguation
+		return this
+	}
+	withDisambiguation(disambiguation) {
+		return new ZonedDate(this).setDisambiguation(disambiguation)
+	}
+
 	#getWallclock(date) {
 		if (typeof this.#_dateTimeFormat.formatToParts === 'function') {
 			const wallclock = []

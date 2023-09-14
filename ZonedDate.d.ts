@@ -29,6 +29,12 @@ export default class ZonedDate {
 	setTimezone(timezone?: ValueSetter<string>): this
 	withTimezone(timezone?: ValueSetter<string>): ZonedDate
 
+	get disambiguation(): Disambiguation
+	set disambiguation(disambiguation: ValueSetter<Disambiguation>)
+	getDisambiguation(): Disambiguation
+	setDisambiguation(disambiguation?: ValueSetter<Disambiguation>): this
+	withDisambiguation(disambiguation?: ValueSetter<Disambiguation>): ZonedDate
+
 	set fullYear(year: ValueSetter)
 	get fullYear(): number
 	setFullYear(year?: ValueSetter): this
