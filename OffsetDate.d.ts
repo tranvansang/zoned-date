@@ -1,3 +1,4 @@
+type ValueSetter = number | undefined | ((value: number) => number | undefined)
 export default class OffsetDate extends Date {
 	static defaultOffset: number
 
@@ -13,93 +14,93 @@ export default class OffsetDate extends Date {
 	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, options?: {offset?: number})
 	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, miliseconds: number, options?: {offset?: number})
 
-	set fullYear(year: undefined | number | ((year: number) => number | undefined))
+	set fullYear(year: ValueSetter)
 	get fullYear(): number
-	setFullYear(year?: number | ((year: number) => number | undefined)): this
-	withFullYear(year?: number | ((year: number) => number | undefined)): OffsetDate
-	set utcFullYear(year: undefined | number | ((year: number) => number | undefined))
+	setFullYear(year?: ValueSetter): this
+	withFullYear(year?: ValueSetter): OffsetDate
+	set utcFullYear(year: ValueSetter)
 	get utcFullYear(): number
-	setUTCFullYear(year?: number | ((year: number) => number | undefined)): this
-	withUTCFullYear(year?: number | ((year: number) => number | undefined)): OffsetDate
+	setUTCFullYear(year?: ValueSetter): this
+	withUTCFullYear(year?: ValueSetter): OffsetDate
 
-	set month(arg: undefined | number | ((month: number) => number | undefined))
+	set month(month: ValueSetter)
 	get month(): number
-	getMonth(): number | ((month: number) => number | undefined)
-	setMonth(month?: number | ((month: number) => number | undefined)): this
-	withMonth(month?: number | ((month: number) => number | undefined)): OffsetDate
-	set utcMonth(arg: undefined | number | ((month: number) => number | undefined))
+	getMonth(): number
+	setMonth(month?: ValueSetter): this
+	withMonth(month?: ValueSetter): OffsetDate
+	set utcMonth(month: ValueSetter)
 	get utcMonth(): number
-	setUTCMonth(month?: number | ((month: number) => number | undefined)): this
-	withUTCMonth(month?: number | ((month: number) => number | undefined)): OffsetDate
+	setUTCMonth(month?: ValueSetter): this
+	withUTCMonth(month?: ValueSetter): OffsetDate
 
-	set date(arg: undefined | number | ((date: number) => number | undefined))
+	set date(date: ValueSetter)
 	get date(): number
-	getDate(): number | ((date: number) => number | undefined)
-	setDate(date?: number | ((date: number) => number | undefined)): this
-	withDate(date?: number | ((date: number) => number | undefined)): OffsetDate
-	set utcDate(arg: undefined | number | ((date: number) => number | undefined))
+	getDate(): number
+	setDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
+	set utcDate(date: ValueSetter)
 	get utcDate(): number
-	setUTCDate(date?: number | ((date: number) => number | undefined)): this
-	withUTCDate(date?: number | ((date: number) => number | undefined)): OffsetDate
+	setUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 
-	set hours(arg: undefined | number | ((hours: number) => number | undefined))
+	set hours(hours: ValueSetter)
 	get hours(): number
-	getHours(): number | ((hours: number) => number | undefined)
-	setHours(hours?: number | ((hours: number) => number | undefined)): this
-	withHours(hours?: number | ((hours: number) => number | undefined)): OffsetDate
-	set utcHours(arg: undefined | number | ((hours: number) => number | undefined))
+	getHours(): number
+	setHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
+	set utcHours(hours: ValueSetter)
 	get utcHours(): number
-	setUTCHours(hours?: number | ((hours: number) => number | undefined)): this
-	withUTCHours(hours?: number | ((hours: number) => number | undefined)): OffsetDate
+	setUTCHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withUTCHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 
-	set minutes(arg: undefined | number | ((minutes: number) => number | undefined))
+	set minutes(minutes: ValueSetter)
 	get minutes(): number
-	getMinutes(): number | ((minutes: number) => number | undefined)
-	setMinutes(minutes?: number | ((minutes: number) => number | undefined)): this
-	withMinutes(minutes?: number | ((minutes: number) => number | undefined)): OffsetDate
-	set utcMinutes(arg: undefined | number | ((minutes: number) => number | undefined))
+	getMinutes(): number
+	setMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
+	set utcMinutes(minutes: ValueSetter)
 	get utcMinutes(): number
-	setUTCMinutes(minutes?: number | ((minutes: number) => number | undefined)): this
-	withUTCMinutes(minutes?: number | ((minutes: number) => number | undefined)): OffsetDate
+	setUTCMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withUTCMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 
-	set seconds(arg: undefined | number | ((seconds: number) => number | undefined))
+	set seconds(seconds: ValueSetter)
 	get seconds(): number
-	getSeconds(): number | ((seconds: number) => number | undefined)
-	setSeconds(seconds?: number | ((seconds: number) => number | undefined)): this
-	withSeconds(seconds?: number | ((seconds: number) => number | undefined)): OffsetDate
-	set utcSeconds(arg: undefined | number | ((seconds: number) => number | undefined))
+	getSeconds(): number
+	setSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this
+	withSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
+	set utcSeconds(seconds: ValueSetter)
 	get utcSeconds(): number
-	setUTCSeconds(seconds?: number | ((seconds: number) => number | undefined)): this
-	withUTCSeconds(seconds?: number | ((seconds: number) => number | undefined)): OffsetDate
+	setUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this
+	withUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 
-	set milliseconds(arg: undefined | number | ((milliseconds: number) => number | undefined))
+	set milliseconds(milliseconds: ValueSetter)
 	get milliseconds(): number
-	getMilliseconds(): number | ((milliseconds: number) => number | undefined)
-	setMilliseconds(milliseconds?: number | ((milliseconds: number) => number | undefined)): this
-	withMilliseconds(milliseconds?: number | ((milliseconds: number) => number | undefined)): OffsetDate
-	set utcMilliseconds(arg: undefined | number | ((milliseconds: number) => number | undefined))
+	getMilliseconds(): number
+	setMilliseconds(milliseconds?: ValueSetter): this
+	withMilliseconds(milliseconds?: ValueSetter): OffsetDate
+	set utcMilliseconds(milliseconds: ValueSetter)
 	get utcMilliseconds(): number
-	setUTCMilliseconds(milliseconds?: number | ((milliseconds: number) => number | undefined)): this
-	withUTCMilliseconds(milliseconds?: number | ((milliseconds: number) => number | undefined)): OffsetDate
+	setUTCMilliseconds(milliseconds?: ValueSetter): this
+	withUTCMilliseconds(milliseconds?: ValueSetter): OffsetDate
 
-	set timezoneOffset(arg: undefined | number | ((offset: number) => number | undefined))
+	set timezoneOffset(timezoneOffset: ValueSetter)
 	get timezoneOffset(): number
-	getTimezoneOffset(): number | ((offset: number) => number | undefined)
-	setTimezoneOffset(offset?: number | ((offset: number) => number | undefined)): this
-	withTimezoneOffset(offset?: number | ((offset: number) => number | undefined)): OffsetDate
+	getTimezoneOffset(): number
+	setTimezoneOffset(timezoneOffset?: ValueSetter): this
+	withTimezoneOffset(timezoneOffset?: ValueSetter): OffsetDate
 
-	set offset(arg: undefined | number | ((offset: number) => number | undefined))
+	set offset(offset: ValueSetter)
 	get offset(): number
 	getOffset(): number
-	setOffset(offset?: number | ((offset: number) => number | undefined)): this
-	withOffset(offset?: number | ((offset: number) => number | undefined)): OffsetDate
+	setOffset(offset?: ValueSetter): this
+	withOffset(offset?: ValueSetter): OffsetDate
 
 	get day(): number
 	get utcDay(): number
 
-	set time(arg: undefined | number | ((time: number) => number | undefined))
+	set time(time: ValueSetter)
 	get time(): number
-	getTime(): number | ((time: number) => number | undefined)
-	setTime(time?: number | ((time: number) => number | undefined)): this
-	withTime(time?: number | ((time: number) => number | undefined)): OffsetDate
+	getTime(): number
+	setTime(time?: ValueSetter): this
+	withTime(time?: ValueSetter): OffsetDate
 }

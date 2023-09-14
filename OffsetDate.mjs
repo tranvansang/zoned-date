@@ -180,35 +180,31 @@ export default class OffsetDate extends Date {
 	}
 	set #utcWallclock(utcWallclock) {
 		super.setTime(utcWallclock.getTime() - this.#offset * ONE_HOUR)
-		// Date.prototype.setTime.call(this, utcWallclock.getTime() - this.#offset * ONE_HOUR)
 	}
 	#withUtcWallclock(utcWallclock) {
 		return new OffsetDate(utcWallclock.getTime() - this.#offset * ONE_HOUR, {offset: this.#offset})
 	}
 
 	get fullYear() {
-		return this.#utcWallclock.getUTCFullYear()
+		return this.getFullYear()
 	}
 	set fullYear(year) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof year === 'function') year = year(utcWallclock.getUTCFullYear())
-		if (year === undefined) return
-		utcWallclock.setUTCFullYear(year)
-		this.#utcWallclock = utcWallclock
+		this.setFullYear(year)
 	}
 	getFullYear() {
-		return this.fullYear
+		return this.#utcWallclock.getUTCFullYear()
 	}
 	setFullYear(year) {
-		this.fullYear = year
+		const utcWallclock = this.#utcWallclock
+		if (typeof year === 'function') year = year(utcWallclock.getUTCFullYear())
+		if (year !== undefined) {
+			utcWallclock.setUTCFullYear(year)
+			this.#utcWallclock = utcWallclock
+		}
 		return this
 	}
 	withFullYear(year) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof year === 'function') year = year(utcWallclock.getUTCFullYear())
-		if (year === undefined) return new OffsetDate(this)
-		utcWallclock.setUTCFullYear(year)
-		return this.#withUtcWallclock(utcWallclock)
+		return new OffsetDate(this).setFullYear(year)
 	}
 	get utcFullYear() {
 		return this.getUTCFullYear()
@@ -218,39 +214,33 @@ export default class OffsetDate extends Date {
 	}
 	setUTCFullYear(year) {
 		if (typeof year === 'function') year = year(this.getUTCFullYear())
-		if (year === undefined) return this
-		super.setUTCFullYear(year)
+		if (year !== undefined) super.setUTCFullYear(year)
 		return this
 	}
 	withUTCFullYear(year) {
-		if (typeof year === 'function') year = year(this.utcFullYear)
-		if (year === undefined) return new OffsetDate(this)
 		return new OffsetDate(this).setUTCFullYear(year)
 	}
 
 	get month() {
-		return this.#utcWallclock.getUTCMonth()
+		return this.getMonth()
 	}
 	set month(month) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof month === 'function') month = month(utcWallclock.getUTCMonth())
-		if (month === undefined) return
-		utcWallclock.setUTCMonth(month)
-		this.#utcWallclock = utcWallclock
+		this.setMonth(month)
 	}
 	getMonth() {
-		return this.month
+		return this.#utcWallclock.getUTCMonth()
 	}
 	setMonth(month) {
-		this.month = month
+		const utcWallclock = this.#utcWallclock
+		if (typeof month === 'function') month = month(utcWallclock.getUTCMonth())
+		if (month !== undefined) {
+			utcWallclock.setUTCMonth(month)
+			this.#utcWallclock = utcWallclock
+		}
 		return this
 	}
 	withMonth(month) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof month === 'function') month = month(utcWallclock.getUTCMonth())
-		if (month === undefined) return new OffsetDate(this)
-		utcWallclock.setUTCMonth(month)
-		return this.#withUtcWallclock(utcWallclock)
+		return new OffsetDate(this).setMonth(month)
 	}
 	get utcMonth() {
 		return this.getUTCMonth()
@@ -260,13 +250,10 @@ export default class OffsetDate extends Date {
 	}
 	setUTCMonth(month) {
 		if (typeof month === 'function') month = month(this.getUTCMonth())
-		if (month === undefined) return this
-		super.setUTCMonth(month)
+		if (month !== undefined) super.setUTCMonth(month)
 		return this
 	}
 	withUTCMonth(month) {
-		if (typeof month === 'function') month = month(this.utcMonth)
-		if (month === undefined) return new OffsetDate(this)
 		return new OffsetDate(this).setUTCMonth(month)
 	}
 
@@ -414,47 +401,26 @@ export default class OffsetDate extends Date {
 		return new OffsetDate(this).setUTCSeconds(seconds, milliseconds)
 	}
 
-	get utcMilliseconds() {
-		return this.getUTCMilliseconds()
-	}
-	set utcMilliseconds(seconds) {
-		this.setUTCMilliseconds(seconds)
-	}
-	setUTCMilliseconds(seconds) {
-		if (typeof seconds === 'function') seconds = seconds(this.getUTCMilliseconds())
-		if (seconds === undefined) return this
-		super.setUTCMilliseconds(seconds)
-		return this
-	}
-	withUTCMilliseconds(seconds) {
-		if (typeof seconds === 'function') seconds = seconds(this.utcMilliseconds)
-		if (seconds === undefined) return new OffsetDate(this)
-		return new OffsetDate(this).setUTCMilliseconds(seconds)
-	}
-
 	get milliseconds() {
-		return this.#utcWallclock.getUTCMilliseconds()
+		return this.getMilliseconds()
 	}
 	set milliseconds(milliseconds) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(utcWallclock.getUTCMilliseconds())
-		if (milliseconds === undefined) return
-		utcWallclock.setUTCMilliseconds(milliseconds)
-		this.#utcWallclock = utcWallclock
+		this.setMilliseconds(milliseconds)
 	}
 	getMilliseconds() {
-		return this.milliseconds
+		return this.#utcWallclock.getUTCMilliseconds()
 	}
 	setMilliseconds(milliseconds) {
-		this.milliseconds = milliseconds
+		const utcWallclock = this.#utcWallclock
+		if (typeof milliseconds === 'function') milliseconds = milliseconds(utcWallclock.getUTCMilliseconds())
+		if (milliseconds !== undefined) {
+			utcWallclock.setUTCMilliseconds(milliseconds)
+			this.#utcWallclock = utcWallclock
+		}
 		return this
 	}
 	withMilliseconds(milliseconds) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(utcWallclock.getUTCMilliseconds())
-		if (milliseconds === undefined) return new OffsetDate(this)
-		utcWallclock.setUTCMilliseconds(milliseconds)
-		return this.#withUtcWallclock(utcWallclock)
+		return new OffsetDate(this).setMilliseconds(milliseconds)
 	}
 	get utcMilliseconds() {
 		return this.getUTCMilliseconds()
@@ -463,64 +429,55 @@ export default class OffsetDate extends Date {
 		this.setUTCMilliseconds(milliseconds)
 	}
 	setUTCMilliseconds(milliseconds) {
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.getUTCMilliseconds())
-		if (milliseconds === undefined) return this
-		super.setUTCMilliseconds(milliseconds)
+		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.utcMilliseconds)
+		if (milliseconds !== undefined) super.setUTCMilliseconds(milliseconds)
 		return this
 	}
 	withUTCMilliseconds(milliseconds) {
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.utcMilliseconds)
-		if (milliseconds === undefined) return new OffsetDate(this)
 		return new OffsetDate(this).setUTCMilliseconds(milliseconds)
 	}
 
 	get timezoneOffset() {
-		return -this.#offset * 60
+		return this.getTimezoneOffset()
 	}
 	set timezoneOffset(offset) {
-		if (typeof offset === 'function') offset = offset(this.timezoneOffset)
-		if (offset === undefined) return
-		this.#offset = -offset / 60
+		this.setTimezoneOffset(offset)
 	}
 	getTimezoneOffset() {
-		return this.timezoneOffset
+		return -this.#offset * 60
 	}
 	setTimezoneOffset(offset) {
-		this.timezoneOffset = offset
+		if (typeof offset === 'function') offset = offset(this.timezoneOffset)
+		if (offset !== undefined) this.#offset = -offset / 60
 		return this
 	}
 	withTimezoneOffset(offset) {
-		if (typeof offset === 'function') offset = offset(this.timezoneOffset)
-		if (offset === undefined) return new OffsetDate(this)
-		return new OffsetDate(this.getTime(), {offset: -offset / 60})
+		return new OffsetDate(this).setTimezoneOffset(offset)
 	}
 
 	get offset() {
 		return this.#offset
 	}
 	set offset(offset) {
-		if (typeof offset === 'function') offset = offset(this.#offset)
-		if (offset === undefined) return
-		this.#offset = offset
+		this.setOffset(offset)
 	}
 	getOffset() {
 		return this.#offset
 	}
 	setOffset(offset) {
-		this.offset = offset
+		if (typeof offset === 'function') offset = offset(this.#offset)
+		if (offset !== undefined) this.#offset = offset
 		return this
 	}
 	withOffset(offset) {
-		if (typeof offset === 'function') offset = offset(this.#offset)
-		if (offset === undefined) return new OffsetDate(this)
-		return new OffsetDate(this.getTime(), {offset})
+		return new OffsetDate(this).setOffset(offset)
 	}
 
 	get day() {
-		return this.#utcWallclock.getUTCDay()
+		return this.getDay()
 	}
 	getDay() {
-		return this.day
+		return this.#utcWallclock.getUTCDay()
 	}
 	get utcDay() {
 		return this.getUTCDay()
@@ -533,18 +490,14 @@ export default class OffsetDate extends Date {
 		return this.getTime()
 	}
 	set time(time) {
-		if (typeof time === 'function') time = time(this.getTime())
-		if (time === undefined) return
-		super.setTime(time)
-		// Date.prototype.setTime.call(this, time)
+		this.setTime(time)
 	}
 	setTime(time) {
-		this.time = time
+		if (typeof time === 'function') time = time(this.getTime())
+		if (time !== undefined) super.setTime(time)
 		return this
 	}
 	withTime(time) {
-		if (typeof time === 'function') time = time(this.getTime())
-		if (time === undefined) return new OffsetDate(this)
-		return new OffsetDate(time, {offset: this.#offset})
+		return new OffsetDate(this).setTime(time)
 	}
 }
