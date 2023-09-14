@@ -1,6 +1,6 @@
 {
   "name": "zoned-date",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Timezone-aware better Javascript Date",
   "main": "index.cjs",
   "type": "module",
@@ -37,6 +37,7 @@
     "ZonedDate.d.ts"
   ],
   "repository": "github:tranvansang/zoned-date",
+  "homepage": "https://github.com/tranvansang/zoned-date",
   "author": "Sang Tran <t@sang.jp>",
   "license": "MIT",
   "packageManager": "yarn@3.6.3"

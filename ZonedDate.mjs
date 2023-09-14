@@ -207,12 +207,6 @@ export default class ZonedDate {
 		this.#_timezone = timezone
 	}
 
-	get timezone() {
-		return this.getTimezone()
-	}
-	set timezone(timezone) {
-		this.setTimezone(timezone)
-	}
 	getTimezone() {
 		return this.#_timezone
 	}
@@ -225,16 +219,7 @@ export default class ZonedDate {
 		}
 		return this
 	}
-	withTimezone(timezone) {
-		return new ZonedDate(this).setTimezone(timezone)
-	}
 
-	get disambiguation() {
-		return this.getDisambiguation()
-	}
-	set disambiguation(disambiguation) {
-		this.setDisambiguation(disambiguation)
-	}
 	getDisambiguation() {
 		return this.#_disambiguation
 	}
@@ -242,9 +227,6 @@ export default class ZonedDate {
 		if (typeof disambiguation === 'function') disambiguation = disambiguation(this.#_disambiguation)
 		if (disambiguation !== undefined) this.#disambiguation = disambiguation
 		return this
-	}
-	withDisambiguation(disambiguation) {
-		return new ZonedDate(this).setDisambiguation(disambiguation)
 	}
 
 	#getWallclock(date) {
@@ -281,12 +263,6 @@ export default class ZonedDate {
 		return Math.round((Date.UTC(...this.#getWallclock(date)) - date.getTime()) / 60_000) / 60
 	}
 
-	get fullYear() {
-		return this.getFullYear()
-	}
-	set fullYear(year) {
-		this.setFullYear(year)
-	}
 	getFullYear() {
 		return this.#utc.getUTCFullYear()
 	}
@@ -294,15 +270,6 @@ export default class ZonedDate {
 		if (typeof year === 'function') year = year(this.#utc.getUTCFullYear())
 		if (year !== undefined) this.#utc.setUTCFullYear(year)
 		return this
-	}
-	withFullYear(year) {
-		return new ZonedDate(this).setFullYear(year)
-	}
-	get utcFullYear() {
-		return this.getUTCFullYear()
-	}
-	set utcFullYear(year) {
-		this.setUTCFullYear(year)
 	}
 	getUTCFullYear() {
 		return this.#dateTime.getFullYear()
@@ -316,16 +283,6 @@ export default class ZonedDate {
 		}
 		return this
 	}
-	withUTCFullYear(year) {
-		return new ZonedDate(this).setUTCFullYear(year)
-	}
-
-	get month() {
-		return this.getMonth()
-	}
-	set month(month) {
-		this.setMonth(month)
-	}
 	getMonth() {
 		return this.#utc.getUTCMonth()
 	}
@@ -333,15 +290,6 @@ export default class ZonedDate {
 		if (typeof month === 'function') month = month(this.#utc.getUTCMonth())
 		if (month !== undefined) this.#utc.setUTCMonth(month)
 		return this
-	}
-	withMonth(month) {
-		return new ZonedDate(this).setMonth(month)
-	}
-	get utcMonth() {
-		return this.getUTCMonth()
-	}
-	set utcMonth(month) {
-		this.setUTCMonth(month)
 	}
 	getUTCMonth() {
 		return this.#dateTime.getUTCMonth()
@@ -355,16 +303,6 @@ export default class ZonedDate {
 		}
 		return this
 	}
-	withUTCMonth(month) {
-		return new ZonedDate(this).setUTCMonth(month)
-	}
-
-	get date() {
-		return this.getDate()
-	}
-	set date(date) {
-		this.setDate(date)
-	}
 	getDate() {
 		return this.#utc.getUTCDate()
 	}
@@ -373,15 +311,6 @@ export default class ZonedDate {
 		if (date !== undefined) this.#utc.setUTCDate(date)
 		this.setHours(hours, minutes, seconds, milliseconds)
 		return this
-	}
-	withDate(date, hours, minutes, seconds, milliseconds) {
-		return new ZonedDate(this).setDate(date, hours, minutes, seconds, milliseconds)
-	}
-	get utcDate() {
-		return this.getUTCDate()
-	}
-	set utcDate(date) {
-		this.setUTCDate(date)
 	}
 	getUTCDate() {
 		return this.#dateTime.getUTCDate()
@@ -396,16 +325,6 @@ export default class ZonedDate {
 		this.setUTCHours(hours, minutes, seconds, milliseconds)
 		return this
 	}
-	withUTCDate(hours, minutes, seconds, milliseconds) {
-		return new ZonedDate(this).setUTCDate(hours, minutes, seconds, milliseconds)
-	}
-
-	get hours() {
-		return this.getHours()
-	}
-	set hours(hours) {
-		this.setHours(hours)
-	}
 	getHours() {
 		return this.#utc.getUTCHours()
 	}
@@ -414,15 +333,6 @@ export default class ZonedDate {
 		if (hours !== undefined) this.#utc.setUTCHours(hours)
 		this.setMinutes(minutes, seconds, milliseconds)
 		return this
-	}
-	withHours(hours, minutes, seconds, milliseconds) {
-		return new ZonedDate(this).setHours(hours, minutes, seconds, milliseconds)
-	}
-	get utcHours() {
-		return this.getUTCHours()
-	}
-	set utcHours(hours) {
-		this.setUTCHours(hours)
 	}
 	getUTCHours() {
 		return this.#dateTime.getUTCHours()
@@ -437,16 +347,6 @@ export default class ZonedDate {
 		this.setUTCMinutes(minutes, seconds, milliseconds)
 		return this
 	}
-	withUTCHours(hours, minutes, seconds, milliseconds) {
-		return new ZonedDate(this).setUTCHours(hours, minutes, seconds, milliseconds)
-	}
-
-	get minutes() {
-		return this.getMinutes()
-	}
-	set minutes(minutes) {
-		this.setMinutes(minutes)
-	}
 	getMinutes() {
 		return this.#utc.getUTCMinutes()
 	}
@@ -455,15 +355,6 @@ export default class ZonedDate {
 		if (minutes !== undefined) this.#utc.setUTCMinutes(minutes)
 		this.setSeconds(seconds, milliseconds)
 		return this
-	}
-	withMinutes(minutes, seconds, milliseconds) {
-		return new ZonedDate(this).setMinutes(minutes, seconds, milliseconds)
-	}
-	get utcMinutes() {
-		return this.getUTCMinutes()
-	}
-	set utcMinutes(minutes) {
-		this.setUTCMinutes(minutes)
 	}
 	getUTCMinutes() {
 		return this.#dateTime.getUTCMinutes()
@@ -478,16 +369,6 @@ export default class ZonedDate {
 		this.setUTCSeconds(seconds, milliseconds)
 		return this
 	}
-	withUTCMinutes(minutes, seconds, milliseconds) {
-		return new ZonedDate(this).setUTCMinutes(minutes, seconds, milliseconds)
-	}
-
-	get seconds() {
-		return this.getSeconds()
-	}
-	set seconds(seconds) {
-		this.setSeconds(seconds)
-	}
 	getSeconds() {
 		return this.#utc.getUTCSeconds()
 	}
@@ -496,15 +377,6 @@ export default class ZonedDate {
 		if (seconds !== undefined) this.#utc.setUTCSeconds(seconds)
 		this.setMilliseconds(milliseconds)
 		return this
-	}
-	withSeconds(seconds, milliseconds) {
-		return new ZonedDate(this).setSeconds(seconds, milliseconds)
-	}
-	get utcSeconds() {
-		return this.getUTCSeconds()
-	}
-	set utcSeconds(seconds) {
-		this.setUTCSeconds(seconds)
 	}
 	getUTCSeconds() {
 		return this.#dateTime.getUTCSeconds()
@@ -519,16 +391,6 @@ export default class ZonedDate {
 		this.setUTCMilliseconds(milliseconds)
 		return this
 	}
-	withUTCSeconds(seconds, milliseconds) {
-		return new ZonedDate(this).setUTCSeconds(seconds, milliseconds)
-	}
-
-	get milliseconds() {
-		return this.getMilliseconds()
-	}
-	set milliseconds(milliseconds) {
-		this.setMilliseconds(milliseconds)
-	}
 	getMilliseconds() {
 		return this.#utc.getUTCMilliseconds()
 	}
@@ -536,15 +398,6 @@ export default class ZonedDate {
 		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.#utc.getUTCMilliseconds())
 		if (milliseconds !== undefined) this.#utc.setUTCMilliseconds(milliseconds)
 		return this
-	}
-	withMilliseconds(milliseconds) {
-		return new ZonedDate(this).setMilliseconds(milliseconds)
-	}
-	get utcMilliseconds() {
-		return this.getUTCMilliseconds()
-	}
-	set utcMilliseconds(milliseconds) {
-		this.setUTCMilliseconds(milliseconds)
 	}
 	getUTCMilliseconds() {
 		return this.#dateTime.getUTCMilliseconds()
@@ -558,10 +411,6 @@ export default class ZonedDate {
 		}
 		return this
 	}
-	withUTCMilliseconds(milliseconds) {
-		return new ZonedDate(this).setUTCMilliseconds(milliseconds)
-	}
-
 	get timezoneOffset() {
 		return this.getTimezoneOffset()
 	}
@@ -649,12 +498,6 @@ export default class ZonedDate {
 			// 'later' or 'compatible'
 			: [Math.min(date3.getTime(), date2.getTime()), 1]
 	}
-	get time() {
-		return this.getTime()
-	}
-	set time(time) {
-		this.setTime(time)
-	}
 	getTime() {
 		return this.#getTime()[0]
 	}
@@ -666,9 +509,6 @@ export default class ZonedDate {
 		}
 		return this
 	}
-	withTime(time) {
-		return new ZonedDate(this).setTime(time)
-	}
 
 	toDate() {
 		return this.#dateTime
@@ -676,38 +516,57 @@ export default class ZonedDate {
 	get #dateTime() {
 		return new Date(this.time)
 	}
-	[Symbol.toPrimitive](...args) {
-		return Date.prototype[Symbol.toPrimitive].call(this.#dateTime, ...args)
-	}
-	toDateString(...args) {
-		return Date.prototype.toDateString.call(this.#dateTime, ...args)
-	}
-
-	toISOString(...args) {
-		return Date.prototype.toISOString.call(this.#dateTime, ...args)
-	}
-	toJSON(...args) {
-		return Date.prototype.toJSON.call(this.#dateTime, ...args)
-	}
-	toLocaleDateString(...args) {
-		return Date.prototype.toLocaleDateString.call(this.#dateTime, ...args)
-	}
-	toLocaleString(...args) {
-		return Date.prototype.toLocaleString.call(this.#dateTime, ...args)
-	}
-	toLocaleTimeString(...args) {
-		return Date.prototype.toLocaleTimeString.call(this.#dateTime, ...args)
-	}
-	toString(...args) {
-		return Date.prototype.toString.call(this.#dateTime, ...args)
-	}
-	toTimeString(...args) {
-		return Date.prototype.toTimeString.call(this.#dateTime, ...args)
-	}
-	toUTCString(...args) {
-		return Date.prototype.toUTCString.call(this.#dateTime, ...args)
-	}
-	valueOf(...args) {
-		return Date.prototype.valueOf.call(this.#dateTime, ...args)
-	}
 }
+
+for (const name of [
+	'timezone',
+	'disambiguation',
+	'fullYear',
+	'utcFullYear',
+	'month',
+	'utcMonth',
+	'date',
+	'utcDate',
+	'hours',
+	'utcHours',
+	'minutes',
+	'utcMinutes',
+	'seconds',
+	'utcSeconds',
+	'milliseconds',
+	'utcMilliseconds',
+	'time',
+]) {
+	const capitalized = name.startsWith('utc')
+		? 'UTC' + name.slice('utc'.length)
+		: name[0].toUpperCase() + name.slice(1)
+	Object.defineProperty(ZonedDate.prototype, name, {
+		get() {
+			return this[`get${capitalized}`]()
+		},
+		set(value) {
+			this[`set${capitalized}`](value)
+		}
+	})
+	Object.assign(ZonedDate.prototype, {
+		[`with${capitalized}`]() {
+			return new ZonedDate(this)[`set${capitalized}`](...arguments)
+		}
+	})
+}
+
+for (const name of [
+	Symbol.toPrimitive,
+	'toDateString',
+	'toISOString',
+	'toJSON',
+	'toLocaleDateString',
+	'toLocaleString',
+	'toLocaleTimeString',
+	'toString',
+	'toTimeString',
+	'toUTCString',
+	'valueOf',
+]) Object.assign(ZonedDate.prototype, {
+	[name]: Date.prototype[name]
+})
