@@ -16,6 +16,17 @@ describe('OffsetDate', () => {
 		assert.strictEqual(date.offset, 7.5)
 		assert.strictEqual(date.timezoneOffset, -7.5 * 60)
 	})
+	test('getter setter', () => {
+		const date = new OffsetDate('2020-01-01T00:00:00.000', {offset: 7.5})
+		assert.strictEqual(date.fullYear, 2020)
+		assert.strictEqual(date.getFullYear(), 2020)
+		assert.strictEqual(date.withFullYear(2021).fullYear, 2021)
+		assert.strictEqual(date.utcFullYear, 2019)
+		assert.strictEqual(date.getUTCFullYear(), 2019)
+		assert.strictEqual(date.withUTCFullYear(2021).utcFullYear, 2021)
+		date.fullYear = 2022
+		assert.strictEqual(date.fullYear, 2022)
+	})
 	test('hour parse', () => {
 		const date = new OffsetDate('02:00', {offset: 7})
 		assert.strictEqual(date.hours, 2)
