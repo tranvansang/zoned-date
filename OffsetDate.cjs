@@ -182,530 +182,300 @@ module.exports = class OffsetDate extends Date {
 	}
 	set #utcWallclock(utcWallclock) {
 		super.setTime(utcWallclock.getTime() - this.#offset * ONE_HOUR)
-		// Date.prototype.setTime.call(this, utcWallclock.getTime() - this.#offset * ONE_HOUR)
 	}
-	#withUtcWallclock(utcWallclock) {
-		return new OffsetDate(utcWallclock.getTime() - this.#offset * ONE_HOUR, {offset: this.#offset})
-	}
-
 	get fullYear() {
-		return this.#utcWallclock.getUTCFullYear()
+		return this.getFullYear()
 	}
-	/**
-	 * @param {undefined | number | ((year: number) => number | undefined)} year
-	 */
 	set fullYear(year) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof year === 'function') year = year(utcWallclock.getUTCFullYear())
-		if (year === undefined) return
-		utcWallclock.setUTCFullYear(year)
-		this.#utcWallclock = utcWallclock
+		this.setFullYear(year)
 	}
 	getFullYear() {
-		return this.fullYear
+		return this.#utcWallclock.getUTCFullYear()
 	}
-	/**
-	 * @param {undefined | number | ((year: number) => number | undefined)} year
-	 * @returns {OffsetDate}
-	 */
 	setFullYear(year) {
-		this.fullYear = year
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((year: number) => number | undefined)} year
-	 * @returns {OffsetDate}
-	 */
-	withFullYear(year) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof year === 'function') year = year(utcWallclock.getUTCFullYear())
-		if (year === undefined) return new OffsetDate(this)
-		utcWallclock.setUTCFullYear(year)
-		return this.#withUtcWallclock(utcWallclock)
+		if (year !== undefined) {
+			utcWallclock.setUTCFullYear(year)
+			this.#utcWallclock = utcWallclock
+		}
+		return this
+	}
+	withFullYear(year) {
+		return new OffsetDate(this).setFullYear(year)
 	}
 	get utcFullYear() {
 		return this.getUTCFullYear()
 	}
-	/**
-	 * @param {undefined | number | ((year: number) => number | undefined)} year
-	 */
 	set utcFullYear(year) {
 		this.setUTCFullYear(year)
 	}
-	/**
-	 * @param {undefined | number | ((year: number) => number | undefined)} year
-	 * @returns {OffsetDate}
-	 */
 	setUTCFullYear(year) {
 		if (typeof year === 'function') year = year(this.getUTCFullYear())
-		if (year === undefined) return this
-		super.setUTCFullYear(year)
+		if (year !== undefined) super.setUTCFullYear(year)
 		return this
 	}
-	/**
-	 * @param {undefined | number | ((year: number) => number | undefined)} year
-	 * @returns {OffsetDate}
-	 */
 	withUTCFullYear(year) {
-		if (typeof year === 'function') year = year(this.utcFullYear)
-		if (year === undefined) return new OffsetDate(this)
 		return new OffsetDate(this).setUTCFullYear(year)
 	}
 
 	get month() {
-		return this.#utcWallclock.getUTCMonth()
+		return this.getMonth()
 	}
-	/**
-	 * @param {undefined | number | ((month: number) => number | undefined)} month
-	 */
 	set month(month) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof month === 'function') month = month(utcWallclock.getUTCMonth())
-		if (month === undefined) return
-		utcWallclock.setUTCMonth(month)
-		this.#utcWallclock = utcWallclock
+		this.setMonth(month)
 	}
 	getMonth() {
-		return this.month
+		return this.#utcWallclock.getUTCMonth()
 	}
-	/**
-	 * @param {undefined | number | ((month: number) => number | undefined)} month
-	 * @returns {OffsetDate}
-	 */
 	setMonth(month) {
-		this.month = month
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((month: number) => number | undefined)} month
-	 * @returns {OffsetDate}
-	 */
-	withMonth(month) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof month === 'function') month = month(utcWallclock.getUTCMonth())
-		if (month === undefined) return new OffsetDate(this)
-		utcWallclock.setUTCMonth(month)
-		return this.#withUtcWallclock(utcWallclock)
+		if (month !== undefined) {
+			utcWallclock.setUTCMonth(month)
+			this.#utcWallclock = utcWallclock
+		}
+		return this
+	}
+	withMonth(month) {
+		return new OffsetDate(this).setMonth(month)
 	}
 	get utcMonth() {
 		return this.getUTCMonth()
 	}
-	/**
-	 * @param {undefined | number | ((month: number) => number | undefined)} month
-	 */
 	set utcMonth(month) {
 		this.setUTCMonth(month)
 	}
-	/**
-	 * @param {undefined | number | ((month: number) => number | undefined)} month
-	 * @returns {OffsetDate}
-	 */
 	setUTCMonth(month) {
 		if (typeof month === 'function') month = month(this.getUTCMonth())
-		if (month === undefined) return this
-		super.setUTCMonth(month)
+		if (month !== undefined) super.setUTCMonth(month)
 		return this
 	}
-	/**
-	 * @param {undefined | number | ((month: number) => number | undefined)} month
-	 * @returns {OffsetDate}
-	 */
 	withUTCMonth(month) {
-		if (typeof month === 'function') month = month(this.utcMonth)
-		if (month === undefined) return new OffsetDate(this)
 		return new OffsetDate(this).setUTCMonth(month)
 	}
 
 	get date() {
-		return this.#utcWallclock.getUTCDate()
+		return this.getDate()
 	}
-	/**
-	 * @param {undefined | number | ((date: number) => number | undefined)} date
-	 */
 	set date(date) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof date === 'function') date = date(utcWallclock.getUTCDate())
-		if (date === undefined) return
-		utcWallclock.setUTCDate(date)
-		this.#utcWallclock = utcWallclock
+		this.setDate(date)
 	}
 	getDate() {
-		return this.date
+		return this.#utcWallclock.getUTCDate()
 	}
-	/**
-	 * @param {undefined | number | ((date: number) => number | undefined)} date
-	 * @returns {OffsetDate}
-	 */
-	setDate(date) {
-		this.date = date
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((date: number) => number | undefined)} date
-	 * @returns {OffsetDate}
-	 */
-	withDate(date) {
+	setDate(date, hours, minutes, seconds, milliseconds) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof date === 'function') date = date(utcWallclock.getUTCDate())
-		if (date === undefined) return new OffsetDate(this)
-		utcWallclock.setUTCDate(date)
-		return this.#withUtcWallclock(utcWallclock)
+		if (date !== undefined) {
+			utcWallclock.setUTCDate(date)
+			this.#utcWallclock = utcWallclock
+		}
+		return this.setHours(hours, minutes, seconds, milliseconds)
+	}
+	withDate(date, hours, minutes, seconds, milliseconds) {
+		return new OffsetDate(this).setDate(date, hours, minutes, seconds, milliseconds)
 	}
 	get utcDate() {
 		return this.getUTCDate()
 	}
-	/**
-	 * @param {undefined | number | ((date: number) => number | undefined)} date
-	 */
 	set utcDate(date) {
 		this.setUTCDate(date)
 	}
-	/**
-	 * @param {undefined | number | ((date: number) => number | undefined)} date
-	 * @returns {OffsetDate}
-	 */
-	setUTCDate(date) {
-		if (typeof date === 'function') date = date(this.getUTCDate())
-		if (date === undefined) return this
-		super.setUTCDate(date)
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((date: number) => number | undefined)} date
-	 * @returns {OffsetDate}
-	 */
-	withUTCDate(date) {
+	setUTCDate(date, hours, minutes, seconds, milliseconds) {
 		if (typeof date === 'function') date = date(this.utcDate)
-		if (date === undefined) return new OffsetDate(this)
-		return new OffsetDate(this).setUTCDate(date)
+		if (date !== undefined) super.setUTCDate(date)
+		return this.setUTCHours(hours, minutes, seconds, milliseconds)
 	}
-
+	withUTCDate(date, hours, minutes, seconds, milliseconds) {
+		return new OffsetDate(this).setUTCDate(date, hours, minutes, seconds, milliseconds)
+	}
 
 	get hours() {
-		return this.#utcWallclock.getUTCHours()
+		return this.getHours()
 	}
-	/**
-	 * @param {undefined | number | ((hours: number) => number | undefined)} hours
-	 */
 	set hours(hours) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof hours === 'function') hours = hours(utcWallclock.getUTCHours())
-		if (hours === undefined) return
-		utcWallclock.setUTCHours(hours)
-		this.#utcWallclock = utcWallclock
+		this.setHours(hours)
 	}
 	getHours() {
-		return this.hours
+		return this.#utcWallclock.getUTCHours()
 	}
-	/**
-	 * @param {undefined | number | ((hours: number) => number | undefined)} hours
-	 * @returns {OffsetDate}
-	 */
-	setHours(hours) {
-		this.hours = hours
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((hours: number) => number | undefined)} hours
-	 * @returns {OffsetDate}
-	 */
-	withHours(hours) {
+	setHours(hours, minutes, seconds, milliseconds) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof hours === 'function') hours = hours(utcWallclock.getUTCHours())
-		if (hours === undefined) return new OffsetDate(this)
-		utcWallclock.setUTCHours(hours)
-		return this.#withUtcWallclock(utcWallclock)
+		if (hours !== undefined) {
+			utcWallclock.setUTCHours(hours)
+			this.#utcWallclock = utcWallclock
+		}
+		return this.setMinutes(minutes, seconds, milliseconds)
+	}
+	withHours(hours, minutes, seconds, milliseconds) {
+		return new OffsetDate(this).setHours(hours, minutes, seconds, milliseconds)
 	}
 	get utcHours() {
 		return this.getUTCHours()
 	}
-	/**
-	 * @param {undefined | number | ((hours: number) => number | undefined)} hours
-	 */
 	set utcHours(hours) {
 		this.setUTCHours(hours)
 	}
-	/**
-	 * @param {undefined | number | ((hours: number) => number | undefined)} hours
-	 * @returns {OffsetDate}
-	 */
-	setUTCHours(hours) {
-		if (typeof hours === 'function') hours = hours(this.getUTCHours())
-		if (hours === undefined) return this
-		super.setUTCHours(hours)
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((hours: number) => number | undefined)} hours
-	 * @returns {OffsetDate}
-	 */
-	withUTCHours(hours) {
+	setUTCHours(hours, minutes, seconds, milliseconds) {
 		if (typeof hours === 'function') hours = hours(this.utcHours)
-		if (hours === undefined) return new OffsetDate(this)
-		return new OffsetDate(this).setUTCHours(hours)
+		if (hours !== undefined) super.setUTCHours(hours)
+		return this.setUTCMinutes(minutes, seconds, milliseconds)
+	}
+	withUTCHours(hours, minutes, seconds, milliseconds) {
+		return new OffsetDate(this).setUTCHours(hours, minutes, seconds, milliseconds)
 	}
 
 	get minutes() {
-		return this.#utcWallclock.getUTCMinutes()
+		return this.getMinutes()
 	}
-	/**
-	 * @param {undefined | number | ((minutes: number) => number | undefined)} minutes
-	 */
 	set minutes(minutes) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof minutes === 'function') minutes = minutes(utcWallclock.getUTCMinutes())
-		if (minutes === undefined) return
-		utcWallclock.setUTCMinutes(minutes)
-		this.#utcWallclock = utcWallclock
+		this.setMinutes(minutes)
 	}
 	getMinutes() {
-		return this.minutes
+		return this.#utcWallclock.getUTCMinutes()
 	}
-	/**
-	 * @param {undefined | number | ((minutes: number) => number | undefined)} minutes
-	 * @returns {OffsetDate}
-	 */
-	setMinutes(minutes) {
-		this.minutes = minutes
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((minutes: number) => number | undefined)} minutes
-	 * @returns {OffsetDate}
-	 */
-	withMinutes(minutes) {
+	setMinutes(minutes, seconds, milliseconds) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof minutes === 'function') minutes = minutes(utcWallclock.getUTCMinutes())
-		if (minutes === undefined) return new OffsetDate(this)
-		utcWallclock.setUTCMinutes(minutes)
-		return this.#withUtcWallclock(utcWallclock)
+		if (minutes !== undefined) {
+			utcWallclock.setUTCMinutes(minutes)
+			this.#utcWallclock = utcWallclock
+		}
+		return this.setSeconds(seconds, milliseconds)
+	}
+	withMinutes(minutes, seconds, milliseconds) {
+		return new OffsetDate(this).setMinutes(minutes, seconds, milliseconds)
 	}
 	get utcMinutes() {
 		return this.getUTCMinutes()
 	}
-	/**
-	 * @param {undefined | number | ((minutes: number) => number | undefined)} minutes
-	 */
 	set utcMinutes(minutes) {
 		this.setUTCMinutes(minutes)
 	}
-	/**
-	 * @param {undefined | number | ((minutes: number) => number | undefined)} minutes
-	 * @returns {OffsetDate}
-	 */
-	setUTCMinutes(minutes) {
-		if (typeof minutes === 'function') minutes = minutes(this.getUTCMinutes())
-		if (minutes === undefined) return this
-		super.setUTCMinutes(minutes)
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((minutes: number) => number | undefined)} minutes
-	 * @returns {OffsetDate}
-	 */
-	withUTCMinutes(minutes) {
+	setUTCMinutes(minutes, seconds, milliseconds) {
 		if (typeof minutes === 'function') minutes = minutes(this.utcMinutes)
-		if (minutes === undefined) return new OffsetDate(this)
-		return new OffsetDate(this).setUTCMinutes(minutes)
+		if (minutes !== undefined) super.setUTCMinutes(minutes)
+		return this.setUTCSeconds(seconds, milliseconds)
+	}
+	withUTCMinutes(minutes, seconds, milliseconds) {
+		return new OffsetDate(this).setUTCMinutes(minutes, seconds, milliseconds)
 	}
 
 	get seconds() {
-		return this.#utcWallclock.getUTCSeconds()
+		return this.getSeconds()
 	}
-	/**
-	 * @param {undefined | number | ((seconds: number) => number | undefined)} seconds
-	 */
 	set seconds(seconds) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof seconds === 'function') seconds = seconds(utcWallclock.getUTCSeconds())
-		if (seconds === undefined) return
-		utcWallclock.setUTCSeconds(seconds)
-		this.#utcWallclock = utcWallclock
+		this.setSeconds(seconds)
 	}
 	getSeconds() {
-		return this.seconds
+		return this.#utcWallclock.getUTCSeconds()
 	}
-	/**
-	 * @param {undefined | number | ((seconds: number) => number | undefined)} seconds
-	 * @returns {OffsetDate}
-	 */
-	setSeconds(seconds) {
-		this.seconds = seconds
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((seconds: number) => number | undefined)} seconds
-	 * @returns {OffsetDate}
-	 */
-	withSeconds(seconds) {
+	setSeconds(seconds, milliseconds) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof seconds === 'function') seconds = seconds(utcWallclock.getUTCSeconds())
-		if (seconds === undefined) return new OffsetDate(this)
-		utcWallclock.setUTCSeconds(seconds)
-		return this.#withUtcWallclock(utcWallclock)
+		if (seconds !== undefined) {
+			utcWallclock.setUTCSeconds(seconds)
+			this.#utcWallclock = utcWallclock
+		}
+		return this.setMilliseconds(milliseconds)
 	}
-	get utcMilliseconds() {
-		return this.getUTCMilliseconds()
+	withSeconds(seconds, milliseconds) {
+		return new OffsetDate(this).setSeconds(seconds, milliseconds)
 	}
-	/**
-	 * @param {undefined | number | ((seconds: number) => number | undefined)} seconds
-	 */
-	set utcMilliseconds(seconds) {
-		this.setUTCMilliseconds(seconds)
+	get utcSeconds() {
+		return this.getUTCSeconds()
 	}
-	/**
-	 * @param {undefined | number | ((seconds: number) => number | undefined)} seconds
-	 * @returns {OffsetDate}
-	 */
-	setUTCMilliseconds(seconds) {
-		if (typeof seconds === 'function') seconds = seconds(this.getUTCMilliseconds())
-		if (seconds === undefined) return this
-		super.setUTCMilliseconds(seconds)
-		return this
+	set utcSeconds(seconds) {
+		this.setUTCSeconds(seconds)
 	}
-	/**
-	 * @param {undefined | number | ((seconds: number) => number | undefined)} seconds
-	 * @returns {OffsetDate}
-	 */
-	withUTCMilliseconds(seconds) {
-		if (typeof seconds === 'function') seconds = seconds(this.utcMilliseconds)
-		if (seconds === undefined) return new OffsetDate(this)
-		return new OffsetDate(this).setUTCMilliseconds(seconds)
+	setUTCSeconds(seconds, milliseconds) {
+		if (typeof seconds === 'function') seconds = seconds(this.utcSeconds)
+		if (seconds !== undefined) super.setUTCSeconds(seconds)
+		return this.setUTCMilliseconds(milliseconds)
+	}
+	withUTCSeconds(seconds, milliseconds) {
+		return new OffsetDate(this).setUTCSeconds(seconds, milliseconds)
 	}
 
 	get milliseconds() {
-		return this.#utcWallclock.getUTCMilliseconds()
+		return this.getMilliseconds()
 	}
-	/**
-	 * @param {undefined | number | ((milliseconds: number) => number | undefined)} milliseconds
-	 */
 	set milliseconds(milliseconds) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(utcWallclock.getUTCMilliseconds())
-		if (milliseconds === undefined) return
-		utcWallclock.setUTCMilliseconds(milliseconds)
-		this.#utcWallclock = utcWallclock
+		this.setMilliseconds(milliseconds)
 	}
 	getMilliseconds() {
-		return this.milliseconds
+		return this.#utcWallclock.getUTCMilliseconds()
 	}
-	/**
-	 * @param {undefined | number | ((milliseconds: number) => number | undefined)} milliseconds
-	 * @returns {OffsetDate}
-	 */
 	setMilliseconds(milliseconds) {
-		this.milliseconds = milliseconds
-		return this
-	}
-	/**
-	 * @param {undefined | number | ((milliseconds: number) => number | undefined)} milliseconds
-	 * @returns {OffsetDate}
-	 */
-	withMilliseconds(milliseconds) {
 		const utcWallclock = this.#utcWallclock
 		if (typeof milliseconds === 'function') milliseconds = milliseconds(utcWallclock.getUTCMilliseconds())
-		if (milliseconds === undefined) return new OffsetDate(this)
-		utcWallclock.setUTCMilliseconds(milliseconds)
-		return this.#withUtcWallclock(utcWallclock)
+		if (milliseconds !== undefined) {
+			utcWallclock.setUTCMilliseconds(milliseconds)
+			this.#utcWallclock = utcWallclock
+		}
+		return this
+	}
+	withMilliseconds(milliseconds) {
+		return new OffsetDate(this).setMilliseconds(milliseconds)
 	}
 	get utcMilliseconds() {
 		return this.getUTCMilliseconds()
 	}
-	/**
-	 * @param {undefined | number | ((milliseconds: number) => number | undefined)} milliseconds
-	 */
 	set utcMilliseconds(milliseconds) {
 		this.setUTCMilliseconds(milliseconds)
 	}
-	/**
-	 * @param {undefined | number | ((milliseconds: number) => number | undefined)} milliseconds
-	 * @returns {OffsetDate}
-	 */
 	setUTCMilliseconds(milliseconds) {
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.getUTCMilliseconds())
-		if (milliseconds === undefined) return this
-		super.setUTCMilliseconds(milliseconds)
+		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.utcMilliseconds)
+		if (milliseconds !== undefined) super.setUTCMilliseconds(milliseconds)
 		return this
 	}
-	/**
-	 * @param {undefined | number | ((milliseconds: number) => number | undefined)} milliseconds
-	 * @returns {OffsetDate}
-	 */
 	withUTCMilliseconds(milliseconds) {
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.utcMilliseconds)
-		if (milliseconds === undefined) return new OffsetDate(this)
 		return new OffsetDate(this).setUTCMilliseconds(milliseconds)
 	}
 
 	get timezoneOffset() {
-		return -this.#offset * 60
+		return this.getTimezoneOffset()
 	}
-	/**
-	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
-	 */
 	set timezoneOffset(offset) {
-		if (typeof offset === 'function') offset = offset(this.timezoneOffset)
-		if (offset === undefined) return
-		this.#offset = -offset / 60
+		this.setTimezoneOffset(offset)
 	}
 	getTimezoneOffset() {
-		return this.timezoneOffset
+		return -this.#offset * 60
 	}
-	/**
-	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
-	 * @returns {OffsetDate}
-	 */
 	setTimezoneOffset(offset) {
-		this.timezoneOffset = offset
+		if (typeof offset === 'function') offset = offset(this.timezoneOffset)
+		if (offset !== undefined) this.#offset = -offset / 60
 		return this
 	}
-	/**
-	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
-	 * @returns {OffsetDate}
-	 */
 	withTimezoneOffset(offset) {
-		if (typeof offset === 'function') offset = offset(this.timezoneOffset)
-		if (offset === undefined) return new OffsetDate(this)
-		return new OffsetDate(this.getTime(), {offset: -offset / 60})
+		return new OffsetDate(this).setTimezoneOffset(offset)
 	}
 
 	get offset() {
 		return this.#offset
 	}
-	/**
-	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
-	 */
 	set offset(offset) {
-		if (typeof offset === 'function') offset = offset(this.#offset)
-		if (offset === undefined) return
-		this.#offset = offset
+		this.setOffset(offset)
 	}
 	getOffset() {
 		return this.#offset
 	}
-	/**
-	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
-	 * @returns {OffsetDate}
-	 */
 	setOffset(offset) {
-		this.offset = offset
+		if (typeof offset === 'function') offset = offset(this.#offset)
+		if (offset !== undefined) this.#offset = offset
 		return this
 	}
-	/**
-	 * @param {undefined | number | ((offset: number) => number | undefined)} offset
-	 * @returns {OffsetDate}
-	 */
 	withOffset(offset) {
-		if (typeof offset === 'function') offset = offset(this.#offset)
-		if (offset === undefined) return new OffsetDate(this)
-		return new OffsetDate(this.getTime(), {offset})
+		return new OffsetDate(this).setOffset(offset)
 	}
 
 	get day() {
-		return this.#utcWallclock.getUTCDay()
+		return this.getDay()
 	}
 	getDay() {
-		return this.day
+		return this.#utcWallclock.getUTCDay()
 	}
 	get utcDay() {
 		return this.getUTCDay()
@@ -717,30 +487,15 @@ module.exports = class OffsetDate extends Date {
 	get time() {
 		return this.getTime()
 	}
-	/**
-	 * @param {undefined | number | ((time: number) => number | undefined)} time
-	 */
 	set time(time) {
-		if (typeof time === 'function') time = time(this.getTime())
-		if (time === undefined) return
-		super.setTime(time)
-		// Date.prototype.setTime.call(this, time)
+		this.setTime(time)
 	}
-	/**
-	 * @param {undefined | number | ((time: number) => number | undefined)} time
-	 * @returns {OffsetDate}
-	 */
 	setTime(time) {
-		this.time = time
+		if (typeof time === 'function') time = time(this.getTime())
+		if (time !== undefined) super.setTime(time)
 		return this
 	}
-	/**
-	 * @param {undefined | number | ((time: number) => number | undefined)} time
-	 * @returns {OffsetDate}
-	 */
 	withTime(time) {
-		if (typeof time === 'function') time = time(this.getTime())
-		if (time === undefined) return new OffsetDate(this)
-		return new OffsetDate(time, {offset: this.#offset})
+		return new OffsetDate(this).setTime(time)
 	}
 }
