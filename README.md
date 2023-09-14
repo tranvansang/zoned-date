@@ -176,6 +176,11 @@ In addition to `OffsetDate`, `ZonedDate` has:
 - `setTimezone(timezone?: string | ((timezone: string) => string | undefined)): this`.
 - `withTimezone(timezone?: string | ((timezone: string) => string | undefined)): ZonedDate`.
 
+- `get/set` `disambiguation`.
+- `getDisambiguation(): string`.
+- `setDisambiguation(disambiguation?: string | ((timezone: string) => string | undefined)): this`.
+- `withDisambiguation(disambiguation?: string | ((timezone: string) => string | undefined)): ZonedDate`.
+
 Besides, `ZonedDate` does not have methods to modify offset/offsetTimezone.
 
 ### Examples:
