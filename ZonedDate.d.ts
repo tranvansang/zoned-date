@@ -57,52 +57,52 @@ export default class ZonedDate {
 	set date(date: ValueSetter)
 	get date(): number
 	getDate(): number
-	setDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
-	withDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	setDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
+	withDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 	set utcDate(date: ValueSetter)
 	get utcDate(): number
-	setUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
-	withUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	setUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
+	withUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 
 	set hours(hours: ValueSetter)
 	get hours(): number
 	getHours(): number
-	setHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
-	withHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	setHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
+	withHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 	set utcHours(hours: ValueSetter)
 	get utcHours(): number
-	setUTCHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
-	withUTCHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	setUTCHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
+	withUTCHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 
 	set minutes(minutes: ValueSetter)
 	get minutes(): number
 	getMinutes(): number
-	setMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): this
-	withMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	setMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
+	withMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 	set utcMinutes(minutes: ValueSetter)
 	get utcMinutes(): number
-	setUTCMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): this
-	withUTCMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	setUTCMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
+	withUTCMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 
 	set seconds(seconds: ValueSetter)
 	get seconds(): number
 	getSeconds(): number
 	setSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this
-	withSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	withSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 	set utcSeconds(seconds: ValueSetter)
 	get utcSeconds(): number
 	setUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this
-	withUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	withUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): OffsetDate
 
 	set milliseconds(milliseconds: ValueSetter)
 	get milliseconds(): number
 	getMilliseconds(): number
 	setMilliseconds(milliseconds?: ValueSetter): this
-	withMilliseconds(milliseconds?: ValueSetter): ZonedDate
+	withMilliseconds(milliseconds?: ValueSetter): OffsetDate
 	set utcMilliseconds(milliseconds: ValueSetter)
 	get utcMilliseconds(): number
 	setUTCMilliseconds(milliseconds?: ValueSetter): this
-	withUTCMilliseconds(milliseconds?: ValueSetter): ZonedDate
+	withUTCMilliseconds(milliseconds?: ValueSetter): OffsetDate
 
 	get timezoneOffset(): number
 	getTimezoneOffset(): number
