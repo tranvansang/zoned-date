@@ -1,3 +1,4 @@
+type ValueSetter<T = number> = T | undefined | ((value: T) => T | undefined)
 export default class ZonedDate {
 	static UTC : typeof Date.UTC
 	static now : typeof Date.now
@@ -18,82 +19,82 @@ export default class ZonedDate {
 	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, miliseconds: number, options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
 
 	get timezone(): string
-	set timezone(timezone: undefined | string | ((timezone: string) => string | undefined))
+	set timezone(timezone: ValueSetter<string>)
 	getTimezone(): string
-	setTimezone(timezone?: string | ((timezone: string) => string | undefined)): this
-	withTimezone(timezone?: string | ((timezone: string) => string | undefined)): ZonedDate
+	setTimezone(timezone?: ValueSetter<string>): this
+	withTimezone(timezone?: ValueSetter<string>): ZonedDate
 
-	set fullYear(year: undefined | number | ((year: number) => number | undefined))
+	set fullYear(year: ValueSetter)
 	get fullYear(): number
-	setFullYear(year?: number | ((year: number) => number | undefined)): this
-	withFullYear(year?: number | ((year: number) => number | undefined)): ZonedDate
-	set utcFullYear(year: undefined | number | ((year: number) => number | undefined))
+	setFullYear(year?: ValueSetter): this
+	withFullYear(year?: ValueSetter): ZonedDate
+	set utcFullYear(year: ValueSetter)
 	get utcFullYear(): number
-	setUTCFullYear(year?: number | ((year: number) => number | undefined)): this
-	withUTCFullYear(year?: number | ((year: number) => number | undefined)): ZonedDate
+	setUTCFullYear(year?: ValueSetter): this
+	withUTCFullYear(year?: ValueSetter): ZonedDate
 
-	set month(arg: undefined | number | ((month: number) => number | undefined))
+	set month(month: ValueSetter)
 	get month(): number
-	getMonth(): number | ((month: number) => number | undefined)
-	setMonth(month?: number | ((month: number) => number | undefined)): this
-	withMonth(month?: number | ((month: number) => number | undefined)): ZonedDate
-	set utcMonth(arg: undefined | number | ((month: number) => number | undefined))
+	getMonth(): number
+	setMonth(month?: ValueSetter): this
+	withMonth(month?: ValueSetter): ZonedDate
+	set utcMonth(month: ValueSetter)
 	get utcMonth(): number
-	setUTCMonth(month?: number | ((month: number) => number | undefined)): this
-	withUTCMonth(month?: number | ((month: number) => number | undefined)): ZonedDate
+	setUTCMonth(month?: ValueSetter): this
+	withUTCMonth(month?: ValueSetter): ZonedDate
 
-	set date(arg: undefined | number | ((date: number) => number | undefined))
+	set date(date: ValueSetter)
 	get date(): number
-	getDate(): number | ((date: number) => number | undefined)
-	setDate(date?: number | ((date: number) => number | undefined)): this
-	withDate(date?: number | ((date: number) => number | undefined)): ZonedDate
-	set utcDate(arg: undefined | number | ((date: number) => number | undefined))
+	getDate(): number
+	setDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	set utcDate(date: ValueSetter)
 	get utcDate(): number
-	setUTCDate(date?: number | ((date: number) => number | undefined)): this
-	withUTCDate(date?: number | ((date: number) => number | undefined)): ZonedDate
+	setUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
 
-	set hours(arg: undefined | number | ((hours: number) => number | undefined))
+	set hours(hours: ValueSetter)
 	get hours(): number
-	getHours(): number | ((hours: number) => number | undefined)
-	setHours(hours?: number | ((hours: number) => number | undefined)): this
-	withHours(hours?: number | ((hours: number) => number | undefined)): ZonedDate
-	set utcHours(arg: undefined | number | ((hours: number) => number | undefined))
+	getHours(): number
+	setHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	set utcHours(hours: ValueSetter)
 	get utcHours(): number
-	setUTCHours(hours?: number | ((hours: number) => number | undefined)): this
-	withUTCHours(hours?: number | ((hours: number) => number | undefined)): ZonedDate
+	setUTCHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withUTCHours(hours?: ValueSetter, minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
 
-	set minutes(arg: undefined | number | ((minutes: number) => number | undefined))
+	set minutes(minutes: ValueSetter)
 	get minutes(): number
-	getMinutes(): number | ((minutes: number) => number | undefined)
-	setMinutes(minutes?: number | ((minutes: number) => number | undefined)): this
-	withMinutes(minutes?: number | ((minutes: number) => number | undefined)): ZonedDate
-	set utcMinutes(arg: undefined | number | ((minutes: number) => number | undefined))
+	getMinutes(): number
+	setMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	set utcMinutes(minutes: ValueSetter)
 	get utcMinutes(): number
-	setUTCMinutes(minutes?: number | ((minutes: number) => number | undefined)): this
-	withUTCMinutes(minutes?: number | ((minutes: number) => number | undefined)): ZonedDate
+	setUTCMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): this
+	withUTCMinutes(minutes?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
 
-	set seconds(arg: undefined | number | ((seconds: number) => number | undefined))
+	set seconds(seconds: ValueSetter)
 	get seconds(): number
-	getSeconds(): number | ((seconds: number) => number | undefined)
-	setSeconds(seconds?: number | ((seconds: number) => number | undefined)): this
-	withSeconds(seconds?: number | ((seconds: number) => number | undefined)): ZonedDate
-	set utcSeconds(arg: undefined | number | ((seconds: number) => number | undefined))
+	getSeconds(): number
+	setSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this
+	withSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	set utcSeconds(seconds: ValueSetter)
 	get utcSeconds(): number
-	setUTCSeconds(seconds?: number | ((seconds: number) => number | undefined)): this
-	withUTCSeconds(seconds?: number | ((seconds: number) => number | undefined)): ZonedDate
+	setUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this
+	withUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
 
-	set milliseconds(arg: undefined | number | ((milliseconds: number) => number | undefined))
+	set milliseconds(milliseconds: ValueSetter)
 	get milliseconds(): number
-	getMilliseconds(): number | ((milliseconds: number) => number | undefined)
-	setMilliseconds(milliseconds?: number | ((milliseconds: number) => number | undefined)): this
-	withMilliseconds(milliseconds?: number | ((milliseconds: number) => number | undefined)): ZonedDate
-	set utcMilliseconds(arg: undefined | number | ((milliseconds: number) => number | undefined))
+	getMilliseconds(): number
+	setMilliseconds(milliseconds?: ValueSetter): this
+	withMilliseconds(milliseconds?: ValueSetter): ZonedDate
+	set utcMilliseconds(milliseconds: ValueSetter)
 	get utcMilliseconds(): number
-	setUTCMilliseconds(milliseconds?: number | ((milliseconds: number) => number | undefined)): this
-	withUTCMilliseconds(milliseconds?: number | ((milliseconds: number) => number | undefined)): ZonedDate
+	setUTCMilliseconds(milliseconds?: ValueSetter): this
+	withUTCMilliseconds(milliseconds?: ValueSetter): ZonedDate
 
 	get timezoneOffset(): number
-	getTimezoneOffset(): number | ((offset: number) => number | undefined)
+	getTimezoneOffset(): number
 
 	get offset(): number
 	getOffset(): number
@@ -101,11 +102,11 @@ export default class ZonedDate {
 	get day(): number
 	get utcDay(): number
 
-	set time(arg: undefined | number | ((time: number) => number | undefined))
+	set time(time: ValueSetter)
 	get time(): number
-	getTime(): number | ((time: number) => number | undefined)
-	setTime(time?: number | ((time: number) => number | undefined)): this
-	withTime(time?: number | ((time: number) => number | undefined)): ZonedDate
+	getTime(): number
+	setTime(time?: ValueSetter): this
+	withTime(time?: ValueSetter): ZonedDate
 
 	toDate(): Date
 

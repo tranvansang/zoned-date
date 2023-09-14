@@ -181,10 +181,6 @@ export default class OffsetDate extends Date {
 	set #utcWallclock(utcWallclock) {
 		super.setTime(utcWallclock.getTime() - this.#offset * ONE_HOUR)
 	}
-	#withUtcWallclock(utcWallclock) {
-		return new OffsetDate(utcWallclock.getTime() - this.#offset * ONE_HOUR, {offset: this.#offset})
-	}
-
 	get fullYear() {
 		return this.getFullYear()
 	}
