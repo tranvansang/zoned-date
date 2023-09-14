@@ -1,18 +1,19 @@
 type ValueSetter = number | undefined | ((value: number) => number | undefined)
+type Options = {offset?: number}
 export default class OffsetDate extends Date {
 	static defaultOffset: number
 
-	constructor(options?: {offset?: number})
-	constructor(offsetDate: OffsetDate, options?: {offset?: number})
-	constructor(date: Date, options?: {offset?: number})
-	constructor(time: number, options?: {offset?: number})
-	constructor(dateStr: string, options?: {offset?: number})
-	constructor(fullYear: number, month: number, options?: {offset?: number})
-	constructor(fullYear: number, month: number, date: number, options?: {offset?: number})
-	constructor(fullYear: number, month: number, date: number, hours: number, options?: {offset?: number})
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, options?: {offset?: number})
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, options?: {offset?: number})
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, miliseconds: number, options?: {offset?: number})
+	constructor(options?: Options)
+	constructor(offsetDate: OffsetDate, options?: Options)
+	constructor(date: Date, options?: Options)
+	constructor(time: number, options?: Options)
+	constructor(dateStr: string, options?: Options)
+	constructor(fullYear: number, month: number, options?: Options)
+	constructor(fullYear: number, month: number, date: number, options?: Options)
+	constructor(fullYear: number, month: number, date: number, hours: number, options?: Options)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, options?: Options)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, options?: Options)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, miliseconds: number, options?: Options)
 
 	set fullYear(year: ValueSetter)
 	get fullYear(): number

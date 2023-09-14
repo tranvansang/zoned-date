@@ -1,22 +1,27 @@
 type ValueSetter<T = number> = T | undefined | ((value: T) => T | undefined)
+type Disambiguation = 'compatible' | 'earlier' | 'later' | 'reject'
+type Options = {
+	timezone?: string
+	disambiguation?: Disambiguation
+}
 export default class ZonedDate {
 	static UTC : typeof Date.UTC
 	static now : typeof Date.now
 	static parse: typeof Date.parse
 
 	static defaultTimezone: string
-	static defaultDisambiguation: 'compatible' | 'earlier' | 'later' | 'reject'
-	constructor(options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
-	constructor(zonedDate: ZonedDate, options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
-	constructor(date: Date, options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
-	constructor(time: number, options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
-	constructor(dateStr: string, options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
-	constructor(fullYear: number, month: number, options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
-	constructor(fullYear: number, month: number, date: number, options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
-	constructor(fullYear: number, month: number, date: number, hours: number, options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, miliseconds: number, options?: {timezone?: string; disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject'})
+	static defaultDisambiguation: Disambiguation
+	constructor(options?: Options)
+	constructor(zonedDate: ZonedDate, options?: Options)
+	constructor(date: Date, options?: Options)
+	constructor(time: number, options?: Options)
+	constructor(dateStr: string, options?: Options)
+	constructor(fullYear: number, month: number, options?: Options)
+	constructor(fullYear: number, month: number, date: number, options?: Options)
+	constructor(fullYear: number, month: number, date: number, hours: number, options?: Options)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, options?: Options)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, options?: Options)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, miliseconds: number, options?: Options)
 
 	get timezone(): string
 	set timezone(timezone: ValueSetter<string>)
