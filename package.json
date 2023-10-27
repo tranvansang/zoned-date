@@ -1,6 +1,6 @@
 {
   "name": "zoned-date",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Timezone-aware better Javascript Date",
   "main": "index.cjs",
   "type": "module",
