@@ -44,6 +44,67 @@ describe('OffsetDate', () => {
 		const todayGMT	= new Date(Date.now() - 3.5 * 60 * 60 * 1000)
 		assert.strictEqual(date.date, todayGMT.getUTCDate())
 	})
+	test('pg-node result parser', () => {
+		let date
+		const offset = -3
+		const now = new OffsetDate({offset})
+
+		// date: 1082
+		// 2023-10-05
+		date = new OffsetDate('2023-10-05', {offset})
+		assert.strictEqual(date.fullYear, 2023)
+		assert.strictEqual(date.month, 9)
+		assert.strictEqual(date.date, 5)
+		assert.strictEqual(date.hours, 0)
+		assert.strictEqual(date.minutes, 0)
+		assert.strictEqual(date.seconds, 0)
+		assert.strictEqual(date.milliseconds, 0)
+
+		// time: 1083
+		// 17:00:00
+		date = new OffsetDate('17:00:00', {offset})
+		assert.strictEqual(date.fullYear, now.fullYear)
+		assert.strictEqual(date.month, now.month)
+		assert.strictEqual(date.date, now.date)
+		assert.strictEqual(date.hours, 17)
+		assert.strictEqual(date.minutes, 0)
+		assert.strictEqual(date.seconds, 0)
+		assert.strictEqual(date.milliseconds, 0)
+
+		// timetz: 1266
+		// 03:20:00+00
+		date = new OffsetDate('03:20:00+11', {offset})
+		assert.strictEqual(date.fullYear, now.fullYear)
+		assert.strictEqual(date.month, now.month)
+		assert.strictEqual(date.date, now.date)
+		assert.strictEqual(date.withOffset(11).hours, 3)
+		assert.strictEqual(date.withOffset(11).minutes, 20)
+		assert.strictEqual(date.withOffset(11).seconds, 0)
+		assert.strictEqual(date.withOffset(11).milliseconds, 0)
+
+		// timestamp: 1114
+		// 2023-10-29 01:44:45
+		date = new OffsetDate('2023-10-29 01:44:45', {offset})
+		assert.strictEqual(date.fullYear, 2023)
+		assert.strictEqual(date.month, 9)
+		assert.strictEqual(date.date, 29)
+		assert.strictEqual(date.hours, 1)
+		assert.strictEqual(date.minutes, 44)
+		assert.strictEqual(date.seconds, 45)
+		assert.strictEqual(date.milliseconds, 0)
+
+		// timestamptz: 1184
+		// 2023-10-25 01:44:59.32+00
+		date = new OffsetDate('2023-10-25 01:44:59.32+11', {offset}).withOffset(11)
+		assert.strictEqual(date.fullYear, 2023)
+		assert.strictEqual(date.month, 9)
+		assert.strictEqual(date.date, 25)
+		assert.strictEqual(date.hours, 1)
+		assert.strictEqual(date.minutes, 44)
+		assert.strictEqual(date.seconds, 59)
+		assert.strictEqual(date.milliseconds, 320)
+
+	})
 	test('get today: tricky', () => {
 		let date
 

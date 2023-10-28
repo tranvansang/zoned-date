@@ -7,16 +7,16 @@ function parseString(str) {
 
 	Some rules for implementation:
 	- Date-only does not have time zone.
-	- Time-only can start with T or not.
+	- Time-only can start with T or space or not.
 	- Timezone part must start with Z or + or -.
 
 	Implementation:
 	Step 0: pre-processing
 	- Convert to uppercase.
-	- If first char is T, remove this char.
+	- If first char is T or space, remove this char.
 
 	Step 1: determine parts
-	- Split by T. Must have 1 or 2 parts.
+	- If contains 'T', split by T, else split by space. Must have 1 or 2 parts.
 	- If 2 part, first part is date, second part is time.
 	- Otherwise, (have 1 part)
 		- If match /^\d{4}/, it is date.
@@ -47,10 +47,10 @@ function parseString(str) {
 
 	// step 0
 	str = str.toUpperCase()
-	if (str.startsWith('T')) str = str.slice(1)
+	if (str.startsWith('T') || str.startsWith(' ')) str = str.slice(1)
 
 	// step 1
-	const parts = str.split('T')
+	const parts = str.includes('T') ? str.split('T') : str.split(' ')
 	if (parts.length > 2) throw new Error('Invalid date string')
 	let dateStr, timeAndZoneStr
 	if (parts.length === 2) {

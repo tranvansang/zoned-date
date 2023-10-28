@@ -4,10 +4,10 @@ const ONE_HOUR = 60 * 60_000
 function parseString(str) {
 	// step 0
 	str = str.toUpperCase()
-	if (str.startsWith('T')) str = str.slice(1)
+	if (str.startsWith('T') || str.startsWith(' ')) str = str.slice(1)
 
 	// step 1
-	const parts = str.split('T')
+	const parts = str.includes('T') ? str.split('T') : str.split(' ')
 	if (parts.length > 2) throw new Error('Invalid date string')
 	let dateStr, timeAndZoneStr
 	if (parts.length === 2) {
