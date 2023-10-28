@@ -3,6 +3,10 @@ import assert from 'node:assert'
 import test, {describe} from 'node:test'
 import ZonedDate from './ZonedDate.mjs'
 
+function day(n) {
+	return n * 24 * 60 * 60 * 1000
+}
+
 describe('OffsetDate', () => {
 	test('OffsetDate', () => {
 		const date = new OffsetDate(Date.UTC(2020, 1, 2, 3, 4, 5, 6), {offset: 7.5})
@@ -163,20 +167,20 @@ describe('OffsetDate', () => {
 
 					date = new OffsetDate(`${timeStr}Z`, {offset})
 					assert.strictEqual(date.hours, ((i + Math.floor(offset)) % 24 + 24) % 24)
-					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+					assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 
 					date = new OffsetDate(timeStr, {offset})
 					assert.strictEqual(date.hours, i % 24)
-					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+					assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 
 					date = new OffsetDate(`${timeStr}${offsetToZoneStr(offset)}`, {offset})
 					assert.strictEqual(date.hours, i % 24)
-					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+					assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 
 					for (const parsedOffset of offsetList) {
 						date = new OffsetDate(`${timeStr}${offsetToZoneStr(parsedOffset)}`, {offset})
 						assert.strictEqual(date.hours, ((i + Math.floor(offset - parsedOffset)) % 24 + 24) % 24)
-						assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+						assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 					}
 				}
 			}
@@ -338,20 +342,20 @@ describe('zoned date', () => {
 
 					date = new ZonedDate(`${timeStr}Z`, {timezone})
 					assert.strictEqual(date.hours, ((i + Math.floor(offset)) % 24 + 24) % 24)
-					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+					assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 
 					date = new ZonedDate(timeStr, {timezone})
 					assert.strictEqual(date.hours, i % 24)
-					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+					assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 
 					date = new ZonedDate(`${timeStr}${offsetToZoneStr(offset)}`, {timezone})
 					assert.strictEqual(date.hours, i % 24)
-					assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+					assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 
 					for (const [parsedTimezone, parsedOffset] of timezoneList) {
 						date = new ZonedDate(`${timeStr}${offsetToZoneStr(parsedOffset)}`, {timezone})
 						assert.strictEqual(date.hours, ((i + Math.floor(offset - parsedOffset)) % 24 + 24) % 24)
-						assert.strictEqual(date.date, todayGMT.getUTCDate() + Math.floor(i / 24))
+						assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 					}
 				}
 			}
