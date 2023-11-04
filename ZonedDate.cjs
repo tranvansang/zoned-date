@@ -6,10 +6,10 @@ const ONE_HOUR = 60 * 60_000
 function parseString(str) {
 	// step 0
 	str = str.toUpperCase()
-	if (str.startsWith('T')) str = str.slice(1)
+	if (str.startsWith('T') || str.startsWith(' ')) str = str.slice(1)
 
 	// step 1
-	const parts = str.split('T')
+	const parts = str.includes('T') ? str.split('T') : str.split(' ')
 	if (parts.length > 2) throw new Error('Invalid date string')
 	let dateStr, timeAndZoneStr
 	if (parts.length === 2) {
@@ -102,16 +102,16 @@ module.exports = class ZonedDate {
 	constructor(...args) {
 		if (args[0] instanceof ZonedDate) {
 			this.#utc = new Date(args[0].#utc)
-			if (typeof args[1] === 'object' && args[1].timezone !== undefined) this.#timezone = args[1].timezone
+			if (args[1]?.timezone !== undefined) this.#timezone = args[1].timezone
 			else this.#timezone = args[0].timezone
-			if (typeof args[1] === 'object' && args[1].disambiguation !== undefined) this.#disambiguation = args[1].disambiguation
+			if (args[1]?.disambiguation !== undefined) this.#disambiguation = args[1].disambiguation
 			else this.#disambiguation = ZonedDate.defaultDisambiguation
 			return
 		}
 
 		const lastArg = args[args.length - 1]
 		let timezone = ZonedDate.defaultTimezone
-		if (typeof lastArg === 'object' && !(lastArg instanceof Date)) {
+		if (typeof lastArg === 'object' && lastArg !== null && !(lastArg instanceof Date)) {
 			args.pop()
 			if (lastArg.timezone !== null && lastArg.timezone !== undefined) timezone = lastArg.timezone
 			if (lastArg.disambiguation !== null && lastArg.disambiguation !== undefined) this.#disambiguation = lastArg.disambiguation
