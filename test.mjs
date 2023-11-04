@@ -8,6 +8,9 @@ function day(n) {
 }
 
 describe('OffsetDate', () => {
+	test('null args', () => {
+		assert.ok(new OffsetDate(null) instanceof OffsetDate)
+	})
 	test('OffsetDate', () => {
 		const date = new OffsetDate(Date.UTC(2020, 1, 2, 3, 4, 5, 6), {offset: 7.5})
 		assert.strictEqual(date.fullYear, 2020)
@@ -358,6 +361,9 @@ describe('OffsetDate', () => {
 })
 
 describe('zoned date', () => {
+	test('null args', () => {
+		assert.ok(new ZonedDate(null) instanceof ZonedDate)
+	})
 	test('simple', () => {
 		const date = new ZonedDate('2021-09-04T05:19:52.001Z')
 		assert.strictEqual(date.fullYear, 2021)

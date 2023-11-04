@@ -132,7 +132,7 @@ export default class OffsetDate extends Date {
 	constructor(...args) {
 		if (args[0] instanceof OffsetDate) { // new Date(offsetDate)
 			super(args[0].getTime())
-			if (typeof args[1] === 'object' && args[1].offset !== undefined) this.#offset = args[1].offset
+			if (typeof args[1] === 'object' && args[1]?.offset !== undefined) this.#offset = args[1].offset
 			else this.#offset = args[0].#offset
 			return
 		}
@@ -140,7 +140,7 @@ export default class OffsetDate extends Date {
 		const lastArg = args[args.length - 1]
 
 		let offset = OffsetDate.defaultOffset
-		if (typeof lastArg === 'object' && !(lastArg instanceof Date)) {
+		if (typeof lastArg === 'object' && lastArg !== null && !(lastArg instanceof Date)) {
 			args.pop()
 			if (lastArg.offset !== null && lastArg.offset !== undefined) offset = lastArg.offset
 		}
