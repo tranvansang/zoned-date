@@ -85,7 +85,7 @@ function parseString(str) {
 	return [year, month, date, hours, minutes, seconds, milliseconds, parsedOffset]
 }
 
-module.exports = class ZonedDate {
+class ZonedDate {
 	static UTC = Date.UTC
 	static now = Date.now
 	static parse = Date.parse
@@ -572,3 +572,6 @@ for (const name of [
 ]) Object.assign(ZonedDate.prototype, {
 	[name]: Date.prototype[name]
 })
+
+module.exports = ZonedDate
+

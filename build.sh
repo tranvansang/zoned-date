@@ -8,16 +8,22 @@ set -Eeuo pipefail
 #rm -rf build
 
 content=$(cat OffsetDate.mjs)
-content="// Generated content. Do not edit.
 
-$content"
-content=${content//export default/module.exports =}
-echo "$content" > OffsetDate.cjs
+echo "// Generated content. Do not edit.
+
+${content//export default /}
+
+module.exports = OffsetDate
+" > OffsetDate.cjs
 
 content=$(cat ZonedDate.mjs)
 content="// Generated content. Do not edit.
 
 $content"
-content=${content//export default/module.exports =}
+content=${content//export default /}
 content=${content/import OffsetDate from './OffsetDate.mjs'/const OffsetDate = require('./OffsetDate.cjs')}
+content="${content}
+
+module.exports = ZonedDate
+"
 echo "$content" > ZonedDate.cjs

@@ -128,7 +128,7 @@ function parseString(str) {
 	return [year, month, date, hours, minutes, seconds, milliseconds, parsedOffset]
 }
 
-module.exports = class OffsetDate extends Date {
+class OffsetDate extends Date {
 	static defaultOffset = 0
 	#offset
 	constructor(...args) {
@@ -379,3 +379,6 @@ for (const name of [
 		}
 	})
 }
+
+module.exports = OffsetDate
+
