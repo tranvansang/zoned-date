@@ -213,9 +213,9 @@ export default class ZonedDate {
 	setTimezone(timezone) {
 		if (typeof timezone === 'function') timezone = timezone(this.#_timezone)
 		if (timezone !== undefined || timezone !== this.#_timezone) {
-			const time = this.time
+			// const time = this.time
 			this.#timezone = timezone
-			this.time = time
+			// this.time = time
 		}
 		return this
 	}

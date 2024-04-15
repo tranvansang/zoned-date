@@ -189,14 +189,14 @@ Besides, `ZonedDate` does not have methods to modify offset/offsetTimezone.
 import ZonedDate from 'zoned-date/ZonedDate'
 
 const date = new ZonedDate('2021-09-04T05:19:52.001', {timezone: 'Asia/Tokyo'}) // GMT+9
-console.log(date.hours, 5)
+console.log(date.hours) // 5
 
-date.timezone = 'Asia/Bangkok' // GMT+7
-console.log(date.hours, 5 - 9 + 7)
+// GMT+7
+console.log(new ZonedDate(date.time, {timezone: 'Asia/Bangkok'}).hours) // 3 = 5 - 9 + 7
 
-date.timezone = 'UTC'
-console.log(date.hours, 5 - 9 + 24)
+// UTC
+console.log(new ZonedDate(date.time, {timezone: 'UTC'}).hours) // 20 = 5 - 9 + 24)
 
-date.timezone = 'America/New_York' // GMT-4
-console.log(date.hours, 5 - 9 + -4 + 24)
+// GMT-4
+console.log(new ZonedDate(date.time, {timezone: 'America/New_York'}).hours) // 16 = 5 - 9 + -4 + 24)
 ```

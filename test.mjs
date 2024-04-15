@@ -479,26 +479,51 @@ describe('zoned date', () => {
 	})
 
 	test('change timezone', () => {
+		const ONE_HOUR = 60 * 60 * 1000
+
+		// GMT+9
 		const date = new ZonedDate('2021-09-04T05:19:52.001', {timezone: 'Asia/Tokyo'})
 		assert.strictEqual(date.hours, 5)
 
-		date.timezone = 'Asia/Bangkok'
-		assert.strictEqual(date.hours, 5 - 9 + 7)
+		// GMT+7
+		assert.strictEqual(date.withTimezone('Asia/Bangkok').hours, 5)
+		assert.strictEqual(date.withTimezone('Asia/Bangkok').time + 7 * ONE_HOUR, date.time + 9 * ONE_HOUR)
+		assert.strictEqual(new ZonedDate(date.time, {timezone: 'Asia/Bangkok'}).hours - 7, date.hours - 9)
 
-		date.timezone = 'UTC'
-		assert.strictEqual(date.hours, 5 - 9 + 24)
+		// UTC
+		assert.strictEqual(date.withTimezone('UTC').hours, 5)
+		assert.strictEqual(date.withTimezone('UTC').time + 0 * ONE_HOUR, date.time + 9 * ONE_HOUR)
+		assert.strictEqual(new ZonedDate(date.time, {timezone: 'UTC'}).hour - 0, date.hour - 9 + 24)
 
-		date.timezone = 'America/New_York'
-		assert.strictEqual(date.hours, 5 - 9 + -4 + 24)
+		// GMT-4
+		assert.strictEqual(date.withTimezone('America/New_York').hours, 5)
+		assert.strictEqual(date.withTimezone('America/New_York').time - 4 * ONE_HOUR, date.time + 9 * ONE_HOUR)
+		assert.strictEqual(new ZonedDate(date.time, {timezone: 'America/New_York'}).hours + 4, date.hours - 9 + 24)
 
 		// ['America/Caracas', -4],
-		date.timezone = 'America/Caracas'
-		assert.strictEqual(date.hours, 5 - 9 + -4 + 24)
+		assert.strictEqual(date.withTimezone('America/Caracas').hours, 5)
+		assert.strictEqual(date.withTimezone('America/Caracas').time - 4 * ONE_HOUR, date.time + 9 * ONE_HOUR)
+		assert.strictEqual(new ZonedDate(date.time, {timezone: 'America/Caracas'}).hours + 4, date.hours - 9 + 24)
 
 		// ['Asia/Kathmandu', 5.75],
-		date.timezone = 'Asia/Kathmandu'
-		assert.strictEqual(date.hours, 5 - 9 + 5 + 1)
-		assert.strictEqual(date.minutes, 19 + 45 - 60)
+		assert.strictEqual(date.withTimezone('Asia/Kathmandu').hours, 5)
+		assert.strictEqual(date.withTimezone('Asia/Kathmandu').time + 5.75 * ONE_HOUR, date.time + 9 * ONE_HOUR)
+		assert.strictEqual(new ZonedDate(date.time, {timezone: 'Asia/Kathmandu'}).hours - 5, date.hours - 9 + 1)
+		assert.strictEqual(new ZonedDate(date.time, {timezone: 'Asia/Kathmandu'}).minutes - 45, date.minutes - 60)
+	})
+
+	test('for readme', () => {
+		const date = new ZonedDate('2021-09-04T05:19:52.001', {timezone: 'Asia/Tokyo'}) // GMT+9
+		assert.strictEqual(date.hours, 5) // 5
+
+// GMT+7
+		assert.strictEqual(new ZonedDate(date.time, {timezone: 'Asia/Bangkok'}).hours, 3) // 3 = 5 - 9 + 7
+
+// UTC
+		assert.strictEqual(new ZonedDate(date.time, {timezone: 'UTC'}).hours, 20) // 20 = 5 - 9 + 24)
+
+// GMT-4
+		assert.strictEqual(new ZonedDate(date.time, {timezone: 'America/New_York'}).hours, 16) // 16 = 5 - 9 + -4 + 24)
 	})
 
 	test('dst option', () => {
