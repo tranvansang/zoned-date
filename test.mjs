@@ -11,6 +11,37 @@ describe('OffsetDate', () => {
 	test('null args', () => {
 		assert.ok(new OffsetDate(null) instanceof OffsetDate)
 	})
+	test('no month', () => {
+		assert.strictEqual(new OffsetDate('2021').time, new OffsetDate('2021-01-01T00:00:00.000').time)
+		assert.strictEqual(new OffsetDate('2021-02').time, new OffsetDate('2021-02-01T00:00:00.000').time)
+
+		assert.strictEqual(new OffsetDate('2021-09-04T05:19:52.000').time, new OffsetDate('2021-09-04T05:19:52.000').time)
+		assert.strictEqual(new OffsetDate('2021-09-04T05:19:52').time, new OffsetDate('2021-09-04T05:19:52.000').time)
+		assert.strictEqual(new OffsetDate('2021-09-04T05:19').time, new OffsetDate('2021-09-04T05:19:00.000').time)
+		assert.strictEqual(new OffsetDate('2021-09-04T05').time, new OffsetDate('2021-09-04T05:00:00.000').time)
+		assert.strictEqual(new OffsetDate('2021-09-04').time, new OffsetDate('2021-09-04T00:00:00.000').time)
+		assert.strictEqual(new OffsetDate('2021-09T05:19:52.000').time, new OffsetDate('2021-09-01T05:19:52.000').time)
+		assert.strictEqual(new OffsetDate('2021-09T05:19:52').time, new OffsetDate('2021-09-01T05:19:52.000').time)
+		assert.strictEqual(new OffsetDate('2021-09T05:19').time, new OffsetDate('2021-09-01T05:19:00.000').time)
+		assert.strictEqual(new OffsetDate('2021-09T05').time, new OffsetDate('2021-09-01T05:00:00.000').time)
+		assert.strictEqual(new OffsetDate('2021-09').time, new OffsetDate('2021-09-01T00:00:00.000').time)
+		assert.strictEqual(new OffsetDate('2021T05:19:52.000').time, new OffsetDate('2021-01-01T05:19:52.000').time)
+		assert.strictEqual(new OffsetDate('2021T05:19:52').time, new OffsetDate('2021-01-01T05:19:52.000').time)
+		assert.strictEqual(new OffsetDate('2021T05:19').time, new OffsetDate('2021-01-01T05:19:00.000').time)
+		assert.strictEqual(new OffsetDate('2021T05').time, new OffsetDate('2021-01-01T05:00:00.000').time)
+		assert.strictEqual(new OffsetDate('2021').time, new OffsetDate('2021-01-01T00:00:00.000').time)
+
+		const today = new OffsetDate
+		const todayStr = `${today.fullYear}-${(today.month + 1).toString().padStart(2, '0')}-${today.date.toString().padStart(2, '0')}`
+		assert.strictEqual(new OffsetDate('T05:19:52.000').time, new OffsetDate(`${todayStr}T05:19:52.000`).time)
+		assert.strictEqual(new OffsetDate('T05:19:52').time, new OffsetDate(`${todayStr}T05:19:52.000`).time)
+		assert.strictEqual(new OffsetDate('T05:19').time, new OffsetDate(`${todayStr}T05:19:00.000`).time)
+		assert.strictEqual(new OffsetDate('T05').time, new OffsetDate(`${todayStr}T05:00:00.000`).time)
+		assert.strictEqual(new OffsetDate('05:19:52.000').time, new OffsetDate(`${todayStr}T05:19:52.000`).time)
+		assert.strictEqual(new OffsetDate('05:19:52').time, new OffsetDate(`${todayStr}T05:19:52.000`).time)
+		assert.strictEqual(new OffsetDate('05:19').time, new OffsetDate(`${todayStr}T05:19:00.000`).time)
+		assert.strictEqual(new OffsetDate('05').time, new OffsetDate(`${todayStr}T05:00:00.000`).time)
+	})
 	test('OffsetDate', () => {
 		const date = new OffsetDate(Date.UTC(2020, 1, 2, 3, 4, 5, 6), {offset: 7.5})
 		assert.strictEqual(date.fullYear, 2020)
