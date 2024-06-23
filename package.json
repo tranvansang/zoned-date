@@ -22,7 +22,7 @@
     }
   },
   "scripts": {
-    "prepublish": "./build.sh",
+    "prepublishOnly": "./build.sh",
     "test": "node --test test.mjs"
   },
   "files": [
@@ -39,6 +39,5 @@
   "repository": "github:tranvansang/zoned-date",
   "homepage": "https://github.com/tranvansang/zoned-date",
   "author": "Sang Tran <t@sang.jp>",
-  "license": "MIT",
-  "packageManager": "yarn@3.6.3"
+  "license": "MIT"
 }

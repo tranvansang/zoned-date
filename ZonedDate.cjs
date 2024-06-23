@@ -32,6 +32,10 @@ function parseString(str) {
 			else if (i === 2) date = num
 			else throw new Error('Invalid date string')
 		}
+		if (year !== undefined) {
+			month ??= 0
+			date ??= 1
+		}
 	}
 
 	// parse time

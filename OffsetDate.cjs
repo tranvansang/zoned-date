@@ -27,6 +27,7 @@ function parseString(str) {
 	Step 2: parse date
 	- Split by -.
 	- From left to right, parse year, month, date.
+	- If year is defined, month is set to jan if undefined, date is set to 1 if undefined.
 
 	Step 3: determine time and zone
 	- Find first char that is one of [:+-], or, end of string.
@@ -74,6 +75,10 @@ function parseString(str) {
 			else if (i === 1) month = num - 1
 			else if (i === 2) date = num
 			else throw new Error('Invalid date string')
+		}
+		if (year !== undefined) {
+			month ??= 0
+			date ??= 1
 		}
 	}
 

@@ -2,7 +2,7 @@
 
 # Install
 ```bash
-yanr add zoned-date
+npm i zoned-date
 ```
 
 # Usage
