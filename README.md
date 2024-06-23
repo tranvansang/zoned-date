@@ -103,41 +103,47 @@ Instead of following the standard, we strictly limit (and also extend) the forma
 - `<Time>`: `HH:mm:ss.sss`, `HH:mm:ss`, `HH:mm`, `HH`.
 - `<Zone>`: `Z`, `+HH`, `-HH`, `+HH:mm`, `-HH:mm`, `+HHmm`, `-HHmm`.
 
-If some fields are missing, they are assumed to be 0 for time fields, and current date for date fields.
+If some fields are missing:
+- For time fields (hour, min, sec, milli sec), they are defaulted to be 0.
+- For date fields (year, month, date), if year is defined, month and date are defaulted to be 1.
+- If year is not defined, year/month/date is defaulted to be the current year/month/date at the timezone of the OffsetDate instance, NOT the timezone specified in the string argument or the timezone of the runtime.
 
 Examples: followings are all valid. "Z" can be omitted or replaced in other formats in any example.
-- `2021-09-04T05:19:52.000Z`
-- `2021-09-04T05:19:52Z`
-- `2021-09-04T05:19Z`
-- `2021-09-04T05Z`
-- `2021-09-04`
-- `2021-09T05:19:52.000Z`
-- `2021-09T05:19:52Z`
-- `2021-09T05:19Z`
-- `2021-09T05Z`
-- `2021-09`: `2021-09-01T00:00:00.000Z`
-- `2021T05:19:52.000Z`
-- `2021T05:19:52Z`
-- `2021T05:19Z`
-- `2021T05Z`
-- `2021`: `2021-01-01T00:00:00.000Z`
-- `T05:19:52.000Z`
-- `T05:19:52Z`
-- `T05:19Z`
-- `T05Z`
-- `05:19:52.000Z`
-- `05:19:52Z`
-- `05:19Z`
-- `05Z`
 
-The timezone offset specified in the string argument determines the absolute time of the argument, it does not affect the value of the timezone of OffsetDate instance.
+| Input | Output |
+|---|---|
+| `2021-09-04T05:19:52.000` | `2021-09-04T05:19:52.000` |
+| `2021-09-04T05:19:52` | `2021-09-04T05:19:52.000` |
+| `2021-09-04T05:19` | `2021-09-04T05:19:00.000` |
+| `2021-09-04T05` | `2021-09-04T05:00:00.000` |
+| `2021-09-04` | `2021-09-04T00:00:00.000` |
+| `2021-09T05:19:52.000` | `2021-09-01T05:19:52.000` |
+| `2021-09T05:19:52` | `2021-09-01T05:19:52.000` |
+| `2021-09T05:19` | `2021-09-01T05:19:00.000` |
+| `2021-09T05` | `2021-09-01T05:00:00.000` |
+| `2021-09` | `2021-09-01T00:00:00.000` |
+| `2021T05:19:52.000` | `2021-01-01T05:19:52.000` |
+| `2021T05:19:52` | `2021-01-01T05:19:52.000` |
+| `2021T05:19` | `2021-01-01T05:19:00.000` |
+| `2021T05` | `2021-01-01T05:00:00.000` |
+| `2021` | `2021-01-01T00:00:00.000` |
+| 
+| `T05:19:52.000` | `<today>T05:19:52.000` |
+| `T05:19:52` | `<today>T05:19:52.000` |
+| `T05:19` | `<today>T05:19:00.000` |
+| `T05` | `<today>T05:00:00.000` |
+| `05:19:52.000` | `<today>T05:19:52.000` |
+| `05:19:52` | `<today>T05:19:52.000` |
+| `05:19` | `<today>T05:19:00.000` |
+| `05` | `<today>T05:00:00.000` |
+
+The timezone offset specified in the string argument determines the absolute time of the argument, it does not affect the value of the timezone of the constructed OffsetDate instance.
 
 If timezone is not specified in the string argument, it falls back to the timezone of OffsetDate instance.
-If year, month, or date are missing, they fall back to the current year, month, date taken at the timezone of OffsetDate instance, NOT the timezone specified in the string argument or the timezone of the runtime.
 
 
 ## ZonedDate
-`ZonedDate` is a full-fleged class to manipulate date with timezone by name.
+`ZonedDate` is a full-fledged class to manipulate date with timezone by name.
 
 `ZonedDate` is not a sub-class of Date, we try to implement all available methods in Date object's prototype, with some additional methods for convenient.
 
