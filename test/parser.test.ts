@@ -1,7 +1,7 @@
 import {ok, strictEqual, throws} from 'node:assert'
-import {describe, test} from 'node:test'
-import OffsetDate from '../OffsetDate.mjs'
-import ZonedDate from '../ZonedDate.mjs'
+import {describe, test, type TestContext} from 'node:test'
+import OffsetDate from 'zoned-date/OffsetDate'
+import ZonedDate from 'zoned-date/ZonedDate'
 
 // Options for both classes: OffsetDate reads offset, ZonedDate reads timezone (a zone that keeps that offset)
 const utc = {offset: 0, timezone: 'UTC'}
@@ -150,7 +150,7 @@ describe('zone designators', () => {
 		for (const [input, expected, hours] of [
 			['2021-09-04T05:19Z', '2021-09-04T05:19:00.000Z', 14],
 			['2021-09-04T05:19:52-04:00', '2021-09-04T09:19:52.000Z', 18],
-		]) for (const date of both(input, plusNine)) {
+		] as const) for (const date of both(input, plusNine)) {
 			strictEqual(instant(date), expected, label(date, input))
 			strictEqual(date.offset, 9, label(date, input))
 			strictEqual(date.hours, hours, label(date, input))
@@ -395,7 +395,7 @@ describe('today for time-only strings', () => {
 			['00:30+14:00', utc, '2028-02-29T10:30:00.000Z'],
 			['23:00Z', minusEleven, '2028-02-29T23:00:00.000Z'], // 2028-02-29 12:00 at -11:00
 		]],
-	]) test(name, t => {
+	] as const) test(name, t => {
 		pinClock(t, now)
 		assertInstants(rows)
 	})
@@ -423,7 +423,7 @@ describe('today for time-only strings', () => {
 			['01:00', '2024-10-05T14:30:00.000Z'], // +10:30
 			['12:00', '2024-10-06T01:00:00.000Z'], // +11:00
 		]],
-	]) test(name, t => {
+	] as const) test(name, t => {
 		pinClock(t, now)
 		for (const [input, expected] of rows) strictEqual(instant(new ZonedDate(input, {timezone})), expected, input)
 	})
@@ -586,46 +586,52 @@ describe('malformed strings', () => {
 	]))
 })
 
-function both(input, zone) {
+function both(input: string, zone: Zone) {
 	return [new OffsetDate(input, zone), new ZonedDate(input, zone)]
 }
 
-function instant(date) {
+function instant(date: OffsetDate | ZonedDate) {
 	return new Date(date.time).toISOString()
 }
 
-function wallclock(date) {
+function wallclock(date: OffsetDate | ZonedDate) {
 	return `${pad(date.fullYear, 4)}-${pad(date.month + 1)}-${pad(date.date)}T${pad(date.hours)}:${pad(date.minutes)}:${pad(date.seconds)}.${pad(date.milliseconds, 3)}`
 }
 
-function pad(value, length = 2) {
+function pad(value: number, length = 2) {
 	return String(value).padStart(length, '0')
 }
 
-function label(date, input) {
+function label(date: OffsetDate | ZonedDate, input: string) {
 	return `${date.constructor.name} ${JSON.stringify(input)}`
 }
 
-function assertInstants(rows) {
+function assertInstants(rows: readonly (readonly [string, Zone, string])[]) {
 	for (const [input, zone, expected] of rows) for (const date of both(input, zone)) strictEqual(instant(date), expected, label(date, input))
 }
 
-function assertRejected(inputs) {
+function assertRejected(inputs: string[]) {
 	for (const input of inputs) {
 		throws(() => new OffsetDate(input, plusNine), invalidDateString, `OffsetDate ${JSON.stringify(input)}`)
 		throws(() => new ZonedDate(input, plusNine), invalidDateString, `ZonedDate ${JSON.stringify(input)}`)
 	}
 }
 
-function pinClock(t, iso) {
+function pinClock(t: TestContext, iso: string) {
 	t.mock.timers.enable({apis: ['Date'], now: Date.parse(iso)})
 }
 
-function useRuntimeTimezone(t, timezone) {
+function useRuntimeTimezone(t: TestContext, timezone: string) {
 	const previous = process.env.TZ
 	process.env.TZ = timezone
 	t.after(() => {
 		if (previous === undefined) delete process.env.TZ
 		else process.env.TZ = previous
 	})
+}
+
+// The option constants at the top, which both() passes to both classes
+interface Zone {
+	offset: number
+	timezone: string
 }

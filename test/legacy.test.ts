@@ -1,9 +1,9 @@
-import OffsetDate from './OffsetDate.mjs'
+import OffsetDate from 'zoned-date/OffsetDate'
 import assert from 'node:assert'
 import test, {describe} from 'node:test'
-import ZonedDate from './ZonedDate.mjs'
+import ZonedDate from 'zoned-date/ZonedDate'
 
-function day(n) {
+function day(n: number) {
 	return n * 24 * 60 * 60 * 1000
 }
 
@@ -289,7 +289,7 @@ describe('OffsetDate', () => {
 				}
 			}
 		}
-		function offsetToZoneStr(offset, colon) {
+		function offsetToZoneStr(offset: number, colon: boolean) {
 			return offset === 0 ? 'Z' : `${offset > 0 ? '+' : '-'}${Math.abs(Math.trunc(offset)).toString().padStart(2, '0')}${colon ? ':' : ''}${
 				((offset - Math.floor(offset)) * 60).toString().padStart(2, '0')
 			}`
@@ -304,7 +304,7 @@ describe('OffsetDate', () => {
 	})
 
 	test('string parser', () => {
-		const cases = [
+		const cases: [string, {fullYear?: number; month?: number; date?: number; hours?: number; minutes?: number; seconds?: number; milliseconds?: number}][] = [
 			['2021-09-04T05:19:52.001Z', {fullYear: 2021, month: 8, date: 4, hours: 5, minutes: 19, seconds: 52, milliseconds: 1}],
 			['2021-09-04T05:19:52Z', {fullYear: 2021, month: 8, date: 4, hours: 5, minutes: 19, seconds: 52}],
 			['2021-09-04T05:19Z', {fullYear: 2021, month: 8, date: 4, hours: 5, minutes: 19}],
@@ -351,7 +351,7 @@ describe('OffsetDate', () => {
 			['-09:30', -9.5],
 			['+0930', 9.5],
 			['-0930', -9.5],
-		]
+		] as const
 
 		const defaultOffsets = [
 			0, 7, 7.5, -7, -7.5
@@ -441,7 +441,7 @@ describe('zoned date', () => {
 			['Asia/Tokyo', 9],
 			['America/Caracas', -4],
 			['Asia/Kathmandu', 5.75],
-		]
+		] as const
 		for (const [timezone, offset] of timezoneList) {
 			const todayGMT	= new Date(Date.now() + offset * 60 * 60 * 1000)
 			for (const i of Array(100).keys()) {
@@ -470,7 +470,7 @@ describe('zoned date', () => {
 				}
 			}
 		}
-		function offsetToZoneStr(offset, colon) {
+		function offsetToZoneStr(offset: number, colon: boolean) {
 			return offset === 0 ? 'Z' : `${offset > 0 ? '+' : '-'}${Math.abs(Math.trunc(offset)).toString().padStart(2, '0')}${colon ? ':' : ''}${
 				((offset - Math.floor(offset)) * 60).toString().padStart(2, '0')
 			}`
@@ -482,7 +482,7 @@ describe('zoned date', () => {
 		for (const [timezone, offset] of [
 			['Asia/Tokyo', 9],
 			['America/New_York', -4],
-		]) {
+		] as const) {
 			for (const isStr of [true, false]) {
 				const date = new ZonedDate(
 					isStr ? abs.toISOString() : abs.getTime(),
@@ -506,7 +506,7 @@ describe('zoned date', () => {
 		for (const [timezone, offset] of [
 			['Asia/Tokyo', 9],
 			['America/New_York', -4],
-		]) {
+		] as const) {
 			const date = new ZonedDate('2021-09-04T05:19:52.001', {timezone})
 			assert.strictEqual(date.fullYear, 2021)
 			assert.strictEqual(date.month, 8)
@@ -598,7 +598,7 @@ describe('zoned date', () => {
 			['America/Los_Angeles', '2023-11-05T01:30:00.000', 'compatible', -7],
 			['America/Los_Angeles', '2023-11-05T01:30:00.000', 'earlier', -7],
 			['America/Los_Angeles', '2023-11-05T01:30:00.000', 'later', -8],
-		]) {
+		] as const) {
 			const date = new ZonedDate(wallclock, {timezone, disambiguation})
 			assert.strictEqual(date.offset, expected)
 		}
@@ -616,7 +616,7 @@ describe('zoned date', () => {
 
 	test('DST backward', () => {
 		// moving the instant into the repeated hour keeps the instant: 1 ms later is the first occurrence, one hour later the second
-		for (const disambiguation of ['reject', 'earlier', 'compatible', 'later']) {
+		for (const disambiguation of ['reject', 'earlier', 'compatible', 'later'] as const) {
 			assert.strictEqual(new ZonedDate('2023-11-05T00:59:59.999', {timezone: 'America/Los_Angeles', disambiguation}).offset, -7)
 			assert.strictEqual(new ZonedDate('2023-11-05T00:59:59.999', {timezone: 'America/Los_Angeles', disambiguation}).setTime(t => t + 1).offset, -7)
 			assert.strictEqual(new ZonedDate('2023-11-05T00:59:59.999', {timezone: 'America/Los_Angeles', disambiguation}).setTime(t => t + 1 + 60 * 60 * 1000).offset, -8)

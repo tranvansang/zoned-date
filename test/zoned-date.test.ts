@@ -1,8 +1,7 @@
 import {deepStrictEqual, notStrictEqual, ok, strictEqual, throws} from 'node:assert'
-import {describe, test} from 'node:test'
-import {createRequire} from 'node:module'
-import OffsetDate from '../OffsetDate.mjs'
-import ZonedDate from '../ZonedDate.mjs'
+import {describe, test, type TestContext} from 'node:test'
+import OffsetDate from 'zoned-date/OffsetDate'
+import ZonedDate from 'zoned-date/ZonedDate'
 
 // 2021-09-04T05:19:52.001Z, a Saturday, far from any DST transition of the zones used below
 const epoch = Date.UTC(2021, 8, 4, 5, 19, 52, 1)
@@ -10,6 +9,10 @@ const epoch = Date.UTC(2021, 8, 4, 5, 19, 52, 1)
 const monthEnd = Date.UTC(2021, 7, 31, 20, 19, 52, 1)
 const oneHour = 60 * 60_000
 const offsetZonesSupported = isSupportedTimezone('+09:00')
+
+// The number arguments of the ZonedDate constructor. TypeScript cannot match a spread of varying length with one of its
+// overloads, so the tables below check theirs against WallclockFields and spread them as Required<WallclockFields>.
+type WallclockFields = readonly [fullYear: number, month: number, date?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number]
 
 describe('ZonedDate constructor', () => {
 	test('an epoch keeps the instant and reads the wallclock in the zone', () => {
@@ -51,8 +54,8 @@ describe('ZonedDate constructor', () => {
 			[[2021, 0, 1, -1], 'Asia/Kathmandu', '2020-12-31T23:00:00.000', '2020-12-31T17:15:00.000Z'],
 			[[2021, 1], 'Etc/GMT+12', '2021-02-01T00:00:00.000', '2021-02-01T12:00:00.000Z'],
 			[[2021, 11, 31, 23, 59, 59, 999], 'Pacific/Kiritimati', '2021-12-31T23:59:59.999', '2021-12-31T09:59:59.999Z'],
-		]) {
-			const zd = new ZonedDate(...args, {timezone})
+		] as const) {
+			const zd = new ZonedDate(...args satisfies WallclockFields as Required<WallclockFields>, {timezone})
 			strictEqual(wallclockOf(zd), wallclock, `${args} ${timezone}`)
 			strictEqual(instantOf(zd), instant, `${args} ${timezone}`)
 		}
@@ -108,7 +111,7 @@ describe('ZonedDate options', () => {
 			['empty', {}],
 			['undefined values', {timezone: undefined, disambiguation: undefined}],
 			['null values', {timezone: null, disambiguation: null}],
-		]) {
+		] as const) {
 			const zd = new ZonedDate(epoch, options)
 			strictEqual(zd.timezone, 'UTC', label)
 			strictEqual(zd.disambiguation, 'compatible', label)
@@ -167,38 +170,6 @@ describe('ZonedDate options', () => {
 		strictEqual(new ZonedDate(zd, {disambiguation: null}).disambiguation, 'later')
 	})
 
-	test('a ZonedDate of another copy of the package is copied', () => {
-		// the CommonJS build is another copy of the class
-		const OtherZonedDate = createRequire(import.meta.url)('../ZonedDate.cjs')
-		const copy = new ZonedDate(new OtherZonedDate(epoch, {timezone: 'Asia/Tokyo', disambiguation: 'later'}))
-		strictEqual(instantOf(copy), '2021-09-04T05:19:52.001Z')
-		strictEqual(copy.timezone, 'Asia/Tokyo')
-		strictEqual(copy.disambiguation, 'later')
-		// an unresolved 'reject' wallclock has no instant: the copy keeps the wallclock
-		const unresolved = new ZonedDate(new OtherZonedDate('2023-11-05T01:30', {timezone: 'America/Los_Angeles', disambiguation: 'reject'}), {disambiguation: 'later'})
-		strictEqual(instantOf(unresolved), '2023-11-05T09:30:00.000Z')
-		// zoned-date 0.1.3 has no disambiguation without an options object
-		const old = {
-			getTime() {
-				return epoch
-			},
-			getTimezone() {
-				return 'Asia/Tokyo'
-			},
-			getDisambiguation() {},
-		}
-		strictEqual(new ZonedDate(old).disambiguation, 'compatible')
-		// a copy whose getTime() throws although its disambiguation is not 'reject' gets the instant of its wallclock
-		const brokenCopy = new Proxy(new OtherZonedDate('2023-11-05T01:30', {timezone: 'America/Los_Angeles', disambiguation: 'reject'}), {
-			get(target, key) {
-				if (key === 'getDisambiguation') return () => 'later'
-				const value = Reflect.get(target, key, target)
-				return typeof value === 'function' ? value.bind(target) : value
-			},
-		})
-		strictEqual(instantOf(new ZonedDate(brokenCopy)), '2023-11-05T09:30:00.000Z')
-	})
-
 	test('new ZonedDate() truncates a fractional clock, like Date', t => {
 		t.mock.timers.enable({apis: ['Date'], now: 1_700_000_000_000})
 		t.mock.timers.tick(0.5)
@@ -242,7 +213,7 @@ describe('ZonedDate wallclock fields', () => {
 			['minutes', 'getMinutes', 4],
 			['seconds', 'getSeconds', 52],
 			['milliseconds', 'getMilliseconds', 1],
-		]) {
+		] as const) {
 			strictEqual(zd[field], value, field)
 			strictEqual(zd[getter](), value, getter)
 		}
@@ -258,7 +229,7 @@ describe('ZonedDate wallclock fields', () => {
 			['Minutes', 0, '2021-09-04T10:00:52.001', '2021-09-04T04:30:52.001Z'],
 			['Seconds', 0, '2021-09-04T10:49:00.001', '2021-09-04T05:19:00.001Z'],
 			['Milliseconds', 999, '2021-09-04T10:49:52.999', '2021-09-04T05:19:52.999Z'],
-		]) {
+		] as const) {
 			const zd = new ZonedDate(epoch, {timezone: 'Asia/Kolkata'})
 			const copy = zd[`with${field}`](value)
 			notStrictEqual(copy, zd, field)
@@ -289,7 +260,7 @@ describe('ZonedDate wallclock fields', () => {
 
 	test('function setters receive the current value of their field', () => {
 		// native Date: the field plus one, on 2021-09-01T01:49:52.001+05:30 or on 2021-08-31T20:19:52.001Z
-		for (const [field, current, instant] of [
+		const fields = [
 			['fullYear', 2021, '2022-08-31T20:19:52.001Z'],
 			['month', 8, '2021-09-30T20:19:52.001Z'],
 			['date', 1, '2021-09-01T20:19:52.001Z'],
@@ -304,7 +275,8 @@ describe('ZonedDate wallclock fields', () => {
 			['utcMinutes', 19, '2021-08-31T20:20:52.001Z'],
 			['utcSeconds', 52, '2021-08-31T20:19:53.001Z'],
 			['utcMilliseconds', 1, '2021-08-31T20:19:52.002Z'],
-		]) {
+		] as const
+		for (const [field, current, instant] of fields) {
 			const zd = new ZonedDate(monthEnd, {timezone: 'Asia/Kolkata'})
 			strictEqual(increment(zd, field), current, field)
 			strictEqual(instantOf(zd), instant, field)
@@ -315,14 +287,14 @@ describe('ZonedDate wallclock fields', () => {
 		for (const [instant, timezone, current, expected] of [
 			['2021-12-31T20:19:52.001Z', 'Asia/Kolkata', 2022, '2022-12-31T20:19:52.001Z'],
 			['2022-01-01T06:00:00.000Z', 'Etc/GMT+12', 2021, '2023-01-01T06:00:00.000Z'],
-		]) {
+		] as const) {
 			const zd = new ZonedDate(Date.parse(instant), {timezone})
 			strictEqual(increment(zd, 'fullYear'), current, timezone)
 			strictEqual(instantOf(zd), expected, timezone)
 		}
 
-		function increment(zd, field) {
-			let seen
+		function increment(zd: ZonedDate, field: typeof fields[number][0]) {
+			let seen: number | undefined
 			zd[field] = value => {
 				seen = value
 				return value + 1
@@ -334,15 +306,15 @@ describe('ZonedDate wallclock fields', () => {
 	test('setters overflow like Date', () => {
 		// native Date: the same setUTC* call on the wallclock; Temporal for the instant
 		for (const [label, start, timezone, update, wallclock, instant] of [
-			['setMonth(1) on January 31', [2021, 0, 31, 12], 'Asia/Tokyo', zd => zd.setMonth(1), '2021-03-03T12:00:00.000', '2021-03-03T03:00:00.000Z'],
-			['setHours(25, 70, 70, 1001)', [2021, 8, 4, 14, 19, 52, 1], 'Asia/Tokyo', zd => zd.setHours(25, 70, 70, 1001), '2021-09-05T02:11:11.001', '2021-09-04T17:11:11.001Z'],
-			['setDate(0)', [2021, 2, 15, 10], 'Pacific/Kiritimati', zd => zd.setDate(0), '2021-02-28T10:00:00.000', '2021-02-27T20:00:00.000Z'],
-			['setFullYear(2021) on February 29', [2020, 1, 29, 10], 'Asia/Kolkata', zd => zd.setFullYear(2021), '2021-03-01T10:00:00.000', '2021-03-01T04:30:00.000Z'],
-			['setMilliseconds(-1) at midnight', [2022, 0, 1], 'Etc/GMT+12', zd => zd.setMilliseconds(-1), '2021-12-31T23:59:59.999', '2022-01-01T11:59:59.999Z'],
-			['setMonth(12)', [2021, 11, 15, 8], 'Asia/Kathmandu', zd => zd.setMonth(12), '2022-01-15T08:00:00.000', '2022-01-15T02:15:00.000Z'],
-			['setMinutes(60) before midnight', [2021, 11, 31, 23, 59], 'Asia/Kathmandu', zd => zd.setMinutes(60), '2022-01-01T00:00:00.000', '2021-12-31T18:15:00.000Z'],
-		]) {
-			const zd = new ZonedDate(...start, {timezone})
+			['setMonth(1) on January 31', [2021, 0, 31, 12], 'Asia/Tokyo', (zd: ZonedDate) => zd.setMonth(1), '2021-03-03T12:00:00.000', '2021-03-03T03:00:00.000Z'],
+			['setHours(25, 70, 70, 1001)', [2021, 8, 4, 14, 19, 52, 1], 'Asia/Tokyo', (zd: ZonedDate) => zd.setHours(25, 70, 70, 1001), '2021-09-05T02:11:11.001', '2021-09-04T17:11:11.001Z'],
+			['setDate(0)', [2021, 2, 15, 10], 'Pacific/Kiritimati', (zd: ZonedDate) => zd.setDate(0), '2021-02-28T10:00:00.000', '2021-02-27T20:00:00.000Z'],
+			['setFullYear(2021) on February 29', [2020, 1, 29, 10], 'Asia/Kolkata', (zd: ZonedDate) => zd.setFullYear(2021), '2021-03-01T10:00:00.000', '2021-03-01T04:30:00.000Z'],
+			['setMilliseconds(-1) at midnight', [2022, 0, 1], 'Etc/GMT+12', (zd: ZonedDate) => zd.setMilliseconds(-1), '2021-12-31T23:59:59.999', '2022-01-01T11:59:59.999Z'],
+			['setMonth(12)', [2021, 11, 15, 8], 'Asia/Kathmandu', (zd: ZonedDate) => zd.setMonth(12), '2022-01-15T08:00:00.000', '2022-01-15T02:15:00.000Z'],
+			['setMinutes(60) before midnight', [2021, 11, 31, 23, 59], 'Asia/Kathmandu', (zd: ZonedDate) => zd.setMinutes(60), '2022-01-01T00:00:00.000', '2021-12-31T18:15:00.000Z'],
+		] as const) {
+			const zd = new ZonedDate(...start satisfies WallclockFields as Required<WallclockFields>, {timezone})
 			update(zd)
 			strictEqual(wallclockOf(zd), wallclock, label)
 			strictEqual(instantOf(zd), instant, label)
@@ -370,7 +342,7 @@ describe('ZonedDate wallclock fields', () => {
 			['setMonth', [0, 31], '2021-01-30T20:00:00.000Z'],
 			['setUTCFullYear', [2020, 1, 29], '2020-02-29T20:00:00.000Z'],
 			['setUTCMonth', [0, 31], '2021-01-31T20:00:00.000Z'],
-		]) {
+		] as const) {
 			const zd = new ZonedDate(Date.UTC(2021, 8, 4, 20), {timezone: 'Asia/Tokyo'})
 			zd[method](...args)
 			strictEqual(instantOf(zd), instant, method)
@@ -382,18 +354,20 @@ describe('ZonedDate wallclock fields', () => {
 		ok(Number.isNaN(zd.time))
 		ok(Number.isNaN(zd.hours))
 		// as in Date, the setters of an invalid instance still convert their values
+		// @ts-expect-error a BigInt is not a number
 		throws(() => zd.setHours(5n), TypeError)
+		// @ts-expect-error a BigInt is not a number
 		throws(() => zd.setUTCMinutes(1, 5n), TypeError)
 		ok(Number.isNaN(zd.setMinutes(30).time))
 	})
 
 	test('a wallclock far past the Date range gives an invalid instance under every disambiguation, like Date', () => {
 		// native Date gives NaN: hours that overflow to Infinity, milliseconds past 2 ** 60 at +09:00, and a day past the range
-		for (const disambiguation of ['compatible', 'earlier', 'later', 'reject']) for (const [label, zd] of [
+		for (const disambiguation of ['compatible', 'earlier', 'later', 'reject'] as const) for (const [label, zd] of [
 			['hours 1e308', new ZonedDate(2021, 0, 1, 1e308, {timezone: 'UTC', disambiguation})],
 			['milliseconds 2 ** 60', new ZonedDate(2021, 0, 1, 0, 0, 0, 2 ** 60, {timezone: 'Etc/GMT-9', disambiguation})],
 			['setDate(2e10)', new ZonedDate(epoch, {timezone: 'Etc/GMT-9', disambiguation}).setDate(2e10)],
-		]) ok(Number.isNaN(zd.time), `${label}, ${disambiguation}`)
+		] as const) ok(Number.isNaN(zd.time), `${label}, ${disambiguation}`)
 	})
 
 	test('setters near the ends of the range work like Date', () => {
@@ -415,7 +389,7 @@ describe('ZonedDate UTC fields', () => {
 			['utcMinutes', 'getUTCMinutes', 19],
 			['utcSeconds', 'getUTCSeconds', 52],
 			['utcMilliseconds', 'getUTCMilliseconds', 1],
-		]) {
+		] as const) {
 			strictEqual(zd[field], value, field)
 			strictEqual(zd[getter](), value, getter)
 		}
@@ -431,7 +405,7 @@ describe('ZonedDate UTC fields', () => {
 			['UTCMinutes', 0, '2021-09-04T05:00:52.001Z'],
 			['UTCSeconds', 0, '2021-09-04T05:19:00.001Z'],
 			['UTCMilliseconds', 999, '2021-09-04T05:19:52.999Z'],
-		]) {
+		] as const) {
 			const zd = new ZonedDate(epoch, {timezone: 'Asia/Kathmandu'})
 			const copy = zd[`with${field}`](value)
 			notStrictEqual(copy, zd, field)
@@ -447,12 +421,12 @@ describe('ZonedDate UTC fields', () => {
 	test('UTC setters overflow like Date', () => {
 		// native Date: the same setUTC* call
 		for (const [label, start, update, instant] of [
-			['setUTCMonth(1) on January 31', Date.UTC(2021, 0, 31, 12), zd => zd.setUTCMonth(1), '2021-03-03T12:00:00.000Z'],
-			['setUTCFullYear(2023) on February 29', Date.UTC(2024, 1, 29, 12), zd => zd.setUTCFullYear(2023), '2023-03-01T12:00:00.000Z'],
-			['setUTCDate(0)', epoch, zd => zd.setUTCDate(0), '2021-08-31T05:19:52.001Z'],
-			['setUTCHours(24)', epoch, zd => zd.setUTCHours(24), '2021-09-05T00:19:52.001Z'],
-			['setUTCMilliseconds(1000)', epoch, zd => zd.setUTCMilliseconds(1000), '2021-09-04T05:19:53.000Z'],
-		]) {
+			['setUTCMonth(1) on January 31', Date.UTC(2021, 0, 31, 12), (zd: ZonedDate) => zd.setUTCMonth(1), '2021-03-03T12:00:00.000Z'],
+			['setUTCFullYear(2023) on February 29', Date.UTC(2024, 1, 29, 12), (zd: ZonedDate) => zd.setUTCFullYear(2023), '2023-03-01T12:00:00.000Z'],
+			['setUTCDate(0)', epoch, (zd: ZonedDate) => zd.setUTCDate(0), '2021-08-31T05:19:52.001Z'],
+			['setUTCHours(24)', epoch, (zd: ZonedDate) => zd.setUTCHours(24), '2021-09-05T00:19:52.001Z'],
+			['setUTCMilliseconds(1000)', epoch, (zd: ZonedDate) => zd.setUTCMilliseconds(1000), '2021-09-04T05:19:53.000Z'],
+		] as const) {
 			const zd = new ZonedDate(start, {timezone: 'Pacific/Kiritimati'})
 			update(zd)
 			strictEqual(instantOf(zd), instant, label)
@@ -489,7 +463,7 @@ describe('ZonedDate and the runtime time zone', () => {
 			['withUTCDate(15)', zd.withUTCDate(15), '2021-08-15T20:19:52.001Z'],
 			['withUTCHours(23)', zd.withUTCHours(23), '2021-08-31T23:19:52.001Z'],
 			['withUTCMinutes(0)', zd.withUTCMinutes(0), '2021-08-31T20:00:52.001Z'],
-		]) strictEqual(instantOf(copy), instant, label)
+		] as const) strictEqual(instantOf(copy), instant, label)
 	})
 
 	test('utcFullYear is the UTC year in any runtime time zone', t => {
@@ -522,6 +496,7 @@ describe('ZonedDate time', () => {
 
 	test('setTime coerces a Date to its epoch', () => {
 		const zd = new ZonedDate(0, {timezone: 'Asia/Tokyo'})
+		// @ts-expect-error a Date where a number is declared
 		zd.setTime(new Date(epoch))
 		strictEqual(instantOf(zd), '2021-09-04T05:19:52.001Z')
 	})
@@ -568,7 +543,7 @@ describe('ZonedDate timezone', () => {
 		zd.timezone = 'Asia/Kathmandu'
 		strictEqual(zd.getTimezone(), 'Asia/Kathmandu')
 
-		let seen
+		let seen: string | undefined
 		strictEqual(zd.setTimezone(timezone => {
 			seen = timezone
 			return 'UTC'
@@ -621,7 +596,7 @@ describe('ZonedDate time zone ids', () => {
 		])
 	})
 
-	function assertZones(rows) {
+	function assertZones(rows: [timezone: string, offset: number, wallclock: string][]) {
 		for (const [timezone, offset, wallclock] of rows) {
 			const zd = new ZonedDate(epoch, {timezone})
 			// README: timezone returns the name as given
@@ -635,7 +610,7 @@ describe('ZonedDate time zone ids', () => {
 
 describe('ZonedDate disambiguation', () => {
 	test('every disambiguation value works away from transitions', () => {
-		for (const disambiguation of ['compatible', 'earlier', 'later', 'reject']) {
+		for (const disambiguation of ['compatible', 'earlier', 'later', 'reject'] as const) {
 			const zd = new ZonedDate('2021-09-04T14:19:52.001', {timezone: 'Asia/Tokyo', disambiguation})
 			strictEqual(zd.disambiguation, disambiguation, disambiguation)
 			strictEqual(instantOf(zd), '2021-09-04T05:19:52.001Z', disambiguation)
@@ -650,7 +625,7 @@ describe('ZonedDate disambiguation', () => {
 		zd.setDisambiguation(undefined)
 		strictEqual(zd.disambiguation, 'earlier')
 
-		let seen
+		let seen: ZonedDate.Disambiguation | undefined
 		zd.setDisambiguation(disambiguation => {
 			seen = disambiguation
 			return 'reject'
@@ -692,7 +667,7 @@ describe('ZonedDate offset and timezoneOffset', () => {
 			['Pacific/Kiritimati', 14, -840],
 			['Pacific/Marquesas', -9.5, 570],
 			['Etc/GMT+12', -12, 720],
-		]) {
+		] as const) {
 			const zd = new ZonedDate(epoch, {timezone})
 			strictEqual(zd.offset, offset, timezone)
 			strictEqual(zd.getOffset(), offset, timezone)
@@ -709,7 +684,7 @@ describe('ZonedDate offset and timezoneOffset', () => {
 			['2021-07-15T12:00:00.000Z', 'America/New_York', -4],
 			['2021-01-15T12:00:00.000Z', 'Australia/Sydney', 11],
 			['2021-07-15T12:00:00.000Z', 'Australia/Sydney', 10],
-		]) strictEqual(new ZonedDate(Date.parse(instant), {timezone}).offset, offset, `${instant} ${timezone}`)
+		] as const) strictEqual(new ZonedDate(Date.parse(instant), {timezone}).offset, offset, `${instant} ${timezone}`)
 	})
 
 	test('timezoneOffset is +0 in a zero-offset zone', () => {
@@ -734,7 +709,7 @@ describe('ZonedDate day and utcDay', () => {
 			['2021-09-05T06:00:00.000Z', 'Etc/GMT+12', 6, 0],
 			['2021-12-31T10:00:00.000Z', 'Pacific/Kiritimati', 6, 5],
 			['2024-02-29T23:45:06.789Z', 'Asia/Kolkata', 5, 4],
-		]) {
+		] as const) {
 			const zd = new ZonedDate(Date.parse(instant), {timezone})
 			strictEqual(zd.day, day, instant)
 			strictEqual(zd.getDay(), day, instant)
@@ -747,7 +722,8 @@ describe('ZonedDate day and utcDay', () => {
 describe('ZonedDate members', () => {
 	test('offset, timezoneOffset, day and utcDay are read-only', () => {
 		const zd = new ZonedDate(epoch, {timezone: 'Asia/Tokyo'})
-		for (const field of ['offset', 'timezoneOffset', 'day', 'utcDay']) throws(() => {
+		for (const field of ['offset', 'timezoneOffset', 'day', 'utcDay'] as const) throws(() => {
+			// @ts-expect-error these accessors are read-only
 			zd[field] = 1
 		}, TypeError, field)
 		strictEqual(zd.offset, 9)
@@ -756,7 +732,8 @@ describe('ZonedDate members', () => {
 
 	test('there are no offset setters', () => {
 		const zd = new ZonedDate(epoch, {timezone: 'Asia/Tokyo'})
-		for (const method of ['setOffset', 'withOffset', 'setTimezoneOffset', 'withTimezoneOffset']) strictEqual(zd[method], undefined, method)
+		// @ts-expect-error ZonedDate has none of these methods
+		for (const method of ['setOffset', 'withOffset', 'setTimezoneOffset', 'withTimezoneOffset'] as const) strictEqual(zd[method], undefined, method)
 	})
 
 	test('for...in over a ZonedDate finds no methods', () => {
@@ -808,10 +785,12 @@ describe('ZonedDate toDate and the Date protocol', () => {
 		// Temporal: the instants of the milliseconds, the year 50, 6 BC (the year -5) and the local mean time of New York
 		for (const time of [Date.parse('2024-03-01T03:34:56.789Z'), Date.parse('0050-06-15T12:00:00.000Z'), Date.parse('-000005-06-15T12:00:00.000Z'), Date.parse('1850-06-15T12:00:00.000Z')]) {
 			const zd = new ZonedDate(time, {timezone: 'America/New_York'})
+			// @ts-expect-error the Date types take no ZonedDate, which converts through Symbol.toPrimitive
 			strictEqual(new Date(zd).getTime(), time, zd.toISOString())
 			strictEqual(zd + '', zd.toISOString())
 			strictEqual(String(zd), zd.toDate().toString())
 		}
+		// @ts-expect-error the Date types take no ZonedDate, which converts through Symbol.toPrimitive
 		ok(Number.isNaN(new Date(new ZonedDate(NaN)).getTime()))
 	})
 
@@ -821,11 +800,18 @@ describe('ZonedDate toDate and the Date protocol', () => {
 		strictEqual(ZonedDate.prototype.withTimezone.name, 'withTimezone')
 	})
 
+	test('a with* call on another receiver throws TypeError, like a Date method', () => {
+		const {withTimezone} = new ZonedDate(epoch)
+		throws(() => withTimezone('Asia/Tokyo'), TypeError)
+		throws(() => withTimezone.call({}, 'Asia/Tokyo'), TypeError)
+	})
+
 	test('< compares the instants and - subtracts them', () => {
 		// the earlier instant has the later wallclock
 		const earlier = new ZonedDate(epoch, {timezone: 'Pacific/Kiritimati'})
 		const later = new ZonedDate(epoch + oneHour, {timezone: 'Etc/GMT+12'})
 		strictEqual(earlier < later, true)
+		// @ts-expect-error TypeScript takes no objects in arithmetic, though a ZonedDate converts to its epoch
 		strictEqual(later - earlier, oneHour)
 	})
 
@@ -837,9 +823,19 @@ describe('ZonedDate toDate and the Date protocol', () => {
 		strictEqual(new ZonedDate(epoch, {timezone: 'Asia/Tokyo'}).toLocaleString('en-GB', {timeZone: 'Asia/Tokyo'}), '04/09/2021, 14:19:52')
 	})
 
+	test('each conversion of Date gives what it gives on toDate(), for a valid and an invalid instant', t => {
+		setRuntimeTimezone(t, 'America/New_York')
+		const locale = ['en-GB', {timeZone: 'Asia/Tokyo'}] as const
+		for (const zd of [new ZonedDate(epoch, {timezone: 'Asia/Tokyo'}), new ZonedDate(NaN, {timezone: 'Asia/Tokyo'})]) {
+			const date = zd.toDate()
+			for (const name of ['valueOf', 'toJSON', 'toString', 'toDateString', 'toTimeString', 'toUTCString'] as const) deepStrictEqual(zd[name](), date[name](), `${name} of ${date}`)
+			for (const name of ['toLocaleString', 'toLocaleDateString', 'toLocaleTimeString'] as const) deepStrictEqual(zd[name](...locale), date[name](...locale), `${name} of ${date}`)
+		}
+	})
+
 	test('an invalid instant has NaN fields and converts like an Invalid Date', () => {
 		for (const zd of [new ZonedDate(NaN, {timezone: 'Asia/Tokyo'}), new ZonedDate(epoch, {timezone: 'Asia/Tokyo'}).setTime(NaN)]) {
-			for (const field of ['time', 'fullYear', 'hours', 'utcHours', 'day', 'offset', 'timezoneOffset']) ok(Number.isNaN(zd[field]), field)
+			for (const field of ['time', 'fullYear', 'hours', 'utcHours', 'day', 'offset', 'timezoneOffset'] as const) ok(Number.isNaN(zd[field]), field)
 			strictEqual(String(zd), 'Invalid Date')
 			strictEqual(zd.toJSON(), null)
 			throws(() => zd.toISOString(), RangeError)
@@ -863,15 +859,19 @@ describe('ZonedDate validation', () => {
 
 	test('an unknown disambiguation throws Invalid disambiguation option and changes nothing', () => {
 		// the message only: the README documents a plain Error, while Temporal throws RangeError for this option
+		// @ts-expect-error an unknown disambiguation
 		throws(() => new ZonedDate(epoch, {disambiguation: 'forward'}), {message: 'Invalid disambiguation option'})
 		const zd = new ZonedDate(epoch, {timezone: 'Asia/Tokyo', disambiguation: 'later'})
+		// @ts-expect-error an unknown disambiguation
 		throws(() => zd.setDisambiguation('backward'), {message: 'Invalid disambiguation option'})
+		// @ts-expect-error an unknown disambiguation
 		throws(() => zd.withDisambiguation('forward'), {message: 'Invalid disambiguation option'})
 		strictEqual(zd.disambiguation, 'later')
 	})
 
 	test('an undefined defaultTimezone throws RangeError instead of using the runtime time zone', t => {
 		restoreDefaults(t)
+		// @ts-expect-error defaultTimezone is a string
 		ZonedDate.defaultTimezone = undefined
 		throws(() => new ZonedDate(epoch), RangeError)
 	})
@@ -932,7 +932,7 @@ describe('ZonedDate engine fallbacks', () => {
 		// an engine that ignores hourCycle formats the probe 2000-11-23T00:00Z in 12-hour style
 		t.mock.method(Intl.DateTimeFormat.prototype, 'format', () => twelveHourProbe, {getter: true})
 		assertCases()
-		ok(construct.mock.calls.some(call => call.arguments[1].hour12 === false))
+		ok(construct.mock.calls.some(call => call.arguments[1]!.hour12 === false))
 
 		function twelveHourProbe() {
 			return '11/23/2000, 12:00:00 AM'
@@ -946,8 +946,9 @@ describe('ZonedDate engine fallbacks', () => {
 		assertCases()
 		strictEqual(formatToParts.mock.callCount(), 0)
 
-		function withoutFormatToParts(locale, options) {
+		function withoutFormatToParts(locale: string, options: Intl.DateTimeFormatOptions) {
 			const format = new DateTimeFormat(locale, options)
+			// @ts-expect-error an engine without formatToParts
 			format.formatToParts = undefined
 			return format
 		}
@@ -1017,25 +1018,26 @@ describe('ZonedDate README examples', () => {
 		const tokyo = new ZonedDate('2021-09-04T05:00', {timezone: 'Asia/Tokyo'})
 		const utc = new ZonedDate('2021-09-04T05:00', {timezone: 'UTC'})
 		strictEqual(tokyo < utc, true)
+		// @ts-expect-error TypeScript takes no objects in arithmetic, though a ZonedDate converts to its epoch
 		strictEqual(utc - tokyo, 9 * oneHour)
 		deepStrictEqual(JSON.parse(JSON.stringify({at: tokyo, timezone: tokyo.timezone})), {at: '2021-09-03T20:00:00.000Z', timezone: 'Asia/Tokyo'})
 		strictEqual(tokyo.toLocaleString('en-GB', {timeZone: tokyo.timezone}), '04/09/2021, 05:00:00')
 	})
 })
 
-function wallclockOf(zd) {
+function wallclockOf(zd: ZonedDate) {
 	return `${pad(zd.fullYear, 4)}-${pad(zd.month + 1, 2)}-${pad(zd.date, 2)}T${pad(zd.hours, 2)}:${pad(zd.minutes, 2)}:${pad(zd.seconds, 2)}.${pad(zd.milliseconds, 3)}`
 }
 
-function instantOf(zd) {
+function instantOf(zd: ZonedDate) {
 	return new Date(zd.time).toISOString()
 }
 
-function pad(value, length) {
+function pad(value: number, length: number) {
 	return String(value).padStart(length, '0')
 }
 
-function restoreDefaults(t) {
+function restoreDefaults(t: TestContext) {
 	const {defaultTimezone, defaultDisambiguation} = ZonedDate
 	t.after(() => {
 		ZonedDate.defaultTimezone = defaultTimezone
@@ -1043,7 +1045,7 @@ function restoreDefaults(t) {
 	})
 }
 
-function setRuntimeTimezone(t, timezone) {
+function setRuntimeTimezone(t: TestContext, timezone: string) {
 	const previous = process.env.TZ
 	t.after(() => {
 		if (previous === undefined) delete process.env.TZ
@@ -1052,7 +1054,7 @@ function setRuntimeTimezone(t, timezone) {
 	process.env.TZ = timezone
 }
 
-function isSupportedTimezone(timezone) {
+function isSupportedTimezone(timezone: string) {
 	try {
 		new Intl.DateTimeFormat('en-US', {timeZone: timezone})
 		return true

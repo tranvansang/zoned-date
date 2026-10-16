@@ -36,9 +36,9 @@ import OffsetDate from 'zoned-date/OffsetDate'
 import ZonedDate from 'zoned-date/ZonedDate'
 ```
 
-CommonJS works the same way: `require('zoned-date')` returns `{OffsetDate, ZonedDate}`, and `require('zoned-date/OffsetDate')` returns the class. The CommonJS modules are a copy of the ES modules, so a program that loads the package both ways gets two copies of each class: `instanceof` does not recognize the other copy's instances, and each copy has its own defaults. The constructors still copy instances of either copy.
+The package is ES modules only. CommonJS code can load it with `import()`, or with `require()` on Node.js 20.19, 22.12 or later, where `require('zoned-date')` returns `{OffsetDate, ZonedDate}`. With Jest, use its ES module mode (`node --experimental-vm-modules`).
 
-TypeScript declarations are included for both module formats. The option types are `OffsetDate.Options` and `ZonedDate.Options`. With `moduleResolution` set to `node10` (`node` before TypeScript 5), the default imports of `zoned-date/OffsetDate` and `zoned-date/ZonedDate` need `esModuleInterop` or `allowSyntheticDefaultImports`, which are on by default from TypeScript 6; `import {OffsetDate, ZonedDate} from 'zoned-date'` works in every mode.
+TypeScript declarations are included. The option types are `OffsetDate.Options` and `ZonedDate.Options`. TypeScript finds the declarations through the `exports` of `package.json`, which it reads when `moduleResolution` is `node16`, `nodenext` or `bundler`. They need a `target` of ES2015 or later (the default from TypeScript 6), or `skipLibCheck`.
 
 ## Concepts
 
@@ -359,12 +359,11 @@ console.log(tokyo.toLocaleString('en-GB', {timeZone: tokyo.timezone})) // 04/09/
 ## Development
 
 ```bash
+npm install
 npm test
 ```
 
-`npm test` runs the suite with the built-in Node.js test runner (`node --test`), on Node.js 20.11 or later (21.2 or later on Node.js 21).
-
-The `.mjs` files are the source. `build.sh` generates the CommonJS modules (`shared.cjs`, `OffsetDate.cjs` and `ZonedDate.cjs`) from them, and the CommonJS declarations `OffsetDate.d.cts` and `ZonedDate.d.cts` from the `.d.ts` files. The `index.*` files are written by hand. The `prepublishOnly` script runs `build.sh` before `npm publish`. After you edit a `.mjs` or `.d.ts` file, run `./build.sh`; `npm test` checks that the generated files are up to date.
+The source and the tests are TypeScript, in `src` and `test`. `tsc` compiles the source into `dist`, with the declarations, and the `prepublishOnly` script runs it before `npm publish`. `npm test` compiles, type-checks the tests (`tsc -p test`), then runs them on the compiled package with the built-in Node.js test runner (`node --test`), which runs TypeScript directly on Node.js 22.18 or later (23.6 or later on Node.js 23).
 
 ## License
 
