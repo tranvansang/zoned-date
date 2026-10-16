@@ -3,7 +3,10 @@
 		"module": "nodenext",
 		"rootDir": "src",
 		"outDir": "dist",
-		"declaration": true
+		"declaration": true,
+		"rewriteRelativeImportExtensions": true,
+		"erasableSyntaxOnly": true,
+		"verbatimModuleSyntax": true
 	},
 	"include": ["src"]
 }

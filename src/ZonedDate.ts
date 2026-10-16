@@ -1,9 +1,20 @@
-import {isZonedDate, makeDate, maxTime, modulo, oneDay, oneHour, parseString, resolve, setFields, takeOptions, timeClip, todayTime, utc, wallclockOf} from './shared.js'
+import {type DateLike, isZonedDate, makeDate, maxTime, modulo, oneDay, oneHour, parseString, resolve, setFields, takeOptions, timeClip, todayTime, utc, type ValueSetter, wallclockOf} from './shared.ts'
+
+export type {DateLike, ValueSetter}
+
+export type Disambiguation = 'compatible' | 'earlier' | 'later' | 'reject'
+
+export interface ZonedDateOptions {
+	/** Time zone name. undefined or null: the time zone of the copied ZonedDate, or else ZonedDate.defaultTimezone */
+	timezone?: string | null | undefined
+	/** undefined or null: the disambiguation of the copied ZonedDate, or else ZonedDate.defaultDisambiguation */
+	disambiguation?: Disambiguation | null | undefined
+}
 
 // The wallclock formatters, per Intl.DateTimeFormat (a polyfill or a mock can replace it) and per time zone name
 const formatters = new WeakMap<typeof Intl.DateTimeFormat, {hourCycle: Intl.DateTimeFormatOptions; byTimezone: Record<string, Intl.DateTimeFormat>}>()
 
-class ZonedDate {
+export default class ZonedDate {
 	static defaultTimezone = 'UTC'
 	/**
 	 * Which instant a wallclock means when it occurs twice or not at all around a DST change, as in Temporal:
@@ -13,7 +24,7 @@ class ZonedDate {
 	 * - later: the later instant
 	 * - reject: neither; reading the instant throws RangeError
 	 */
-	static defaultDisambiguation: ZonedDate.Disambiguation = 'compatible'
+	static defaultDisambiguation: Disambiguation = 'compatible'
 	static UTC(...args: [year: number, monthIndex?: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number]) {
 		return Date.UTC(...args)
 	}
@@ -31,17 +42,17 @@ class ZonedDate {
 	// The offset in milliseconds at the instant #offsetTime
 	#offset!: number
 	#offsetTime: number | undefined
-	constructor(options?: ZonedDate.Options)
-	constructor(zonedDate: ZonedDate, options?: ZonedDate.Options | null)
-	constructor(value: number | string | Date | ZonedDate.DateLike | null, options?: ZonedDate.Options | null)
-	constructor(fullYear: number, month: number, options?: ZonedDate.Options | null)
-	constructor(fullYear: number, month: number, date: number, options?: ZonedDate.Options | null)
-	constructor(fullYear: number, month: number, date: number, hours: number, options?: ZonedDate.Options | null)
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, options?: ZonedDate.Options | null)
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, options?: ZonedDate.Options | null)
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, milliseconds: number, options?: ZonedDate.Options | null)
+	constructor(options?: ZonedDateOptions)
+	constructor(zonedDate: ZonedDate, options?: ZonedDateOptions | null)
+	constructor(value: number | string | Date | DateLike | null, options?: ZonedDateOptions | null)
+	constructor(fullYear: number, month: number, options?: ZonedDateOptions | null)
+	constructor(fullYear: number, month: number, date: number, options?: ZonedDateOptions | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, options?: ZonedDateOptions | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, options?: ZonedDateOptions | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, options?: ZonedDateOptions | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, milliseconds: number, options?: ZonedDateOptions | null)
 	constructor(...args: unknown[]) {
-		const options = takeOptions<ZonedDate.Options>(args)
+		const options = takeOptions<ZonedDateOptions>(args)
 		const [value] = args
 		if (args.length === 1 && isZonedDate(value)) { // new ZonedDate(zonedDate)
 			if (value instanceof ZonedDate) {
@@ -72,8 +83,8 @@ class ZonedDate {
 		return 'ZonedDate'
 	}
 
-	#_disambiguation!: ZonedDate.Disambiguation
-	set #disambiguation(disambiguation: ZonedDate.Disambiguation) {
+	#_disambiguation!: Disambiguation
+	set #disambiguation(disambiguation: Disambiguation) {
 		if (!['compatible', 'earlier', 'later', 'reject'].includes(disambiguation)) throw new Error('Invalid disambiguation option')
 		this.#_disambiguation = disambiguation
 	}
@@ -92,258 +103,258 @@ class ZonedDate {
 	get timezone(): string {
 		return this.getTimezone()
 	}
-	set timezone(timezone: ZonedDate.ValueSetter<string>) {
+	set timezone(timezone: ValueSetter<string>) {
 		this.setTimezone(timezone)
 	}
 	getTimezone() {
 		return this.#_timezone
 	}
 	/** Keeps the wallclock */
-	setTimezone(timezone?: ZonedDate.ValueSetter<string>) {
+	setTimezone(timezone?: ValueSetter<string>) {
 		const [value] = resolve([timezone], [this.#_timezone])
 		if (value !== this.#_timezone) this.#rezone(value, this.#_disambiguation)
 		return this
 	}
 	/** Keeps the wallclock */
-	withTimezone(timezone?: ZonedDate.ValueSetter<string>) {
+	withTimezone(timezone?: ValueSetter<string>) {
 		return this.#copy().setTimezone(timezone)
 	}
 
-	get disambiguation(): ZonedDate.Disambiguation {
+	get disambiguation(): Disambiguation {
 		return this.getDisambiguation()
 	}
-	set disambiguation(disambiguation: ZonedDate.ValueSetter<ZonedDate.Disambiguation>) {
+	set disambiguation(disambiguation: ValueSetter<Disambiguation>) {
 		this.setDisambiguation(disambiguation)
 	}
 	getDisambiguation() {
 		return this.#_disambiguation
 	}
 	/** Resolves the wallclock again with the new option */
-	setDisambiguation(disambiguation?: ZonedDate.ValueSetter<ZonedDate.Disambiguation>) {
+	setDisambiguation(disambiguation?: ValueSetter<Disambiguation>) {
 		const [value] = resolve([disambiguation], [this.#_disambiguation])
 		if (value !== this.#_disambiguation) this.#rezone(this.#_timezone, value)
 		return this
 	}
 	/** Resolves the wallclock again with the new option */
-	withDisambiguation(disambiguation?: ZonedDate.ValueSetter<ZonedDate.Disambiguation>) {
+	withDisambiguation(disambiguation?: ValueSetter<Disambiguation>) {
 		return this.#copy().setDisambiguation(disambiguation)
 	}
 
 	get fullYear(): number {
 		return this.getFullYear()
 	}
-	set fullYear(year: ZonedDate.ValueSetter) {
+	set fullYear(year: ValueSetter) {
 		this.setFullYear(year)
 	}
 	getFullYear() {
 		const [date, years] = this.#wallclock()
 		return date.getUTCFullYear() + years
 	}
-	setFullYear(year?: ZonedDate.ValueSetter, month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter) {
+	setFullYear(year?: ValueSetter, month?: ValueSetter, date?: ValueSetter) {
 		return this.#setWallclock(0, [year, month, date])
 	}
-	withFullYear(year?: ZonedDate.ValueSetter, month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter) {
+	withFullYear(year?: ValueSetter, month?: ValueSetter, date?: ValueSetter) {
 		return this.#copy().setFullYear(year, month, date)
 	}
 	get utcFullYear(): number {
 		return this.getUTCFullYear()
 	}
-	set utcFullYear(year: ZonedDate.ValueSetter) {
+	set utcFullYear(year: ValueSetter) {
 		this.setUTCFullYear(year)
 	}
 	getUTCFullYear() {
 		return this.toDate().getUTCFullYear()
 	}
-	setUTCFullYear(year?: ZonedDate.ValueSetter, month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter) {
+	setUTCFullYear(year?: ValueSetter, month?: ValueSetter, date?: ValueSetter) {
 		return this.#setUTC(0, [year, month, date])
 	}
-	withUTCFullYear(year?: ZonedDate.ValueSetter, month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter) {
+	withUTCFullYear(year?: ValueSetter, month?: ValueSetter, date?: ValueSetter) {
 		return this.#copy().setUTCFullYear(year, month, date)
 	}
 
 	get month(): number {
 		return this.getMonth()
 	}
-	set month(month: ZonedDate.ValueSetter) {
+	set month(month: ValueSetter) {
 		this.setMonth(month)
 	}
 	getMonth() {
 		return this.#wallclock()[0].getUTCMonth()
 	}
-	setMonth(month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter) {
+	setMonth(month?: ValueSetter, date?: ValueSetter) {
 		return this.#setWallclock(1, [month, date])
 	}
-	withMonth(month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter) {
+	withMonth(month?: ValueSetter, date?: ValueSetter) {
 		return this.#copy().setMonth(month, date)
 	}
 	get utcMonth(): number {
 		return this.getUTCMonth()
 	}
-	set utcMonth(month: ZonedDate.ValueSetter) {
+	set utcMonth(month: ValueSetter) {
 		this.setUTCMonth(month)
 	}
 	getUTCMonth() {
 		return this.toDate().getUTCMonth()
 	}
-	setUTCMonth(month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter) {
+	setUTCMonth(month?: ValueSetter, date?: ValueSetter) {
 		return this.#setUTC(1, [month, date])
 	}
-	withUTCMonth(month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter) {
+	withUTCMonth(month?: ValueSetter, date?: ValueSetter) {
 		return this.#copy().setUTCMonth(month, date)
 	}
 
 	get date(): number {
 		return this.getDate()
 	}
-	set date(date: ZonedDate.ValueSetter) {
+	set date(date: ValueSetter) {
 		this.setDate(date)
 	}
 	getDate() {
 		return this.#wallclock()[0].getUTCDate()
 	}
-	setDate(date?: ZonedDate.ValueSetter, hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	setDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#setWallclock(2, [date, hours, minutes, seconds, milliseconds])
 	}
-	withDate(date?: ZonedDate.ValueSetter, hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	withDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setDate(date, hours, minutes, seconds, milliseconds)
 	}
 	get utcDate(): number {
 		return this.getUTCDate()
 	}
-	set utcDate(date: ZonedDate.ValueSetter) {
+	set utcDate(date: ValueSetter) {
 		this.setUTCDate(date)
 	}
 	getUTCDate() {
 		return this.toDate().getUTCDate()
 	}
-	setUTCDate(date?: ZonedDate.ValueSetter, hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	setUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#setUTC(2, [date, hours, minutes, seconds, milliseconds])
 	}
-	withUTCDate(date?: ZonedDate.ValueSetter, hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	withUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setUTCDate(date, hours, minutes, seconds, milliseconds)
 	}
 
 	get hours(): number {
 		return this.getHours()
 	}
-	set hours(hours: ZonedDate.ValueSetter) {
+	set hours(hours: ValueSetter) {
 		this.setHours(hours)
 	}
 	getHours() {
 		return this.#wallclock()[0].getUTCHours()
 	}
-	setHours(hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	setHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#setWallclock(3, [hours, minutes, seconds, milliseconds])
 	}
-	withHours(hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	withHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setHours(hours, minutes, seconds, milliseconds)
 	}
 	get utcHours(): number {
 		return this.getUTCHours()
 	}
-	set utcHours(hours: ZonedDate.ValueSetter) {
+	set utcHours(hours: ValueSetter) {
 		this.setUTCHours(hours)
 	}
 	getUTCHours() {
 		return this.toDate().getUTCHours()
 	}
-	setUTCHours(hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	setUTCHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#setUTC(3, [hours, minutes, seconds, milliseconds])
 	}
-	withUTCHours(hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	withUTCHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setUTCHours(hours, minutes, seconds, milliseconds)
 	}
 
 	get minutes(): number {
 		return this.getMinutes()
 	}
-	set minutes(minutes: ZonedDate.ValueSetter) {
+	set minutes(minutes: ValueSetter) {
 		this.setMinutes(minutes)
 	}
 	getMinutes() {
 		return this.#wallclock()[0].getUTCMinutes()
 	}
-	setMinutes(minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	setMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#setWallclock(4, [minutes, seconds, milliseconds])
 	}
-	withMinutes(minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	withMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setMinutes(minutes, seconds, milliseconds)
 	}
 	get utcMinutes(): number {
 		return this.getUTCMinutes()
 	}
-	set utcMinutes(minutes: ZonedDate.ValueSetter) {
+	set utcMinutes(minutes: ValueSetter) {
 		this.setUTCMinutes(minutes)
 	}
 	getUTCMinutes() {
 		return this.toDate().getUTCMinutes()
 	}
-	setUTCMinutes(minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	setUTCMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#setUTC(4, [minutes, seconds, milliseconds])
 	}
-	withUTCMinutes(minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	withUTCMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setUTCMinutes(minutes, seconds, milliseconds)
 	}
 
 	get seconds(): number {
 		return this.getSeconds()
 	}
-	set seconds(seconds: ZonedDate.ValueSetter) {
+	set seconds(seconds: ValueSetter) {
 		this.setSeconds(seconds)
 	}
 	getSeconds() {
 		return this.#wallclock()[0].getUTCSeconds()
 	}
-	setSeconds(seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	setSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#setWallclock(5, [seconds, milliseconds])
 	}
-	withSeconds(seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	withSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setSeconds(seconds, milliseconds)
 	}
 	get utcSeconds(): number {
 		return this.getUTCSeconds()
 	}
-	set utcSeconds(seconds: ZonedDate.ValueSetter) {
+	set utcSeconds(seconds: ValueSetter) {
 		this.setUTCSeconds(seconds)
 	}
 	getUTCSeconds() {
 		return this.toDate().getUTCSeconds()
 	}
-	setUTCSeconds(seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	setUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#setUTC(5, [seconds, milliseconds])
 	}
-	withUTCSeconds(seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter) {
+	withUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setUTCSeconds(seconds, milliseconds)
 	}
 
 	get milliseconds(): number {
 		return this.getMilliseconds()
 	}
-	set milliseconds(milliseconds: ZonedDate.ValueSetter) {
+	set milliseconds(milliseconds: ValueSetter) {
 		this.setMilliseconds(milliseconds)
 	}
 	getMilliseconds() {
 		return this.#wallclock()[0].getUTCMilliseconds()
 	}
-	setMilliseconds(milliseconds?: ZonedDate.ValueSetter) {
+	setMilliseconds(milliseconds?: ValueSetter) {
 		return this.#setWallclock(6, [milliseconds])
 	}
-	withMilliseconds(milliseconds?: ZonedDate.ValueSetter) {
+	withMilliseconds(milliseconds?: ValueSetter) {
 		return this.#copy().setMilliseconds(milliseconds)
 	}
 	get utcMilliseconds(): number {
 		return this.getUTCMilliseconds()
 	}
-	set utcMilliseconds(milliseconds: ZonedDate.ValueSetter) {
+	set utcMilliseconds(milliseconds: ValueSetter) {
 		this.setUTCMilliseconds(milliseconds)
 	}
 	getUTCMilliseconds() {
 		return this.toDate().getUTCMilliseconds()
 	}
-	setUTCMilliseconds(milliseconds?: ZonedDate.ValueSetter) {
+	setUTCMilliseconds(milliseconds?: ValueSetter) {
 		return this.#setUTC(6, [milliseconds])
 	}
-	withUTCMilliseconds(milliseconds?: ZonedDate.ValueSetter) {
+	withUTCMilliseconds(milliseconds?: ValueSetter) {
 		return this.#copy().setUTCMilliseconds(milliseconds)
 	}
 
@@ -377,14 +388,14 @@ class ZonedDate {
 	get time(): number {
 		return this.getTime()
 	}
-	set time(time: ZonedDate.ValueSetter) {
+	set time(time: ValueSetter) {
 		this.setTime(time)
 	}
 	getTime() {
 		if (this.#time === undefined) throw new RangeError('Ambiguous time')
 		return this.#time
 	}
-	setTime(time?: ZonedDate.ValueSetter) {
+	setTime(time?: ValueSetter) {
 		if (typeof time === 'function') time = time(this.getTime())
 		if (time !== undefined) {
 			// ToNumber and the range check, as Date#setTime does
@@ -393,7 +404,7 @@ class ZonedDate {
 		}
 		return this
 	}
-	withTime(time?: ZonedDate.ValueSetter) {
+	withTime(time?: ValueSetter) {
 		return this.#copy().setTime(time)
 	}
 
@@ -466,20 +477,20 @@ class ZonedDate {
 	#wallclock() {
 		return wallclockOf(this.#wallclockTime())
 	}
-	#setWallclock(index: number, values: ZonedDate.ValueSetter[]) {
+	#setWallclock(index: number, values: ValueSetter[]) {
 		const wallclockTime = this.#wallclockTime()
 		const next = setFields(wallclockTime, index, values)
 		// an unchanged wallclock keeps its instant, even in a repeated hour
 		if (next !== wallclockTime) this.#setWallclockTime(next)
 		return this
 	}
-	#setUTC(index: number, values: ZonedDate.ValueSetter[]) {
+	#setUTC(index: number, values: ValueSetter[]) {
 		this.#time = timeClip(setFields(this.getTime(), index, values))
 		return this
 	}
 	// Moves to another time zone or disambiguation and keeps the wallclock. With the same disambiguation, an instant that
 	// already shows the wallclock in the new time zone stays.
-	#rezone(timezone: string, disambiguation: ZonedDate.Disambiguation) {
+	#rezone(timezone: string, disambiguation: Disambiguation) {
 		const wallclockTime = this.#wallclockTime()
 		const time = this.#time
 		const keep = disambiguation === this.#_disambiguation && time !== undefined && !Number.isNaN(time)
@@ -539,31 +550,6 @@ class ZonedDate {
 		else this.#time = timeClip(todayTime(time, zone, now, instant => this.#offsetAt(clamp(instant))))
 	}
 }
-
-namespace ZonedDate {
-	/** A value, a function that takes the current value and returns the new one, or undefined to keep the current value */
-	export type ValueSetter<T = number> = T | undefined | ((value: T) => T | undefined)
-	export type Disambiguation = 'compatible' | 'earlier' | 'later' | 'reject'
-	export interface Options {
-		/** Time zone name. undefined or null: the time zone of the copied ZonedDate, or else ZonedDate.defaultTimezone */
-		timezone?: string | null | undefined
-		/** undefined or null: the disambiguation of the copied ZonedDate, or else ZonedDate.defaultDisambiguation */
-		disambiguation?: Disambiguation | null | undefined
-	}
-	/**
-	 * A value that Date converts to an instant through Symbol.toPrimitive or valueOf(), such as a ZonedDate or a dayjs
-	 * object. Temporal objects, whose conversions throw, are left out.
-	 */
-	export interface DateLike {
-		valueOf(): number
-		epochMilliseconds?: undefined
-		calendarId?: undefined
-		nanosecond?: undefined
-		sign?: undefined
-	}
-}
-
-export default ZonedDate
 
 // The formatter of the wallclock in a time zone, created once per time zone
 function formatterOf(timezone: string) {

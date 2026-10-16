@@ -49,6 +49,15 @@ describe('package entry points', () => {
 	})
 })
 
+describe('source', () => {
+	test('runs on Node.js without a build, as it uses only erasable TypeScript', async () => {
+		const {default: SourceOffsetDate} = await import('../src/OffsetDate.ts')
+		const {default: SourceZonedDate} = await import('../src/ZonedDate.ts')
+		strictEqual(new SourceOffsetDate('2021-09-04T05:19', {offset: 9}).toISOString(), '2021-09-03T20:19:00.000Z')
+		strictEqual(new SourceZonedDate('2023-11-05T01:30', {timezone: 'America/Los_Angeles', disambiguation: 'later'}).time, Date.UTC(2023, 10, 5, 9, 30))
+	})
+})
+
 describe('published files', () => {
 	test('npm publishes the compiled modules with the declarations beside them, which TypeScript reads', {skip: process.platform === 'win32'}, () => {
 		const [{files}]: [{files: {path: string}[]}] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {cwd: packageRoot, encoding: 'utf8'}))

@@ -1,26 +1,33 @@
-import {isDate, isZonedDate, oneDay, oneHour, parseString, resolve, setFields, takeOptions, timeClip, todayTime, utc, wallclockOf} from './shared.js'
+import {type DateLike, isDate, isZonedDate, oneDay, oneHour, parseString, resolve, setFields, takeOptions, timeClip, todayTime, utc, type ValueSetter, wallclockOf} from './shared.ts'
+
+export type {DateLike, ValueSetter}
+
+export interface OffsetDateOptions {
+	/** UTC offset in hours. undefined or null: the offset of the copied OffsetDate, or else OffsetDate.defaultOffset */
+	offset?: number | null | undefined
+}
 
 /**
  * The setters that Date has return the instance. Each also has Date's own signature, which returns the time, so that an
  * OffsetDate is assignable to Date; calls with the first signature's arguments get the instance.
  */
-class OffsetDate extends Date {
+export default class OffsetDate extends Date {
 	static defaultOffset = 0
 	static now() {
 		return Date.now()
 	}
 
 	#offset: number // milliseconds
-	constructor(options?: OffsetDate.Options)
-	constructor(value: number | string | Date | OffsetDate.DateLike | null, options?: OffsetDate.Options | null)
-	constructor(fullYear: number, month: number, options?: OffsetDate.Options | null)
-	constructor(fullYear: number, month: number, date: number, options?: OffsetDate.Options | null)
-	constructor(fullYear: number, month: number, date: number, hours: number, options?: OffsetDate.Options | null)
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, options?: OffsetDate.Options | null)
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, options?: OffsetDate.Options | null)
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, milliseconds: number, options?: OffsetDate.Options | null)
+	constructor(options?: OffsetDateOptions)
+	constructor(value: number | string | Date | DateLike | null, options?: OffsetDateOptions | null)
+	constructor(fullYear: number, month: number, options?: OffsetDateOptions | null)
+	constructor(fullYear: number, month: number, date: number, options?: OffsetDateOptions | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, options?: OffsetDateOptions | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, options?: OffsetDateOptions | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, options?: OffsetDateOptions | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, milliseconds: number, options?: OffsetDateOptions | null)
 	constructor(...args: unknown[]) {
-		const options = takeOptions<OffsetDate.Options>(args)
+		const options = takeOptions<OffsetDateOptions>(args)
 		const [value] = args
 		const offset = toOffset(options?.offset ?? (args.length === 1 && isOffsetDate(value) ? value.getOffset() : OffsetDate.defaultOffset))
 		if (args.length === 0) super(Date.now()) // new Date()
@@ -33,225 +40,225 @@ class OffsetDate extends Date {
 	get fullYear(): number {
 		return this.getFullYear()
 	}
-	set fullYear(year: OffsetDate.ValueSetter) {
+	set fullYear(year: ValueSetter) {
 		this.setFullYear(year)
 	}
 	getFullYear() {
 		const [date, years] = this.#wallclock()
 		return date.getUTCFullYear() + years
 	}
-	setFullYear(year?: OffsetDate.ValueSetter, month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter): this
+	setFullYear(year?: ValueSetter, month?: ValueSetter, date?: ValueSetter): this
 	setFullYear(year: number, month?: number, date?: number): number
-	setFullYear(year?: OffsetDate.ValueSetter, month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter): this | number {
+	setFullYear(year?: ValueSetter, month?: ValueSetter, date?: ValueSetter): this | number {
 		return this.#setWallclock(0, [year, month, date])
 	}
-	withFullYear(year?: OffsetDate.ValueSetter, month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter) {
+	withFullYear(year?: ValueSetter, month?: ValueSetter, date?: ValueSetter) {
 		return this.#copy().setFullYear(year, month, date)
 	}
 	get utcFullYear(): number {
 		return this.getUTCFullYear()
 	}
-	set utcFullYear(year: OffsetDate.ValueSetter) {
+	set utcFullYear(year: ValueSetter) {
 		this.setUTCFullYear(year)
 	}
-	setUTCFullYear(year?: OffsetDate.ValueSetter, month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter): this
+	setUTCFullYear(year?: ValueSetter, month?: ValueSetter, date?: ValueSetter): this
 	setUTCFullYear(year: number, month?: number, date?: number): number
-	setUTCFullYear(year?: OffsetDate.ValueSetter, month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter): this | number {
+	setUTCFullYear(year?: ValueSetter, month?: ValueSetter, date?: ValueSetter): this | number {
 		return this.#setUTC(0, [year, month, date])
 	}
-	withUTCFullYear(year?: OffsetDate.ValueSetter, month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter) {
+	withUTCFullYear(year?: ValueSetter, month?: ValueSetter, date?: ValueSetter) {
 		return this.#copy().setUTCFullYear(year, month, date)
 	}
 
 	get month(): number {
 		return this.getMonth()
 	}
-	set month(month: OffsetDate.ValueSetter) {
+	set month(month: ValueSetter) {
 		this.setMonth(month)
 	}
 	getMonth() {
 		return this.#wallclock()[0].getUTCMonth()
 	}
-	setMonth(month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter): this
+	setMonth(month?: ValueSetter, date?: ValueSetter): this
 	setMonth(month: number, date?: number): number
-	setMonth(month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter): this | number {
+	setMonth(month?: ValueSetter, date?: ValueSetter): this | number {
 		return this.#setWallclock(1, [month, date])
 	}
-	withMonth(month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter) {
+	withMonth(month?: ValueSetter, date?: ValueSetter) {
 		return this.#copy().setMonth(month, date)
 	}
 	get utcMonth(): number {
 		return this.getUTCMonth()
 	}
-	set utcMonth(month: OffsetDate.ValueSetter) {
+	set utcMonth(month: ValueSetter) {
 		this.setUTCMonth(month)
 	}
-	setUTCMonth(month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter): this
+	setUTCMonth(month?: ValueSetter, date?: ValueSetter): this
 	setUTCMonth(month: number, date?: number): number
-	setUTCMonth(month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter): this | number {
+	setUTCMonth(month?: ValueSetter, date?: ValueSetter): this | number {
 		return this.#setUTC(1, [month, date])
 	}
-	withUTCMonth(month?: OffsetDate.ValueSetter, date?: OffsetDate.ValueSetter) {
+	withUTCMonth(month?: ValueSetter, date?: ValueSetter) {
 		return this.#copy().setUTCMonth(month, date)
 	}
 
 	get date(): number {
 		return this.getDate()
 	}
-	set date(date: OffsetDate.ValueSetter) {
+	set date(date: ValueSetter) {
 		this.setDate(date)
 	}
 	getDate() {
 		return this.#wallclock()[0].getUTCDate()
 	}
-	setDate(date?: OffsetDate.ValueSetter, hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this
+	setDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
 	setDate(date: number): number
-	setDate(date?: OffsetDate.ValueSetter, hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this | number {
+	setDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this | number {
 		return this.#setWallclock(2, [date, hours, minutes, seconds, milliseconds])
 	}
-	withDate(date?: OffsetDate.ValueSetter, hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter) {
+	withDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setDate(date, hours, minutes, seconds, milliseconds)
 	}
 	get utcDate(): number {
 		return this.getUTCDate()
 	}
-	set utcDate(date: OffsetDate.ValueSetter) {
+	set utcDate(date: ValueSetter) {
 		this.setUTCDate(date)
 	}
-	setUTCDate(date?: OffsetDate.ValueSetter, hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this
+	setUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
 	setUTCDate(date: number): number
-	setUTCDate(date?: OffsetDate.ValueSetter, hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this | number {
+	setUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this | number {
 		return this.#setUTC(2, [date, hours, minutes, seconds, milliseconds])
 	}
-	withUTCDate(date?: OffsetDate.ValueSetter, hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter) {
+	withUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setUTCDate(date, hours, minutes, seconds, milliseconds)
 	}
 
 	get hours(): number {
 		return this.getHours()
 	}
-	set hours(hours: OffsetDate.ValueSetter) {
+	set hours(hours: ValueSetter) {
 		this.setHours(hours)
 	}
 	getHours() {
 		return this.#wallclock()[0].getUTCHours()
 	}
-	setHours(hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this
+	setHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
 	setHours(hours: number, minutes?: number, seconds?: number, milliseconds?: number): number
-	setHours(hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this | number {
+	setHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this | number {
 		return this.#setWallclock(3, [hours, minutes, seconds, milliseconds])
 	}
-	withHours(hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter) {
+	withHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setHours(hours, minutes, seconds, milliseconds)
 	}
 	get utcHours(): number {
 		return this.getUTCHours()
 	}
-	set utcHours(hours: OffsetDate.ValueSetter) {
+	set utcHours(hours: ValueSetter) {
 		this.setUTCHours(hours)
 	}
-	setUTCHours(hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this
+	setUTCHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
 	setUTCHours(hours: number, minutes?: number, seconds?: number, milliseconds?: number): number
-	setUTCHours(hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this | number {
+	setUTCHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this | number {
 		return this.#setUTC(3, [hours, minutes, seconds, milliseconds])
 	}
-	withUTCHours(hours?: OffsetDate.ValueSetter, minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter) {
+	withUTCHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setUTCHours(hours, minutes, seconds, milliseconds)
 	}
 
 	get minutes(): number {
 		return this.getMinutes()
 	}
-	set minutes(minutes: OffsetDate.ValueSetter) {
+	set minutes(minutes: ValueSetter) {
 		this.setMinutes(minutes)
 	}
 	getMinutes() {
 		return this.#wallclock()[0].getUTCMinutes()
 	}
-	setMinutes(minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this
+	setMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
 	setMinutes(minutes: number, seconds?: number, milliseconds?: number): number
-	setMinutes(minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this | number {
+	setMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this | number {
 		return this.#setWallclock(4, [minutes, seconds, milliseconds])
 	}
-	withMinutes(minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter) {
+	withMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setMinutes(minutes, seconds, milliseconds)
 	}
 	get utcMinutes(): number {
 		return this.getUTCMinutes()
 	}
-	set utcMinutes(minutes: OffsetDate.ValueSetter) {
+	set utcMinutes(minutes: ValueSetter) {
 		this.setUTCMinutes(minutes)
 	}
-	setUTCMinutes(minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this
+	setUTCMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
 	setUTCMinutes(minutes: number, seconds?: number, milliseconds?: number): number
-	setUTCMinutes(minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this | number {
+	setUTCMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this | number {
 		return this.#setUTC(4, [minutes, seconds, milliseconds])
 	}
-	withUTCMinutes(minutes?: OffsetDate.ValueSetter, seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter) {
+	withUTCMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setUTCMinutes(minutes, seconds, milliseconds)
 	}
 
 	get seconds(): number {
 		return this.getSeconds()
 	}
-	set seconds(seconds: OffsetDate.ValueSetter) {
+	set seconds(seconds: ValueSetter) {
 		this.setSeconds(seconds)
 	}
 	getSeconds() {
 		return this.#wallclock()[0].getUTCSeconds()
 	}
-	setSeconds(seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this
+	setSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this
 	setSeconds(seconds: number, milliseconds?: number): number
-	setSeconds(seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this | number {
+	setSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this | number {
 		return this.#setWallclock(5, [seconds, milliseconds])
 	}
-	withSeconds(seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter) {
+	withSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setSeconds(seconds, milliseconds)
 	}
 	get utcSeconds(): number {
 		return this.getUTCSeconds()
 	}
-	set utcSeconds(seconds: OffsetDate.ValueSetter) {
+	set utcSeconds(seconds: ValueSetter) {
 		this.setUTCSeconds(seconds)
 	}
-	setUTCSeconds(seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this
+	setUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this
 	setUTCSeconds(seconds: number, milliseconds?: number): number
-	setUTCSeconds(seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter): this | number {
+	setUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this | number {
 		return this.#setUTC(5, [seconds, milliseconds])
 	}
-	withUTCSeconds(seconds?: OffsetDate.ValueSetter, milliseconds?: OffsetDate.ValueSetter) {
+	withUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter) {
 		return this.#copy().setUTCSeconds(seconds, milliseconds)
 	}
 
 	get milliseconds(): number {
 		return this.getMilliseconds()
 	}
-	set milliseconds(milliseconds: OffsetDate.ValueSetter) {
+	set milliseconds(milliseconds: ValueSetter) {
 		this.setMilliseconds(milliseconds)
 	}
 	getMilliseconds() {
 		return this.#wallclock()[0].getUTCMilliseconds()
 	}
-	setMilliseconds(milliseconds?: OffsetDate.ValueSetter): this
+	setMilliseconds(milliseconds?: ValueSetter): this
 	setMilliseconds(milliseconds: number): number
-	setMilliseconds(milliseconds?: OffsetDate.ValueSetter): this | number {
+	setMilliseconds(milliseconds?: ValueSetter): this | number {
 		return this.#setWallclock(6, [milliseconds])
 	}
-	withMilliseconds(milliseconds?: OffsetDate.ValueSetter) {
+	withMilliseconds(milliseconds?: ValueSetter) {
 		return this.#copy().setMilliseconds(milliseconds)
 	}
 	get utcMilliseconds(): number {
 		return this.getUTCMilliseconds()
 	}
-	set utcMilliseconds(milliseconds: OffsetDate.ValueSetter) {
+	set utcMilliseconds(milliseconds: ValueSetter) {
 		this.setUTCMilliseconds(milliseconds)
 	}
-	setUTCMilliseconds(milliseconds?: OffsetDate.ValueSetter): this
+	setUTCMilliseconds(milliseconds?: ValueSetter): this
 	setUTCMilliseconds(milliseconds: number): number
-	setUTCMilliseconds(milliseconds?: OffsetDate.ValueSetter): this | number {
+	setUTCMilliseconds(milliseconds?: ValueSetter): this | number {
 		return this.#setUTC(6, [milliseconds])
 	}
-	withUTCMilliseconds(milliseconds?: OffsetDate.ValueSetter) {
+	withUTCMilliseconds(milliseconds?: ValueSetter) {
 		return this.#copy().setUTCMilliseconds(milliseconds)
 	}
 
@@ -279,53 +286,53 @@ class OffsetDate extends Date {
 	get timezoneOffset(): number {
 		return this.getTimezoneOffset()
 	}
-	set timezoneOffset(timezoneOffset: OffsetDate.ValueSetter) {
+	set timezoneOffset(timezoneOffset: ValueSetter) {
 		this.setTimezoneOffset(timezoneOffset)
 	}
 	getTimezoneOffset() {
 		return -this.#offset / 60_000 + 0
 	}
-	setTimezoneOffset(timezoneOffset?: OffsetDate.ValueSetter) {
+	setTimezoneOffset(timezoneOffset?: ValueSetter) {
 		const [value] = resolve([timezoneOffset], [this.getTimezoneOffset()])
 		this.#offset = toOffset(-value / 60)
 		return this
 	}
-	withTimezoneOffset(timezoneOffset?: OffsetDate.ValueSetter) {
+	withTimezoneOffset(timezoneOffset?: ValueSetter) {
 		return this.#copy().setTimezoneOffset(timezoneOffset)
 	}
 
 	get offset(): number {
 		return this.getOffset()
 	}
-	set offset(offset: OffsetDate.ValueSetter) {
+	set offset(offset: ValueSetter) {
 		this.setOffset(offset)
 	}
 	getOffset() {
 		return this.#offset / oneHour
 	}
-	setOffset(offset?: OffsetDate.ValueSetter) {
+	setOffset(offset?: ValueSetter) {
 		const [value] = resolve([offset], [this.getOffset()])
 		this.#offset = toOffset(value)
 		return this
 	}
-	withOffset(offset?: OffsetDate.ValueSetter) {
+	withOffset(offset?: ValueSetter) {
 		return this.#copy().setOffset(offset)
 	}
 
 	get time(): number {
 		return this.getTime()
 	}
-	set time(time: OffsetDate.ValueSetter) {
+	set time(time: ValueSetter) {
 		this.setTime(time)
 	}
-	setTime(time?: OffsetDate.ValueSetter): this
+	setTime(time?: ValueSetter): this
 	setTime(time: number): number
-	setTime(time?: OffsetDate.ValueSetter): this | number {
+	setTime(time?: ValueSetter): this | number {
 		const [value] = resolve([time], [this.getTime()])
 		super.setTime(value)
 		return this
 	}
-	withTime(time?: OffsetDate.ValueSetter) {
+	withTime(time?: ValueSetter) {
 		return this.#copy().setTime(time)
 	}
 
@@ -337,37 +344,15 @@ class OffsetDate extends Date {
 	#wallclock() {
 		return wallclockOf(this.getTime() + this.#offset)
 	}
-	#setWallclock(index: number, values: OffsetDate.ValueSetter[]) {
+	#setWallclock(index: number, values: ValueSetter[]) {
 		super.setTime(setFields(this.getTime() + this.#offset, index, values) - this.#offset)
 		return this
 	}
-	#setUTC(index: number, values: OffsetDate.ValueSetter[]) {
+	#setUTC(index: number, values: ValueSetter[]) {
 		super.setTime(setFields(this.getTime(), index, values))
 		return this
 	}
 }
-
-namespace OffsetDate {
-	/** A value, a function that takes the current value and returns the new one, or undefined to keep the current value */
-	export type ValueSetter = number | undefined | ((value: number) => number | undefined)
-	export interface Options {
-		/** UTC offset in hours. undefined or null: the offset of the copied OffsetDate, or else OffsetDate.defaultOffset */
-		offset?: number | null | undefined
-	}
-	/**
-	 * A value that Date converts to an instant through Symbol.toPrimitive or valueOf(), such as a ZonedDate or a dayjs
-	 * object. Temporal objects, whose conversions throw, are left out.
-	 */
-	export interface DateLike {
-		valueOf(): number
-		epochMilliseconds?: undefined
-		calendarId?: undefined
-		nanosecond?: undefined
-		sign?: undefined
-	}
-}
-
-export default OffsetDate
 
 // The instant of a date string. A string without a zone is a wallclock at the offset (milliseconds).
 function timeOfString(string: string, offset: number) {

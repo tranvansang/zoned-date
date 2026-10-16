@@ -1,7 +1,7 @@
 import {deepStrictEqual, notStrictEqual, ok, strictEqual, throws} from 'node:assert'
 import {describe, test, type TestContext} from 'node:test'
 import OffsetDate from 'zoned-date/OffsetDate'
-import ZonedDate from 'zoned-date/ZonedDate'
+import ZonedDate, {type Disambiguation} from 'zoned-date/ZonedDate'
 
 // 2021-09-04T05:19:52.001Z, a Saturday, far from any DST transition of the zones used below
 const epoch = Date.UTC(2021, 8, 4, 5, 19, 52, 1)
@@ -625,7 +625,7 @@ describe('ZonedDate disambiguation', () => {
 		zd.setDisambiguation(undefined)
 		strictEqual(zd.disambiguation, 'earlier')
 
-		let seen: ZonedDate.Disambiguation | undefined
+		let seen: Disambiguation | undefined
 		zd.setDisambiguation(disambiguation => {
 			seen = disambiguation
 			return 'reject'

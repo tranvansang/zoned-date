@@ -1,7 +1,7 @@
 import {describe, test, type TestContext} from 'node:test'
 import {deepStrictEqual, notStrictEqual, ok, strictEqual, throws} from 'node:assert'
 import {runInNewContext} from 'node:vm'
-import OffsetDate from 'zoned-date/OffsetDate'
+import OffsetDate, {type DateLike, type OffsetDateOptions, type ValueSetter} from 'zoned-date/OffsetDate'
 import ZonedDate from 'zoned-date/ZonedDate'
 
 // Wed 2024-01-31T20:30:15.250Z, which is Thu 2024-02-01T05:30:15.250 at +09:00
@@ -127,7 +127,7 @@ describe('constructor', () => {
 			[[100, 0], '0100-01-01T00:00:00.000Z'],
 			[[-1, 0], '-000001-01-01T00:00:00.000Z'],
 		] as const) {
-			strictEqual(new (OffsetDate as Constructor<[...typeof args, OffsetDate.Options]>)(...args satisfies WallclockFields, {offset: 0}).toISOString(), expected, `${args}`)
+			strictEqual(new (OffsetDate as Constructor<[...typeof args, OffsetDateOptions]>)(...args satisfies WallclockFields, {offset: 0}).toISOString(), expected, `${args}`)
 			strictEqual(new (OffsetDate as Constructor<typeof args>)(...args satisfies WallclockFields).toISOString(), expected, `${args} without options`)
 		}
 	})
@@ -139,7 +139,7 @@ describe('constructor', () => {
 			[[2020, 0, 1, 12, {offset: -9.5}], '2020-01-01T12:00:00.000', '2020-01-01T21:30:00.000Z'],
 			[[2024, 1, 29, 23, 59, 59, 999, {offset: 5.75}], '2024-02-29T23:59:59.999', '2024-02-29T18:14:59.999Z'],
 		] as const) {
-			const date = new (OffsetDate as Constructor<typeof args>)(...args satisfies readonly [...number[], OffsetDate.Options])
+			const date = new (OffsetDate as Constructor<typeof args>)(...args satisfies readonly [...number[], OffsetDateOptions])
 			strictEqual(wallclock(date), expectedWallclock, JSON.stringify(args))
 			strictEqual(date.toISOString(), expectedIso, JSON.stringify(args))
 		}
@@ -152,7 +152,7 @@ describe('constructor', () => {
 	})
 
 	test('a lone null or boolean converts to an epoch like Date', () => {
-		const values: [value: number | string | Date | OffsetDate.DateLike | null, expected: string][] = [
+		const values: [value: number | string | Date | DateLike | null, expected: string][] = [
 			[null, '1970-01-01T00:00:00.000Z'],
 			// @ts-expect-error a boolean is not a declared value
 			[false, '1970-01-01T00:00:00.000Z'],
@@ -934,7 +934,7 @@ describe('invalid dates and range limits', () => {
 	})
 
 	test('setFullYear without a year keeps an invalid date invalid', () => {
-		const years: OffsetDate.ValueSetter[] = [undefined, () => undefined, year => year + 1]
+		const years: ValueSetter[] = [undefined, () => undefined, year => year + 1]
 		for (const year of years) strictEqual(iso(new OffsetDate(NaN, {offset: 9}).setFullYear(year)), 'Invalid Date', String(year))
 		let received
 		new OffsetDate(NaN).setFullYear(year => {

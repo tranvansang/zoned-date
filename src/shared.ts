@@ -1,5 +1,5 @@
 // What OffsetDate and ZonedDate share. Internal: package.json does not export this module.
-import type ZonedDate from './ZonedDate.js'
+import type ZonedDate from './ZonedDate.ts'
 
 export const oneHour = 60 * 60_000
 export const oneDay = 24 * oneHour
@@ -17,8 +17,20 @@ const zonePattern = String.raw`(?<utc>Z)|(?<sign>[+-])(?<zoneHours>\d{2})(?:(?<c
 // The string formats of README.md: <date>, <date>T<time>[<zone>] and [T]<time>[<zone>], where a space can replace the T
 const stringPattern = new RegExp(`^(?:${datePattern})?(?:(?<separator>[T ])?${timePattern}(?:${zonePattern})?)?$`, 'i')
 
-// A value, a function that takes the current value and returns the new one, or undefined to keep the current value
-type ValueSetter<T = number> = T | undefined | ((value: T) => T | undefined)
+/** A value, a function that takes the current value and returns the new one, or undefined to keep the current value */
+export type ValueSetter<T = number> = T | undefined | ((value: T) => T | undefined)
+
+/**
+ * A value that Date converts to an instant through Symbol.toPrimitive or valueOf(), such as a ZonedDate or a dayjs object.
+ * Temporal objects, whose conversions throw, are left out.
+ */
+export interface DateLike {
+	valueOf(): number
+	epochMilliseconds?: undefined
+	calendarId?: undefined
+	nanosecond?: undefined
+	sign?: undefined
+}
 
 // Reads a string of stringPattern: [days since 1970 (undefined without a date), the time of day in milliseconds (past
 // 24 hours for hours past 23 without a date), the offset of the zone in milliseconds (undefined without a zone)]
