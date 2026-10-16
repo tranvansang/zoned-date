@@ -1,3 +1,2 @@
-import type OffsetDate from './OffsetDate.d.ts'
-import type ZonedDate from './ZonedDate.d.ts'
-export {OffsetDate, ZonedDate}
+export {default as OffsetDate} from './OffsetDate.js'
+export {default as ZonedDate} from './ZonedDate.js'

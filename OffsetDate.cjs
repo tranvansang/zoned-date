@@ -1,354 +1,157 @@
-// Generated content. Do not edit.
+'use strict'
+// Generated from OffsetDate.mjs by build.sh. Do not edit.
 
-const ONE_HOUR = 60 * 60_000
-
-// same implementation is repeated in ZonedDate.mjs
-function parseString(str) {
-	/* Read description in README.md for more information.
-	Additional info for implementation:
-
-	Some rules for implementation:
-	- Date-only does not have time zone.
-	- Time-only can start with T or space or not.
-	- Timezone part must start with Z or + or -.
-
-	Implementation:
-	Step 0: pre-processing
-	- Convert to uppercase.
-	- If first char is T or space, remove this char.
-
-	Step 1: determine parts
-	- If contains 'T', split by T, else split by space. Must have 1 or 2 parts.
-	- If 2 part, first part is date, second part is time.
-	- Otherwise, (have 1 part)
-		- If match /^\d{4}/, it is date.
-		- Otherwise, it is time.
-
-	Step 2: parse date
-	- Split by -.
-	- From left to right, parse year, month, date.
-	- If year is defined, month is set to jan if undefined, date is set to 1 if undefined.
-
-	Step 3: determine time and zone
-	- Find first char that is one of [:+-], or, end of string.
-	- Up to this character is time, the rest is timezone.
-
-	Step 4: parse time
-	- Split time part by :.
-	- From left to right, parse hours, minutes, seconds.
-	- Second can be ss or ss.sss.
-		- Split by .
-		- From left to right, parse seconds, milliseconds.
-
-	Step 5: Parse timezone part.
-	- If Z, offset is 0.
-	- Pop first char, determine timezone sign.
-	- Remove all colon. Now: it is HH or HHmm.
-	- Parse hours by 2 digits from left and remove them.
-	- If still have something, parse minutes by 2 digits from left.
-	*/
-
-	// step 0
-	str = str.toUpperCase()
-	if (str.startsWith('T') || str.startsWith(' ')) str = str.slice(1)
-
-	// step 1
-	const parts = str.includes('T') ? str.split('T') : str.split(' ')
-	if (parts.length > 2) throw new Error('Invalid date string')
-	let dateStr, timeAndZoneStr
-	if (parts.length === 2) {
-		dateStr = parts[0]
-		timeAndZoneStr = parts[1]
-	}
-	else if (/^\d{4}/.test(str)) dateStr = str
-	else timeAndZoneStr = str
-
-	// parse date
-	let year, month, date
-	if (dateStr !== undefined) {
-		const dateParts = dateStr.split('-')
-		for (let i = 0; i < dateParts.length; i++) {
-			const datePart = dateParts[i]
-			const num = parseInt(datePart, 10)
-			if (isNaN(num) || !isFinite(num)) throw new Error('Invalid date string')
-			if (i === 0) year = num
-			else if (i === 1) month = num - 1
-			else if (i === 2) date = num
-			else throw new Error('Invalid date string')
-		}
-		if (year !== undefined) {
-			month ??= 0
-			date ??= 1
-		}
-	}
-
-	// parse time
-	let hours = 0, minutes = 0, seconds = 0, milliseconds = 0, parsedOffset
-	if (timeAndZoneStr !== undefined) {
-		let timeStr, zoneStr
-		const zoneIndex = timeAndZoneStr.search(/[Z+-]/)
-		if (zoneIndex === -1) timeStr = timeAndZoneStr
-		else {
-			timeStr = timeAndZoneStr.slice(0, zoneIndex)
-			zoneStr = timeAndZoneStr.slice(zoneIndex)
-		}
-
-		// timeStr is always defined
-		const timeParts = timeStr.split(':')
-		for (let i = 0; i < timeParts.length; i++) {
-			const timePart = timeParts[i]
-			const num = i <= 1 ? parseInt(timePart, 10) : parseFloat(timePart)
-			if (isNaN(num) || !isFinite(num)) throw new Error('Invalid date string')
-			if (i === 0) hours = num
-			else if (i === 1) minutes = num
-			else if (i === 2) {
-				seconds = Math.floor(num)
-				milliseconds = Math.round((num - seconds) * 1000)
-			} else throw new Error('Invalid date string')
-		}
-		if (hours === undefined) throw new Error('Invalid date string')
-
-		if (zoneStr !== undefined) {
-			if (zoneStr === 'Z') parsedOffset = 0
-			else {
-				const sign = zoneStr[0]
-				zoneStr = zoneStr.slice(1).replace(/:/g, '')
-
-				const hoursStr = zoneStr.slice(0, 2)
-				const tzHours = parseInt(hoursStr, 10)
-				if (isNaN(tzHours) || !isFinite(tzHours)) throw new Error('Invalid date string')
-
-				const minutesStr = zoneStr.slice(2)
-				let minutes = 0
-				if (minutesStr) {
-					minutes = parseInt(minutesStr, 10)
-					if (isNaN(minutes) || !isFinite(minutes)) throw new Error('Invalid date string')
-				}
-
-				parsedOffset = (sign === '-' ? -1 : 1) * (tzHours + minutes / 60)
-			}
-		}
-	}
-
-	return [year, month, date, hours, minutes, seconds, milliseconds, parsedOffset]
-}
+const {defineFields, isDate, isZonedDate, oneDay, oneHour, parseString, resolve, setFields, takeOptions, timeClip, todayTime, utc, wallclockOf} = require('./shared.cjs')
 
 class OffsetDate extends Date {
 	static defaultOffset = 0
-	#offset
+	static now() {
+		return Date.now()
+	}
+
+	#offset // milliseconds
 	constructor(...args) {
-		if (args[0] instanceof OffsetDate) { // new Date(offsetDate)
-			super(args[0].getTime())
-			if (typeof args[1] === 'object' && args[1]?.offset !== undefined) this.#offset = args[1].offset
-			else this.#offset = args[0].#offset
-			return
-		}
-
-		const lastArg = args[args.length - 1]
-
-		let offset = OffsetDate.defaultOffset
-		if (typeof lastArg === 'object' && lastArg !== null && !(lastArg instanceof Date)) {
-			args.pop()
-			if (lastArg.offset !== null && lastArg.offset !== undefined) offset = lastArg.offset
-		}
-
-		if (args.length === 0) super() // new Date()
-		else if (
-			args[0] instanceof Date // new Date(date)
-			|| (args.length === 1 && typeof args[0] === 'number') // new Date(time)
-		) super(...args)
-		else if (typeof args[0] === 'string') { // new Date(dateString)
-			let [year, month, date, hours, minutes, seconds, milliseconds, parsedOffset = offset] = parseString(args[0])
-
-			if (year === undefined || month === undefined || date === undefined) {
-				let fixDate = 0
-				const utcWallclock = new Date(Date.now() + offset * ONE_HOUR)
-				if (parsedOffset !== offset) {
-					const sample = new Date(
-						Date.UTC(2020, 0, 1, hours % 24, minutes, seconds, milliseconds)
-						+ (offset - parsedOffset) * ONE_HOUR
-					)
-					if (sample.getUTCDate() !== 1) fixDate = parsedOffset < offset ? -1 : 1
-				}
-				year ??= utcWallclock.getUTCFullYear()
-				month ??= utcWallclock.getUTCMonth()
-				date ??= utcWallclock.getUTCDate() + fixDate
-			}
-
-			super(Date.UTC(year, month, date, hours, minutes, seconds, milliseconds) - parsedOffset * ONE_HOUR)
-		}
-		else super(Date.UTC(...args) + offset * ONE_HOUR) // new Date(year, month, date, hours, minutes, seconds, ms)
-
+		const options = takeOptions(args)
+		const [value] = args
+		const offset = toOffset(options?.offset ?? (args.length === 1 && isOffsetDate(value) ? value.getOffset() : OffsetDate.defaultOffset))
+		if (args.length === 0) super(Date.now()) // new Date()
+		else if (args.length > 1) super(utc(...args) - offset) // new Date(year, month, date, hours, minutes, seconds, ms)
+		else if (typeof value === 'string') super(timeOfString(value, offset)) // new Date(dateString)
+		else super(isZonedDate(value) ? value.getTime() : value) // new Date(value)
 		this.#offset = offset
-	}
-
-	get #utcWallclock() {
-		return new Date(this.getTime() + this.#offset * ONE_HOUR)
-	}
-	set #utcWallclock(utcWallclock) {
-		super.setTime(utcWallclock.getTime() - this.#offset * ONE_HOUR)
-	}
-	getFullYear() {
-		return this.#utcWallclock.getUTCFullYear()
-	}
-	setFullYear(year) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof year === 'function') year = year(utcWallclock.getUTCFullYear())
-		if (year !== undefined) {
-			utcWallclock.setUTCFullYear(year)
-			this.#utcWallclock = utcWallclock
-		}
-		return this
-	}
-	setUTCFullYear(year) {
-		if (typeof year === 'function') year = year(this.getUTCFullYear())
-		if (year !== undefined) super.setUTCFullYear(year)
-		return this
-	}
-
-	getMonth() {
-		return this.#utcWallclock.getUTCMonth()
-	}
-	setMonth(month) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof month === 'function') month = month(utcWallclock.getUTCMonth())
-		if (month !== undefined) {
-			utcWallclock.setUTCMonth(month)
-			this.#utcWallclock = utcWallclock
-		}
-		return this
-	}
-	setUTCMonth(month) {
-		if (typeof month === 'function') month = month(this.getUTCMonth())
-		if (month !== undefined) super.setUTCMonth(month)
-		return this
-	}
-
-	getDate() {
-		return this.#utcWallclock.getUTCDate()
-	}
-	setDate(date, hours, minutes, seconds, milliseconds) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof date === 'function') date = date(utcWallclock.getUTCDate())
-		if (date !== undefined) {
-			utcWallclock.setUTCDate(date)
-			this.#utcWallclock = utcWallclock
-		}
-		return this.setHours(hours, minutes, seconds, milliseconds)
-	}
-	setUTCDate(date, hours, minutes, seconds, milliseconds) {
-		if (typeof date === 'function') date = date(this.utcDate)
-		if (date !== undefined) super.setUTCDate(date)
-		return this.setUTCHours(hours, minutes, seconds, milliseconds)
-	}
-
-	getHours() {
-		return this.#utcWallclock.getUTCHours()
-	}
-	setHours(hours, minutes, seconds, milliseconds) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof hours === 'function') hours = hours(utcWallclock.getUTCHours())
-		if (hours !== undefined) {
-			utcWallclock.setUTCHours(hours)
-			this.#utcWallclock = utcWallclock
-		}
-		return this.setMinutes(minutes, seconds, milliseconds)
-	}
-	setUTCHours(hours, minutes, seconds, milliseconds) {
-		if (typeof hours === 'function') hours = hours(this.utcHours)
-		if (hours !== undefined) super.setUTCHours(hours)
-		return this.setUTCMinutes(minutes, seconds, milliseconds)
-	}
-
-	getMinutes() {
-		return this.#utcWallclock.getUTCMinutes()
-	}
-	setMinutes(minutes, seconds, milliseconds) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof minutes === 'function') minutes = minutes(utcWallclock.getUTCMinutes())
-		if (minutes !== undefined) {
-			utcWallclock.setUTCMinutes(minutes)
-			this.#utcWallclock = utcWallclock
-		}
-		return this.setSeconds(seconds, milliseconds)
-	}
-	setUTCMinutes(minutes, seconds, milliseconds) {
-		if (typeof minutes === 'function') minutes = minutes(this.utcMinutes)
-		if (minutes !== undefined) super.setUTCMinutes(minutes)
-		return this.setUTCSeconds(seconds, milliseconds)
-	}
-	getSeconds() {
-		return this.#utcWallclock.getUTCSeconds()
-	}
-	setSeconds(seconds, milliseconds) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof seconds === 'function') seconds = seconds(utcWallclock.getUTCSeconds())
-		if (seconds !== undefined) {
-			utcWallclock.setUTCSeconds(seconds)
-			this.#utcWallclock = utcWallclock
-		}
-		return this.setMilliseconds(milliseconds)
-	}
-	setUTCSeconds(seconds, milliseconds) {
-		if (typeof seconds === 'function') seconds = seconds(this.utcSeconds)
-		if (seconds !== undefined) super.setUTCSeconds(seconds)
-		return this.setUTCMilliseconds(milliseconds)
-	}
-	getMilliseconds() {
-		return this.#utcWallclock.getUTCMilliseconds()
-	}
-	setMilliseconds(milliseconds) {
-		const utcWallclock = this.#utcWallclock
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(utcWallclock.getUTCMilliseconds())
-		if (milliseconds !== undefined) {
-			utcWallclock.setUTCMilliseconds(milliseconds)
-			this.#utcWallclock = utcWallclock
-		}
-		return this
-	}
-	setUTCMilliseconds(milliseconds) {
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.utcMilliseconds)
-		if (milliseconds !== undefined) super.setUTCMilliseconds(milliseconds)
-		return this
-	}
-	getTimezoneOffset() {
-		return -this.#offset * 60
-	}
-	setTimezoneOffset(offset) {
-		if (typeof offset === 'function') offset = offset(this.timezoneOffset)
-		if (offset !== undefined) this.#offset = -offset / 60
-		return this
-	}
-	getOffset() {
-		return this.#offset
-	}
-	setOffset(offset) {
-		if (typeof offset === 'function') offset = offset(this.#offset)
-		if (offset !== undefined) this.#offset = offset
-		return this
 	}
 
 	get day() {
 		return this.getDay()
 	}
-	getDay() {
-		return this.#utcWallclock.getUTCDay()
-	}
 	get utcDay() {
 		return this.getUTCDay()
 	}
-	getUTCDay() {
-		return super.getUTCDay()
+
+	getFullYear() {
+		const [date, years] = this.#wallclock()
+		return date.getUTCFullYear() + years
+	}
+	setFullYear(...values) {
+		return this.#setWallclock(0, values)
+	}
+	setUTCFullYear(...values) {
+		return this.#setUTC(0, values)
+	}
+
+	getMonth() {
+		return this.#wallclock()[0].getUTCMonth()
+	}
+	setMonth(...values) {
+		return this.#setWallclock(1, values)
+	}
+	setUTCMonth(...values) {
+		return this.#setUTC(1, values)
+	}
+
+	getDate() {
+		return this.#wallclock()[0].getUTCDate()
+	}
+	setDate(...values) {
+		return this.#setWallclock(2, values)
+	}
+	setUTCDate(...values) {
+		return this.#setUTC(2, values)
+	}
+
+	getHours() {
+		return this.#wallclock()[0].getUTCHours()
+	}
+	setHours(...values) {
+		return this.#setWallclock(3, values)
+	}
+	setUTCHours(...values) {
+		return this.#setUTC(3, values)
+	}
+
+	getMinutes() {
+		return this.#wallclock()[0].getUTCMinutes()
+	}
+	setMinutes(...values) {
+		return this.#setWallclock(4, values)
+	}
+	setUTCMinutes(...values) {
+		return this.#setUTC(4, values)
+	}
+
+	getSeconds() {
+		return this.#wallclock()[0].getUTCSeconds()
+	}
+	setSeconds(...values) {
+		return this.#setWallclock(5, values)
+	}
+	setUTCSeconds(...values) {
+		return this.#setUTC(5, values)
+	}
+
+	getMilliseconds() {
+		return this.#wallclock()[0].getUTCMilliseconds()
+	}
+	setMilliseconds(...values) {
+		return this.#setWallclock(6, values)
+	}
+	setUTCMilliseconds(...values) {
+		return this.#setUTC(6, values)
+	}
+
+	getDay() {
+		return this.#wallclock()[0].getUTCDay()
+	}
+
+	getYear() {
+		return this.getFullYear() - 1900
+	}
+	// as in Date, 0 to 99 are years since 1900
+	setYear(year) {
+		// ToNumber, which throws for a BigInt as Date does
+		const value = +year
+		const integer = Math.trunc(value)
+		return this.setFullYear(integer >= 0 && integer <= 99 ? 1900 + integer : value)
+	}
+
+	getTimezoneOffset() {
+		return -this.#offset / 60_000 + 0
+	}
+	setTimezoneOffset(timezoneOffset) {
+		const [value] = resolve([timezoneOffset], [this.getTimezoneOffset()])
+		this.#offset = toOffset(-value / 60)
+		return this
+	}
+	getOffset() {
+		return this.#offset / oneHour
+	}
+	setOffset(offset) {
+		const [value] = resolve([offset], [this.getOffset()])
+		this.#offset = toOffset(value)
+		return this
 	}
 
 	setTime(time) {
-		if (typeof time === 'function') time = time(this.getTime())
-		if (time !== undefined) super.setTime(time)
+		const [value] = resolve([time], [this.getTime()])
+		super.setTime(value)
+		return this
+	}
+
+	// A Date whose UTC fields are the wallclock, and the years to add to its UTC year
+	#wallclock() {
+		return wallclockOf(this.getTime() + this.#offset)
+	}
+	#setWallclock(index, values) {
+		super.setTime(setFields(this.getTime() + this.#offset, index, values) - this.#offset)
+		return this
+	}
+	#setUTC(index, values) {
+		super.setTime(setFields(this.getTime(), index, values))
 		return this
 	}
 }
 
-for (const name of [
+defineFields(OffsetDate, [
 	'fullYear',
 	'utcFullYear',
 	'month',
@@ -366,24 +169,26 @@ for (const name of [
 	'timezoneOffset',
 	'offset',
 	'time',
-]) {
-	const capitalized = name.startsWith('utc')
-		? 'UTC' + name.slice('utc'.length)
-		: name[0].toUpperCase() + name.slice(1)
-	Object.defineProperty(OffsetDate.prototype, name, {
-		get() {
-			return this[`get${capitalized}`]()
-		},
-		set(value) {
-			this[`set${capitalized}`](value)
-		}
-	})
-	Object.assign(OffsetDate.prototype, {
-		[`with${capitalized}`]() {
-			return new OffsetDate(this)[`set${capitalized}`](...arguments)
-		}
-	})
+])
+
+// The instant of a date string. A string without a zone is a wallclock at the offset (milliseconds).
+function timeOfString(string, offset) {
+	const [days, time, zone = offset] = parseString(string)
+	if (days !== undefined) return days * oneDay + time - zone
+	// a time without a date falls on today's date at the offset. A clock outside the Date range is invalid, like NaN.
+	return todayTime(time, zone, timeClip(Date.now()), () => offset)
+}
+
+// An OffsetDate of any realm or copy of this package
+function isOffsetDate(value) {
+	return isDate(value) && typeof value.getOffset === 'function'
+}
+
+// An offset in hours, in milliseconds
+function toOffset(hours) {
+	const offset = Math.round(hours * oneHour)
+	if (!Number.isFinite(offset)) throw new RangeError(`Invalid offset: ${hours}`)
+	return offset + 0 // not -0
 }
 
 module.exports = OffsetDate
-

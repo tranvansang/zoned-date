@@ -3,39 +3,75 @@
   "version": "0.1.3",
   "description": "Timezone-aware better Javascript Date",
   "main": "index.cjs",
+  "types": "index.d.cts",
+  "typesVersions": {
+    "*": {
+      "OffsetDate": [
+        "OffsetDate.d.cts"
+      ],
+      "ZonedDate": [
+        "ZonedDate.d.cts"
+      ]
+    }
+  },
   "type": "module",
   "exports": {
     ".": {
-      "require": "./index.cjs",
-      "import": "./index.mjs",
-      "types": "./index.d.ts"
+      "import": {
+        "types": "./index.d.ts",
+        "default": "./index.mjs"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
+      }
     },
     "./OffsetDate": {
-      "require": "./OffsetDate.cjs",
-      "import": "./OffsetDate.mjs",
-      "types": "./OffsetDate.d.ts"
+      "import": {
+        "types": "./OffsetDate.d.ts",
+        "default": "./OffsetDate.mjs"
+      },
+      "require": {
+        "types": "./OffsetDate.d.cts",
+        "default": "./OffsetDate.cjs"
+      }
     },
     "./ZonedDate": {
-      "require": "./ZonedDate.cjs",
-      "import": "./ZonedDate.mjs",
-      "types": "./ZonedDate.d.ts"
-    }
+      "import": {
+        "types": "./ZonedDate.d.ts",
+        "default": "./ZonedDate.mjs"
+      },
+      "require": {
+        "types": "./ZonedDate.d.cts",
+        "default": "./ZonedDate.cjs"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "prepublishOnly": "./build.sh",
-    "test": "node --test test.mjs"
+    "test": "node --test"
   },
   "files": [
     "index.cjs",
     "index.mjs",
     "index.d.ts",
+    "index.d.cts",
     "OffsetDate.cjs",
     "OffsetDate.mjs",
     "OffsetDate.d.ts",
+    "OffsetDate.d.cts",
     "ZonedDate.cjs",
     "ZonedDate.mjs",
-    "ZonedDate.d.ts"
+    "ZonedDate.d.ts",
+    "ZonedDate.d.cts",
+    "shared.cjs",
+    "shared.mjs"
   ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=16.6.0"
+  },
   "repository": "github:tranvansang/zoned-date",
   "homepage": "https://github.com/tranvansang/zoned-date",
   "author": "Sang Tran <t@sang.jp>",

@@ -1,134 +1,161 @@
-type ValueSetter<T = number> = T | undefined | ((value: T) => T | undefined)
-type Disambiguation = 'compatible' | 'earlier' | 'later' | 'reject'
-type Options = {
-	timezone?: string
-	disambiguation?: Disambiguation
-}
-export default class ZonedDate {
-	static UTC : typeof Date.UTC
-	static now : typeof Date.now
-	static parse: typeof Date.parse
-
+declare class ZonedDate {
 	static defaultTimezone: string
-	static defaultDisambiguation: Disambiguation
-	constructor(options?: Options)
-	constructor(zonedDate: ZonedDate, options?: Options)
-	constructor(date: Date, options?: Options)
-	constructor(time: number, options?: Options)
-	constructor(dateStr: string, options?: Options)
-	constructor(fullYear: number, month: number, options?: Options)
-	constructor(fullYear: number, month: number, date: number, options?: Options)
-	constructor(fullYear: number, month: number, date: number, hours: number, options?: Options)
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, options?: Options)
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, options?: Options)
-	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, miliseconds: number, options?: Options)
+	static defaultDisambiguation: ZonedDate.Disambiguation
+	static UTC(year: number, monthIndex?: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): number
+	static now(): number
+	static parse(string: string): number
 
+	constructor(options?: ZonedDate.Options)
+	constructor(zonedDate: ZonedDate, options?: ZonedDate.Options | null)
+	constructor(value: number | string | Date | ZonedDate.DateLike | null, options?: ZonedDate.Options | null)
+	constructor(fullYear: number, month: number, options?: ZonedDate.Options | null)
+	constructor(fullYear: number, month: number, date: number, options?: ZonedDate.Options | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, options?: ZonedDate.Options | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, options?: ZonedDate.Options | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, options?: ZonedDate.Options | null)
+	constructor(fullYear: number, month: number, date: number, hours: number, minutes: number, seconds: number, milliseconds: number, options?: ZonedDate.Options | null)
+
+	// keeps the wallclock
 	get timezone(): string
-	set timezone(timezone: ValueSetter<string>)
+	set timezone(timezone: ZonedDate.ValueSetter<string>)
 	getTimezone(): string
-	setTimezone(timezone?: ValueSetter<string>): this
-	withTimezone(timezone?: ValueSetter<string>): ZonedDate
+	setTimezone(timezone?: ZonedDate.ValueSetter<string>): this
+	withTimezone(timezone?: ZonedDate.ValueSetter<string>): ZonedDate
 
-	get disambiguation(): Disambiguation
-	set disambiguation(disambiguation: ValueSetter<Disambiguation>)
-	getDisambiguation(): Disambiguation
-	setDisambiguation(disambiguation?: ValueSetter<Disambiguation>): this
-	withDisambiguation(disambiguation?: ValueSetter<Disambiguation>): ZonedDate
+	// resolves the wallclock again
+	get disambiguation(): ZonedDate.Disambiguation
+	set disambiguation(disambiguation: ZonedDate.ValueSetter<ZonedDate.Disambiguation>)
+	getDisambiguation(): ZonedDate.Disambiguation
+	setDisambiguation(disambiguation?: ZonedDate.ValueSetter<ZonedDate.Disambiguation>): this
+	withDisambiguation(disambiguation?: ZonedDate.ValueSetter<ZonedDate.Disambiguation>): ZonedDate
 
-	set fullYear(year: ValueSetter)
 	get fullYear(): number
-	setFullYear(year?: ValueSetter): this
-	withFullYear(year?: ValueSetter): ZonedDate
-	set utcFullYear(year: ValueSetter)
+	set fullYear(year: ZonedDate.ValueSetter)
+	getFullYear(): number
+	setFullYear(year?: ZonedDate.ValueSetter, month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter): this
+	withFullYear(year?: ZonedDate.ValueSetter, month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter): ZonedDate
 	get utcFullYear(): number
-	setUTCFullYear(year?: ValueSetter): this
-	withUTCFullYear(year?: ValueSetter): ZonedDate
+	set utcFullYear(year: ZonedDate.ValueSetter)
+	getUTCFullYear(): number
+	setUTCFullYear(year?: ZonedDate.ValueSetter, month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter): this
+	withUTCFullYear(year?: ZonedDate.ValueSetter, month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter): ZonedDate
 
-	set month(month: ValueSetter)
 	get month(): number
+	set month(month: ZonedDate.ValueSetter)
 	getMonth(): number
-	setMonth(month?: ValueSetter): this
-	withMonth(month?: ValueSetter): ZonedDate
-	set utcMonth(month: ValueSetter)
+	setMonth(month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter): this
+	withMonth(month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter): ZonedDate
 	get utcMonth(): number
-	setUTCMonth(month?: ValueSetter): this
-	withUTCMonth(month?: ValueSetter): ZonedDate
+	set utcMonth(month: ZonedDate.ValueSetter)
+	getUTCMonth(): number
+	setUTCMonth(month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter): this
+	withUTCMonth(month?: ZonedDate.ValueSetter, date?: ZonedDate.ValueSetter): ZonedDate
 
-	set date(date: ValueSetter)
 	get date(): number
+	set date(date: ZonedDate.ValueSetter)
 	getDate(): number
-	setDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
-	withDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
-	set utcDate(date: ValueSetter)
+	setDate(date?: ZonedDate.ValueSetter, hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): this
+	withDate(date?: ZonedDate.ValueSetter, hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): ZonedDate
 	get utcDate(): number
-	setUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
-	withUTCDate(date?: ValueSetter, hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	set utcDate(date: ZonedDate.ValueSetter)
+	getUTCDate(): number
+	setUTCDate(date?: ZonedDate.ValueSetter, hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): this
+	withUTCDate(date?: ZonedDate.ValueSetter, hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): ZonedDate
 
-	set hours(hours: ValueSetter)
 	get hours(): number
+	set hours(hours: ZonedDate.ValueSetter)
 	getHours(): number
-	setHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
-	withHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
-	set utcHours(hours: ValueSetter)
+	setHours(hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): this
+	withHours(hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): ZonedDate
 	get utcHours(): number
-	setUTCHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
-	withUTCHours(hours?: ValueSetter, minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	set utcHours(hours: ZonedDate.ValueSetter)
+	getUTCHours(): number
+	setUTCHours(hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): this
+	withUTCHours(hours?: ZonedDate.ValueSetter, minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): ZonedDate
 
-	set minutes(minutes: ValueSetter)
 	get minutes(): number
+	set minutes(minutes: ZonedDate.ValueSetter)
 	getMinutes(): number
-	setMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
-	withMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
-	set utcMinutes(minutes: ValueSetter)
+	setMinutes(minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): this
+	withMinutes(minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): ZonedDate
 	get utcMinutes(): number
-	setUTCMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): this
-	withUTCMinutes(minutes?: ValueSetter, seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	set utcMinutes(minutes: ZonedDate.ValueSetter)
+	getUTCMinutes(): number
+	setUTCMinutes(minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): this
+	withUTCMinutes(minutes?: ZonedDate.ValueSetter, seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): ZonedDate
 
-	set seconds(seconds: ValueSetter)
 	get seconds(): number
+	set seconds(seconds: ZonedDate.ValueSetter)
 	getSeconds(): number
-	setSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this
-	withSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
-	set utcSeconds(seconds: ValueSetter)
+	setSeconds(seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): this
+	withSeconds(seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): ZonedDate
 	get utcSeconds(): number
-	setUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): this
-	withUTCSeconds(seconds?: ValueSetter, milliseconds?: ValueSetter): ZonedDate
+	set utcSeconds(seconds: ZonedDate.ValueSetter)
+	getUTCSeconds(): number
+	setUTCSeconds(seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): this
+	withUTCSeconds(seconds?: ZonedDate.ValueSetter, milliseconds?: ZonedDate.ValueSetter): ZonedDate
 
-	set milliseconds(milliseconds: ValueSetter)
 	get milliseconds(): number
+	set milliseconds(milliseconds: ZonedDate.ValueSetter)
 	getMilliseconds(): number
-	setMilliseconds(milliseconds?: ValueSetter): this
-	withMilliseconds(milliseconds?: ValueSetter): ZonedDate
-	set utcMilliseconds(milliseconds: ValueSetter)
+	setMilliseconds(milliseconds?: ZonedDate.ValueSetter): this
+	withMilliseconds(milliseconds?: ZonedDate.ValueSetter): ZonedDate
 	get utcMilliseconds(): number
-	setUTCMilliseconds(milliseconds?: ValueSetter): this
-	withUTCMilliseconds(milliseconds?: ValueSetter): ZonedDate
+	set utcMilliseconds(milliseconds: ZonedDate.ValueSetter)
+	getUTCMilliseconds(): number
+	setUTCMilliseconds(milliseconds?: ZonedDate.ValueSetter): this
+	withUTCMilliseconds(milliseconds?: ZonedDate.ValueSetter): ZonedDate
+
+	get day(): number
+	getDay(): number
+	get utcDay(): number
+	getUTCDay(): number
 
 	get timezoneOffset(): number
 	getTimezoneOffset(): number
-
 	get offset(): number
 	getOffset(): number
 
-	get day(): number
-	get utcDay(): number
-
-	set time(time: ValueSetter)
 	get time(): number
+	set time(time: ZonedDate.ValueSetter)
 	getTime(): number
-	setTime(time?: ValueSetter): this
-	withTime(time?: ValueSetter): ZonedDate
+	setTime(time?: ZonedDate.ValueSetter): this
+	withTime(time?: ZonedDate.ValueSetter): ZonedDate
 
 	toDate(): Date
 
-	toDateString: typeof Date.prototype.toDateString
-	toISOString: typeof Date.prototype.toISOString
-	toJSON: typeof Date.prototype.toJSON
-	toLocaleDateString: typeof Date.prototype.toLocaleDateString
-	toLocaleString: typeof Date.prototype.toLocaleString
-	toLocaleTimeString: typeof Date.prototype.toLocaleTimeString
-	toString: typeof Date.prototype.toString
-	toTimeString: typeof Date.prototype.toTimeString
-	toUTCString: typeof Date.prototype.toUTCString
-	valueOf: typeof Date.prototype.valueOf
+	// the conversions of Date, applied to the same instant
+	valueOf(): number
+	toISOString(): string
+	toJSON(key?: any): string
+	toString(): string
+	toDateString(): string
+	toTimeString(): string
+	toUTCString(): string
+	toLocaleString(locales?: Parameters<Date['toLocaleString']>[0], options?: Intl.DateTimeFormatOptions): string
+	toLocaleDateString(locales?: Parameters<Date['toLocaleDateString']>[0], options?: Intl.DateTimeFormatOptions): string
+	toLocaleTimeString(locales?: Parameters<Date['toLocaleTimeString']>[0], options?: Intl.DateTimeFormatOptions): string
 }
+
+declare namespace ZonedDate {
+	// A value, a function that takes the current value and returns the new one, or undefined to keep the current value
+	export type ValueSetter<T = number> = T | undefined | ((value: T) => T | undefined)
+	export type Disambiguation = 'compatible' | 'earlier' | 'later' | 'reject'
+	export interface Options {
+		// time zone name. undefined or null: the time zone of the copied ZonedDate, or else ZonedDate.defaultTimezone
+		timezone?: string | null | undefined
+		// undefined or null: the disambiguation of the copied ZonedDate, or else ZonedDate.defaultDisambiguation
+		disambiguation?: Disambiguation | null | undefined
+	}
+	// A value that Date converts to an instant through Symbol.toPrimitive or valueOf(), such as a ZonedDate or a dayjs
+	// object. Temporal objects, whose conversions throw, are left out.
+	export interface DateLike {
+		valueOf(): number
+		epochMilliseconds?: undefined
+		calendarId?: undefined
+		nanosecond?: undefined
+		sign?: undefined
+	}
+}
+
+export default ZonedDate

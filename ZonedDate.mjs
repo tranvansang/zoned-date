@@ -1,162 +1,64 @@
-const ONE_HOUR = 60 * 60_000
+import {defineFields, defineMembers, isZonedDate, makeDate, maxTime, modulo, oneDay, oneHour, parseString, resolve, setFields, takeOptions, timeClip, todayTime, utc, wallclockOf} from './shared.mjs'
 
-// copied from OffsetDate.mjs. Do not modify this function, modify OffsetDate.mjs instead.
-function parseString(str) {
-	// step 0
-	str = str.toUpperCase()
-	if (str.startsWith('T') || str.startsWith(' ')) str = str.slice(1)
-
-	// step 1
-	const parts = str.includes('T') ? str.split('T') : str.split(' ')
-	if (parts.length > 2) throw new Error('Invalid date string')
-	let dateStr, timeAndZoneStr
-	if (parts.length === 2) {
-		dateStr = parts[0]
-		timeAndZoneStr = parts[1]
-	}
-	else if (/^\d{4}/.test(str)) dateStr = str
-	else timeAndZoneStr = str
-
-	// parse date
-	let year, month, date
-	if (dateStr !== undefined) {
-		const dateParts = dateStr.split('-')
-		for (let i = 0; i < dateParts.length; i++) {
-			const datePart = dateParts[i]
-			const num = parseInt(datePart, 10)
-			if (isNaN(num) || !isFinite(num)) throw new Error('Invalid date string')
-			if (i === 0) year = num
-			else if (i === 1) month = num - 1
-			else if (i === 2) date = num
-			else throw new Error('Invalid date string')
-		}
-		if (year !== undefined) {
-			month ??= 0
-			date ??= 1
-		}
-	}
-
-	// parse time
-	let hours = 0, minutes = 0, seconds = 0, milliseconds = 0, parsedOffset
-	if (timeAndZoneStr !== undefined) {
-		let timeStr, zoneStr
-		const zoneIndex = timeAndZoneStr.search(/[Z+-]/)
-		if (zoneIndex === -1) timeStr = timeAndZoneStr
-		else {
-			timeStr = timeAndZoneStr.slice(0, zoneIndex)
-			zoneStr = timeAndZoneStr.slice(zoneIndex)
-		}
-
-		// timeStr is always defined
-		const timeParts = timeStr.split(':')
-		for (let i = 0; i < timeParts.length; i++) {
-			const timePart = timeParts[i]
-			const num = i <= 1 ? parseInt(timePart, 10) : parseFloat(timePart)
-			if (isNaN(num) || !isFinite(num)) throw new Error('Invalid date string')
-			if (i === 0) hours = num
-			else if (i === 1) minutes = num
-			else if (i === 2) {
-				seconds = Math.floor(num)
-				milliseconds = Math.round((num - seconds) * 1000)
-			} else throw new Error('Invalid date string')
-		}
-		if (hours === undefined) throw new Error('Invalid date string')
-
-		if (zoneStr !== undefined) {
-			if (zoneStr === 'Z') parsedOffset = 0
-			else {
-				const sign = zoneStr[0]
-				zoneStr = zoneStr.slice(1).replace(/:/g, '')
-
-				const hoursStr = zoneStr.slice(0, 2)
-				const tzHours = parseInt(hoursStr, 10)
-				if (isNaN(tzHours) || !isFinite(tzHours)) throw new Error('Invalid date string')
-
-				const minutesStr = zoneStr.slice(2)
-				let minutes = 0
-				if (minutesStr) {
-					minutes = parseInt(minutesStr, 10)
-					if (isNaN(minutes) || !isFinite(minutes)) throw new Error('Invalid date string')
-				}
-
-				parsedOffset = (sign === '-' ? -1 : 1) * (tzHours + minutes / 60)
-			}
-		}
-	}
-
-	return [year, month, date, hours, minutes, seconds, milliseconds, parsedOffset]
-}
+// The wallclock formatters, per Intl.DateTimeFormat (a polyfill or a mock can replace it) and per time zone name
+const formatters = new WeakMap()
 
 export default class ZonedDate {
-	static UTC = Date.UTC
-	static now = Date.now
-	static parse = Date.parse
-
 	static defaultTimezone = 'UTC'
-	// which timezone to choose when ambiguous time is encountered
-	// later: choose the later timezone
-	// earlier: choose the earlier timezone
-	// compatible: later timezone when forward clock, earlier timezone when backward clock
-	// reject: throw RangeError error
-	// https://tc39.es/proposal-temporal/docs/ambiguity.html#resolving-time-ambiguity-in-temporal
+	// Which instant a wallclock means when it occurs twice or not at all around a DST change, as in Temporal:
+	// https://tc39.es/proposal-temporal/docs/timezone.html#resolving-time-ambiguity-in-temporal
+	// - compatible: the earlier instant when the wallclock occurs twice, the later one when it is skipped
+	// - earlier: the earlier instant
+	// - later: the later instant
+	// - reject: neither; reading the instant throws RangeError
 	static defaultDisambiguation = 'compatible'
-	#utc // utc wallclock
+	static UTC(...args) {
+		return Date.UTC(...args)
+	}
+	static now() {
+		return Date.now()
+	}
+	static parse(string) {
+		return Date.parse(string)
+	}
+
+	// The instant in milliseconds (NaN for an invalid date), or undefined while #unresolved is set
+	#time
+	// With 'reject', a wallclock (in milliseconds, as if it were UTC) that occurs twice or not at all
+	#unresolved
+	// The offset in milliseconds at the instant #offsetTime
+	#offset
+	#offsetTime
 	constructor(...args) {
-		if (args[0] instanceof ZonedDate) {
-			this.#utc = new Date(args[0].#utc)
-			if (args[1]?.timezone !== undefined) this.#timezone = args[1].timezone
-			else this.#timezone = args[0].timezone
-			if (args[1]?.disambiguation !== undefined) this.#disambiguation = args[1].disambiguation
-			else this.#disambiguation = ZonedDate.defaultDisambiguation
+		const options = takeOptions(args)
+		const [value] = args
+		if (args.length === 1 && isZonedDate(value)) { // new ZonedDate(zonedDate)
+			if (value instanceof ZonedDate) {
+				this.#time = value.#time
+				this.#unresolved = value.#unresolved
+			} else this.#copyForeign(value)
+			this.#timezone = value.getTimezone()
+			// zoned-date 0.1.3 leaves the disambiguation undefined without an options object
+			this.#disambiguation = value.getDisambiguation() ?? ZonedDate.defaultDisambiguation
+			// only 'reject' leaves a wallclock without an instant
+			if (this.#time === undefined && this.#_disambiguation !== 'reject') this.#setWallclockTime(this.#unresolved)
+			// a copy into another time zone keeps the wallclock
+			const timezone = options?.timezone ?? this.#_timezone
+			const disambiguation = options?.disambiguation ?? this.#_disambiguation
+			if (timezone !== this.#_timezone || disambiguation !== this.#_disambiguation) this.#rezone(timezone, disambiguation)
 			return
 		}
 
-		const lastArg = args[args.length - 1]
-		let timezone = ZonedDate.defaultTimezone
-		if (typeof lastArg === 'object' && lastArg !== null && !(lastArg instanceof Date)) {
-			args.pop()
-			if (lastArg.timezone !== null && lastArg.timezone !== undefined) timezone = lastArg.timezone
-			if (lastArg.disambiguation !== null && lastArg.disambiguation !== undefined) this.#disambiguation = lastArg.disambiguation
-			else this.#disambiguation = ZonedDate.defaultDisambiguation
-		}
-		this.#timezone = timezone
+		this.#timezone = options?.timezone ?? ZonedDate.defaultTimezone
+		this.#disambiguation = options?.disambiguation ?? ZonedDate.defaultDisambiguation
+		if (args.length === 0) this.#time = new Date(Date.now()).getTime() // new Date()
+		else if (args.length > 1) this.#setWallclockTime(utc(...args)) // new Date(year, month, date, hours, minutes, seconds, ms)
+		else if (typeof value === 'string') this.#setString(value) // new Date(dateString)
+		else this.#time = new Date(value).getTime() // new Date(value)
+	}
 
-		if (args.length === 0) {// new Date()
-			this.#utc = new Date()
-			this.time = Date.now()
-		} else if (args[0] instanceof Date) { // new Date(date)
-			this.#utc = new Date()
-			this.time = args[0].getTime()
-		} else if (args.length === 1 && typeof args[0] === 'number') { // new Date(time)
-			this.#utc = new Date()
-			this.time = args[0]
-		} else if (typeof args[0] === 'string') { // new Date(dateString)
-			let [year, month, date, hours, minutes, seconds, milliseconds, parsedOffset] = parseString(args[0])
-
-			if (year === undefined || month === undefined || date === undefined) {
-				let fixDate = 0
-				const offset = this.#getOffset(new Date())
-				const utcWallclock = new Date(Date.now() + offset * ONE_HOUR)
-				if (parsedOffset !== undefined && parsedOffset !== offset) {
-					const sample = new Date(
-						Date.UTC(2020, 0, 1, hours % 24, minutes, seconds, milliseconds)
-						+ (offset - parsedOffset) * ONE_HOUR
-					)
-					if (sample.getUTCDate() !== 1) fixDate = parsedOffset < offset ? -1 : 1
-				}
-				year ??= utcWallclock.getUTCFullYear()
-				month ??= utcWallclock.getUTCMonth()
-				date ??= utcWallclock.getUTCDate() + fixDate
-			}
-
-			if (parsedOffset === undefined) this.#utc = new Date(Date.UTC(
-				year, month, date, hours, minutes, seconds, milliseconds
-			))
-			else {
-				this.#utc = new Date() // arbitrary date
-				this.time = Date.UTC(year, month, date, hours, minutes, seconds, milliseconds) - parsedOffset * ONE_HOUR
-			}
-		} else this.#utc = new Date(Date.UTC(...args)) // new Date(year, month, date, hours, minutes, seconds, ms)
+	get [Symbol.toStringTag]() {
+		return 'ZonedDate'
 	}
 
 	#_disambiguation
@@ -168,361 +70,268 @@ export default class ZonedDate {
 	#_timezone
 	#_dateTimeFormat
 	set #timezone(timezone) {
+		// Intl would read undefined as the runtime's time zone
+		if (timezone === undefined) throw new RangeError('Invalid time zone specified: undefined')
 		if (timezone === this.#_timezone) return
-		/**
-		 * Some browser does not support hourCycle
-		 * Try formatting 2000-11-23T00:00:00.000Z at UTC, timezone UTC
-		 * - Old browser (no hourCycle supported, .e.g: Chrome 24), regardless of hourCycle:
-		 * 		- hour12=true: 11/23/2000 12:00:00 AM
-		 * 		- hour12=false: 11/23/2000 00:00:00
-		 * 		- hour12 not defined: 11/23/2000 12:00:00 AM
-		 * - New browser (hourCycle supported):
-		 * 		- If hour12 is defined, regardless of hourCycle:
-		 * 			- hour12=true: 1/23/2000, 12:00:00 AM
-		 * 			- hour12=false: 11/23/2000, 24:00:00
-		 * 		- If hour12 is undefined:
-		 * 			- hourCycle=h23: 11/23/2000, 00:00:00
-		 * 			- hourCycle is not defined: 11/23/2000, 12:00:00 AM
-		 */
-		this.#_dateTimeFormat = new Intl.DateTimeFormat('en-US', {
-			...[
-				'11/23/2000 12:00:00 AM',
-				'11/23/2000, 12:00:00 AM',
-			].includes(
-				new Intl.DateTimeFormat('en-US', {
-					hourCycle: 'h23',
-					timeZone: 'UTC',
-					year: 'numeric',
-					month: 'numeric',
-					day: '2-digit',
-					hour: '2-digit',
-					minute: '2-digit',
-					second: '2-digit',
-				}).format(new Date('2000-11-23T00:00:00.000Z'))
-			) ? {hour12: false} : {hourCycle: 'h23'},
-			timeZone: timezone,
-			year: 'numeric',
-			month: 'numeric',
-			day: '2-digit',
-			hour: '2-digit',
-			minute: '2-digit',
-			second: '2-digit',
-		})
+		this.#_dateTimeFormat = formatterOf(timezone)
 		this.#_timezone = timezone
+		this.#offsetTime = undefined
 	}
 
 	getTimezone() {
 		return this.#_timezone
 	}
+	// keeps the wallclock
 	setTimezone(timezone) {
-		if (typeof timezone === 'function') timezone = timezone(this.#_timezone)
-		if (timezone !== undefined || timezone !== this.#_timezone) {
-			// const time = this.time
-			this.#timezone = timezone
-			// this.time = time
-		}
+		const [value] = resolve([timezone], [this.#_timezone])
+		if (value !== this.#_timezone) this.#rezone(value, this.#_disambiguation)
 		return this
 	}
 
 	getDisambiguation() {
 		return this.#_disambiguation
 	}
+	// resolves the wallclock again with the new option
 	setDisambiguation(disambiguation) {
-		if (typeof disambiguation === 'function') disambiguation = disambiguation(this.#_disambiguation)
-		if (disambiguation !== undefined) this.#disambiguation = disambiguation
+		const [value] = resolve([disambiguation], [this.#_disambiguation])
+		if (value !== this.#_disambiguation) this.#rezone(this.#_timezone, value)
 		return this
-	}
-
-	#getWallclock(date) {
-		if (typeof this.#_dateTimeFormat.formatToParts === 'function') {
-			const wallclock = []
-			const parts = this.#_dateTimeFormat.formatToParts(date)
-			const nameToPos = {
-				year: 0,
-				month: 1,
-				day: 2,
-				hour: 3,
-				minute: 4,
-				second: 5,
-			}
-			for (const {type, value} of parts) {
-				if (typeof nameToPos[type] === 'number') wallclock[nameToPos[type]] = parseInt(value, 10)
-				if (type === 'month') wallclock[1] -= 1
-			}
-			return wallclock
-		} else {
-			const parts = this.#_dateTimeFormat.format(date).split(/[^0-9]/).filter(Boolean).map(v => parseInt(v, 10))
-			return [
-				parts[2], // year
-				parts[0] - 1, // month
-				parts[1], // day
-				parts[3], // hour
-				parts[4], // minute
-				parts[5], // second
-			]
-		}
-	}
-
-	#getOffset(date) {
-		return Math.round((Date.UTC(...this.#getWallclock(date)) - date.getTime()) / 60_000) / 60
 	}
 
 	getFullYear() {
-		return this.#utc.getUTCFullYear()
+		const [date, years] = this.#wallclock()
+		return date.getUTCFullYear() + years
 	}
-	setFullYear(year) {
-		if (typeof year === 'function') year = year(this.#utc.getUTCFullYear())
-		if (year !== undefined) this.#utc.setUTCFullYear(year)
-		return this
+	setFullYear(...values) {
+		return this.#setWallclock(0, values)
 	}
 	getUTCFullYear() {
-		return this.#dateTime.getFullYear()
+		return this.toDate().getUTCFullYear()
 	}
-	setUTCFullYear(year) {
-		if (typeof year === 'function') year = year(this.utcFullYear)
-		if (year !== undefined) {
-			const dateTime = this.#dateTime
-			dateTime.setUTCFullYear(year)
-			this.time = dateTime.getTime()
-		}
-		return this
+	setUTCFullYear(...values) {
+		return this.#setUTC(0, values)
 	}
+
 	getMonth() {
-		return this.#utc.getUTCMonth()
+		return this.#wallclock()[0].getUTCMonth()
 	}
-	setMonth(month) {
-		if (typeof month === 'function') month = month(this.#utc.getUTCMonth())
-		if (month !== undefined) this.#utc.setUTCMonth(month)
-		return this
+	setMonth(...values) {
+		return this.#setWallclock(1, values)
 	}
 	getUTCMonth() {
-		return this.#dateTime.getUTCMonth()
+		return this.toDate().getUTCMonth()
 	}
-	setUTCMonth(month) {
-		if (typeof month === 'function') month = month(this.utcMonth)
-		if (month !== undefined) {
-			const dateTime = this.#dateTime
-			dateTime.setUTCMonth(month)
-			this.time = dateTime.getTime()
-		}
-		return this
+	setUTCMonth(...values) {
+		return this.#setUTC(1, values)
 	}
+
 	getDate() {
-		return this.#utc.getUTCDate()
+		return this.#wallclock()[0].getUTCDate()
 	}
-	setDate(date, hours, minutes, seconds, milliseconds) {
-		if (typeof date === 'function') date = date(this.#utc.getUTCDate())
-		if (date !== undefined) this.#utc.setUTCDate(date)
-		this.setHours(hours, minutes, seconds, milliseconds)
-		return this
+	setDate(...values) {
+		return this.#setWallclock(2, values)
 	}
 	getUTCDate() {
-		return this.#dateTime.getUTCDate()
+		return this.toDate().getUTCDate()
 	}
-	setUTCDate(date, hours, minutes, seconds, milliseconds) {
-		if (typeof date === 'function') date = date(this.utcDate)
-		if (date !== undefined) {
-			const dateTime = this.#dateTime
-			dateTime.setUTCDate(date)
-			this.time = dateTime.getTime()
-		}
-		this.setUTCHours(hours, minutes, seconds, milliseconds)
-		return this
+	setUTCDate(...values) {
+		return this.#setUTC(2, values)
 	}
+
 	getHours() {
-		return this.#utc.getUTCHours()
+		return this.#wallclock()[0].getUTCHours()
 	}
-	setHours(hours, minutes, seconds, milliseconds) {
-		if (typeof hours === 'function') hours = hours(this.#utc.getUTCHours())
-		if (hours !== undefined) this.#utc.setUTCHours(hours)
-		this.setMinutes(minutes, seconds, milliseconds)
-		return this
+	setHours(...values) {
+		return this.#setWallclock(3, values)
 	}
 	getUTCHours() {
-		return this.#dateTime.getUTCHours()
+		return this.toDate().getUTCHours()
 	}
-	setUTCHours(hours, minutes, seconds, milliseconds) {
-		if (typeof hours === 'function') hours = hours(this.utcHours)
-		if (hours !== undefined) {
-			const dateTime = this.#dateTime
-			dateTime.setUTCHours(hours)
-			this.time = dateTime.getTime()
-		}
-		this.setUTCMinutes(minutes, seconds, milliseconds)
-		return this
+	setUTCHours(...values) {
+		return this.#setUTC(3, values)
 	}
+
 	getMinutes() {
-		return this.#utc.getUTCMinutes()
+		return this.#wallclock()[0].getUTCMinutes()
 	}
-	setMinutes(minutes, seconds, milliseconds) {
-		if (typeof minutes === 'function') minutes = minutes(this.#utc.getUTCMinutes())
-		if (minutes !== undefined) this.#utc.setUTCMinutes(minutes)
-		this.setSeconds(seconds, milliseconds)
-		return this
+	setMinutes(...values) {
+		return this.#setWallclock(4, values)
 	}
 	getUTCMinutes() {
-		return this.#dateTime.getUTCMinutes()
+		return this.toDate().getUTCMinutes()
 	}
-	setUTCMinutes(minutes, seconds, milliseconds) {
-		if (typeof minutes === 'function') minutes = minutes(this.utcMinutes)
-		if (minutes !== undefined) {
-			const dateTime = this.#dateTime
-			dateTime.setUTCMinutes(minutes)
-			this.time = dateTime.getTime()
-		}
-		this.setUTCSeconds(seconds, milliseconds)
-		return this
+	setUTCMinutes(...values) {
+		return this.#setUTC(4, values)
 	}
+
 	getSeconds() {
-		return this.#utc.getUTCSeconds()
+		return this.#wallclock()[0].getUTCSeconds()
 	}
-	setSeconds(seconds, milliseconds) {
-		if (typeof seconds === 'function') seconds = seconds(this.#utc.getUTCSeconds())
-		if (seconds !== undefined) this.#utc.setUTCSeconds(seconds)
-		this.setMilliseconds(milliseconds)
-		return this
+	setSeconds(...values) {
+		return this.#setWallclock(5, values)
 	}
 	getUTCSeconds() {
-		return this.#dateTime.getUTCSeconds()
+		return this.toDate().getUTCSeconds()
 	}
-	setUTCSeconds(seconds, milliseconds) {
-		if (typeof seconds === 'function') seconds = seconds(this.utcSeconds)
-		if (seconds !== undefined) {
-			const dateTime = this.#dateTime
-			dateTime.setUTCSeconds(seconds)
-			this.time = dateTime.getTime()
-		}
-		this.setUTCMilliseconds(milliseconds)
-		return this
+	setUTCSeconds(...values) {
+		return this.#setUTC(5, values)
 	}
+
 	getMilliseconds() {
-		return this.#utc.getUTCMilliseconds()
+		return this.#wallclock()[0].getUTCMilliseconds()
 	}
-	setMilliseconds(milliseconds) {
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.#utc.getUTCMilliseconds())
-		if (milliseconds !== undefined) this.#utc.setUTCMilliseconds(milliseconds)
-		return this
+	setMilliseconds(...values) {
+		return this.#setWallclock(6, values)
 	}
 	getUTCMilliseconds() {
-		return this.#dateTime.getUTCMilliseconds()
+		return this.toDate().getUTCMilliseconds()
 	}
-	setUTCMilliseconds(milliseconds) {
-		if (typeof milliseconds === 'function') milliseconds = milliseconds(this.utcMilliseconds)
-		if (milliseconds !== undefined) {
-			const dateTime = this.#dateTime
-			dateTime.setUTCMilliseconds(milliseconds)
-			this.time = dateTime.getTime()
-		}
-		return this
+	setUTCMilliseconds(...values) {
+		return this.#setUTC(6, values)
 	}
+
 	get timezoneOffset() {
 		return this.getTimezoneOffset()
 	}
 	getTimezoneOffset() {
-		return -this.offset * 60
+		return -this.#currentOffset() / 60_000 + 0
 	}
 
 	get offset() {
 		return this.getOffset()
 	}
 	getOffset() {
-		// const back1h = this.#getWallclock(new Date(date.getTime() - ONE_HOUR))
-		// console.log(
-		// 	wallclock,
-		// 	back1h,
-		// 	Math.round((new Date(Date.UTC(...wallclock)).getTime() - date.getTime()) / 60_000) / 60,
-		// 	[...Array(6).keys()].every(i => wallclock[i] === back1h[i]) ? 1 : 0,
-		// )
-		// + ([...Array(6).keys()].every(i => wallclock[i] === back1h[i]) ? -1 : 0)
-		// duplicated (later) wallclock while clock-backwarding.
-		const [time, offsetFix = 0] = this.#getTime()
-		return this.#getOffset(new Date(time)) + offsetFix
+		return this.#currentOffset() / oneHour
 	}
 
 	get day() {
 		return this.getDay()
 	}
 	getDay() {
-		return this.#utc.getUTCDay()
+		return this.#wallclock()[0].getUTCDay()
 	}
 	get utcDay() {
 		return this.getUTCDay()
 	}
 	getUTCDay() {
-		return this.#dateTime.getUTCDay()
+		return this.toDate().getUTCDay()
 	}
 
-	#getTime() {
-		const offset1 = this.#getOffset(this.#utc)
-		if (offset1 === 0) return [this.#utc.getTime()]
-
-		const date2 = new Date(this.#utc.getTime() - offset1 * ONE_HOUR)
-		const offset2 = this.#getOffset(date2)
-		if (offset2 === offset1) {
-			// check clock-backwarding
-
-			// no need to check
-			if (this.#_disambiguation !== 'reject' && offset1 > 0 === (this.#_disambiguation === 'later')) return [date2.getTime()]
-
-			// offset1 > 0: 'earlier' or 'compatible' or 'reject'
-			// offset1 < 0: 'later' or 'reject'
-			const maxBackwardGap = 1 // unit: hour. This value can be increased if needed.
-
-			// try backwarding maxBackwardGap hours for offset1 > 0
-			// try forwarding maxBackwardGap hours for offset1 < 0
-			const date3 = new Date(date2.getTime() - (offset1 > 0 ? 1 : -1) * maxBackwardGap * ONE_HOUR)
-			const offset3 = this.#getOffset(date3)
-			if (offset3 !== offset2 && offset3 > offset2 === offset1 > 0) {
-				const date4 = new Date(date2.getTime() + (offset2 - offset3) * ONE_HOUR)
-				if (this.#getOffset(date4) !== offset2) {
-					// There are 2 choices for the same wallclock.
-					// offset1 > 0: The newly probed date is the compatible one.
-					// offset1 < 0: The selected date2 is not the compatible one.
-					if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
-					// offset1 > 0: 'earlier' or 'compatible'
-					// offset1 < 0: 'later'
-					return [date3.getTime()]
-				}
-			}
-
-			return [date2.getTime()]
-		}
-
-		const date3 = new Date(this.#utc.getTime() - offset2 * ONE_HOUR)
-		const offset3 = this.#getOffset(date3)
-		if (offset3 === offset2) return [date3.getTime()]
-
-		// Clock-forwarding and we are in the forwarded (i.e., not existing) wallclock
-		// it is fair for forward and backward in terms of complexity.
-		// backward: complex when getting epoch
-		// forward: complex when getting offset. See: this.offset
-		if (this.#_disambiguation === 'reject') throw new RangeError('Ambiguous time')
-		return this.#_disambiguation === 'earlier'
-			? [Math.max(date3.getTime(), date2.getTime()), -1]
-			// 'later' or 'compatible'
-			: [Math.min(date3.getTime(), date2.getTime()), 1]
-	}
 	getTime() {
-		return this.#getTime()[0]
+		if (this.#time === undefined) throw new RangeError('Ambiguous time')
+		return this.#time
 	}
 	setTime(time) {
 		if (typeof time === 'function') time = time(this.getTime())
 		if (time !== undefined) {
-			const offset = this.#getOffset(new Date(time))
-			this.#utc.setTime(time + offset * ONE_HOUR)
+			// ToNumber and the range check, as Date#setTime does
+			this.#time = new Date(+time).getTime()
+			this.#unresolved = undefined
 		}
 		return this
 	}
 
 	toDate() {
-		return this.#dateTime
+		return new Date(this.getTime())
 	}
-	get #dateTime() {
-		return new Date(this.time)
+
+	// The offset in milliseconds at the instant
+	#currentOffset() {
+		const time = this.getTime()
+		if (Number.isNaN(time)) return NaN
+		if (this.#offsetTime !== time) {
+			this.#offset = this.#offsetAt(time)
+			this.#offsetTime = time
+		}
+		return this.#offset
+	}
+	// The offset in milliseconds at an instant inside the Date range, and NaN without an instant (an invalid clock)
+	#offsetAt(time) {
+		if (Number.isNaN(time)) return NaN
+		return makeDate(...wallclockFieldsOf(this.#_dateTimeFormat, time), modulo(time, 1000)) - time
+	}
+	// The wallclock in milliseconds, as if it were UTC
+	#wallclockTime() {
+		return this.#time === undefined ? this.#unresolved : this.#time + this.#currentOffset()
+	}
+	// A Date whose UTC fields are the wallclock, and the years to add to its UTC year
+	#wallclock() {
+		return wallclockOf(this.#wallclockTime())
+	}
+	#setWallclock(index, values) {
+		const wallclockTime = this.#wallclockTime()
+		const next = setFields(wallclockTime, index, values)
+		// an unchanged wallclock keeps its instant, even in a repeated hour
+		if (next !== wallclockTime) this.#setWallclockTime(next)
+		return this
+	}
+	#setUTC(index, values) {
+		this.#time = timeClip(setFields(this.getTime(), index, values))
+		return this
+	}
+	// Moves to another time zone or disambiguation and keeps the wallclock. With the same disambiguation, an instant that
+	// already shows the wallclock in the new time zone stays.
+	#rezone(timezone, disambiguation) {
+		const wallclockTime = this.#wallclockTime()
+		const keep = disambiguation === this.#_disambiguation && this.#time !== undefined && !Number.isNaN(this.#time)
+		this.#timezone = timezone
+		this.#disambiguation = disambiguation
+		if (keep && this.#currentOffset() === wallclockTime - this.#time) return
+		this.#setWallclockTime(wallclockTime)
+	}
+	// A copy of a ZonedDate of another copy of this package. A 'reject' wallclock that is unresolved has no instant, so it
+	// is read from the wallclock getters.
+	#copyForeign(value) {
+		try {
+			this.#time = value.getTime()
+		} catch {
+			this.#unresolved = makeDate(value.getFullYear(), value.getMonth(), value.getDate(), value.getHours(), value.getMinutes(), value.getSeconds(), value.getMilliseconds())
+		}
+	}
+	// Sets the instant of a wallclock (in milliseconds, as if it were UTC), or leaves the wallclock unresolved
+	#setWallclockTime(wallclockTime) {
+		this.#time = this.#instantOf(wallclockTime)
+		this.#unresolved = this.#time === undefined ? wallclockTime : undefined
+	}
+	// The instant of a wallclock, chosen by the disambiguation option, or undefined if 'reject' rejects it
+	#instantOf(wallclockTime) {
+		// offsets are less than a day, so a wallclock more than a day past the Date range has no instant in it
+		if (!(Math.abs(wallclockTime) <= maxTime + oneDay)) return NaN
+		// The offsets before and after any change near the wallclock: each gives an instant, and the instants whose
+		// own offset matches are the ones that show the wallclock. Repeated wallclocks have two, skipped ones none.
+		const before = this.#offsetAt(clamp(wallclockTime - oneDay))
+		const after = this.#offsetAt(clamp(wallclockTime + oneDay))
+		const instants = [...new Set([before, after])]
+			.map(offset => wallclockTime - offset)
+			.filter(time => this.#offsetAt(clamp(time)) === wallclockTime - time)
+			.sort((a, b) => a - b)
+		if (instants.length === 0) {
+			if (this.#_disambiguation === 'reject') return undefined
+			// a skipped wallclock moves by the length of the gap, back for earlier and forward otherwise
+			return timeClip(wallclockTime - (this.#_disambiguation === 'earlier' ? after : before))
+		}
+		if (instants.length > 1 && this.#_disambiguation === 'reject') return undefined
+		const time = timeClip(this.#_disambiguation === 'later' ? instants.at(-1) : instants[0])
+		// the offset at the instant is known
+		this.#offset = wallclockTime - time
+		this.#offsetTime = time
+		return time
+	}
+	#setString(string) {
+		const [days, time, zone] = parseString(string)
+		if (days !== undefined) {
+			if (zone === undefined) this.#setWallclockTime(days * oneDay + time)
+			else this.#time = timeClip(days * oneDay + time - zone)
+			return
+		}
+		// a time without a date falls on today's date in the time zone. A clock outside the Date range is invalid, like NaN.
+		const now = timeClip(Date.now())
+		if (zone === undefined) this.#setWallclockTime(Math.floor((now + this.#offsetAt(now)) / oneDay) * oneDay + time)
+		else this.#time = timeClip(todayTime(time, zone, now, instant => this.#offsetAt(clamp(instant))))
 	}
 }
 
-for (const name of [
+defineFields(ZonedDate, [
 	'timezone',
 	'disambiguation',
 	'fullYear',
@@ -540,27 +349,10 @@ for (const name of [
 	'milliseconds',
 	'utcMilliseconds',
 	'time',
-]) {
-	const capitalized = name.startsWith('utc')
-		? 'UTC' + name.slice('utc'.length)
-		: name[0].toUpperCase() + name.slice(1)
-	Object.defineProperty(ZonedDate.prototype, name, {
-		get() {
-			return this[`get${capitalized}`]()
-		},
-		set(value) {
-			this[`set${capitalized}`](value)
-		}
-	})
-	Object.assign(ZonedDate.prototype, {
-		[`with${capitalized}`]() {
-			return new ZonedDate(this)[`set${capitalized}`](...arguments)
-		}
-	})
-}
+])
 
+// The conversions of Date, applied to the same instant
 for (const name of [
-	Symbol.toPrimitive,
 	'toDateString',
 	'toISOString',
 	'toJSON',
@@ -571,6 +363,91 @@ for (const name of [
 	'toTimeString',
 	'toUTCString',
 	'valueOf',
-]) Object.assign(ZonedDate.prototype, {
-	[name]: Date.prototype[name]
+]) defineMembers(ZonedDate, {
+	[name](...args) {
+		return this.toDate()[name](...args)
+	},
 })
+defineMembers(ZonedDate, {
+	// new Date(zonedDate) and zonedDate + '' convert with the 'default' hint, which gives toString() on a Date. Here it
+	// gives the ISO string, which keeps the milliseconds and any year. String() and template literals give toString().
+	[Symbol.toPrimitive](hint) {
+		const date = this.toDate()
+		return hint === 'default' && !Number.isNaN(date.getTime()) ? date.toISOString() : date[Symbol.toPrimitive](hint)
+	},
+})
+
+// The formatter of the wallclock in a time zone, created once per time zone
+function formatterOf(timezone) {
+	const {DateTimeFormat} = Intl
+	if (!formatters.has(DateTimeFormat)) formatters.set(DateTimeFormat, {
+		hourCycle: hourCycleOf(DateTimeFormat),
+		byTimezone: Object.create(null),
+	})
+	const {hourCycle, byTimezone} = formatters.get(DateTimeFormat)
+	byTimezone[timezone] ??= new DateTimeFormat('en-US', {
+		...hourCycle,
+		timeZone: timezone,
+		era: 'short',
+		year: 'numeric',
+		month: 'numeric',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+		second: '2-digit',
+	})
+	return byTimezone[timezone]
+}
+
+/**
+ * The option for a 24-hour clock. Some browser does not support hourCycle
+ * Try formatting 2000-11-23T00:00:00.000Z at UTC, timezone UTC
+ * - Old browser (no hourCycle supported, .e.g: Chrome 24), regardless of hourCycle:
+ * 		- hour12=true: 11/23/2000 12:00:00 AM
+ * 		- hour12=false: 11/23/2000 00:00:00
+ * 		- hour12 not defined: 11/23/2000 12:00:00 AM
+ * - New browser (hourCycle supported):
+ * 		- If hour12 is defined, regardless of hourCycle:
+ * 			- hour12=true: 1/23/2000, 12:00:00 AM
+ * 			- hour12=false: 11/23/2000, 24:00:00
+ * 		- If hour12 is undefined:
+ * 			- hourCycle=h23: 11/23/2000, 00:00:00
+ * 			- hourCycle is not defined: 11/23/2000, 12:00:00 AM
+ */
+function hourCycleOf(DateTimeFormat) {
+	return [
+		'11/23/2000 12:00:00 AM',
+		'11/23/2000, 12:00:00 AM',
+	].includes(
+		new DateTimeFormat('en-US', {
+			hourCycle: 'h23',
+			timeZone: 'UTC',
+			year: 'numeric',
+			month: 'numeric',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+		}).format(new Date('2000-11-23T00:00:00.000Z'))
+	) ? {hour12: false} : {hourCycle: 'h23'}
+}
+
+// The wallclock that a formatter shows for an instant: [year, month, day, hours, minutes, seconds].
+// Years before 1 CE are shown with the era BC, and an engine without hourCycle may show midnight as 24.
+function wallclockFieldsOf(formatter, time) {
+	if (typeof formatter.formatToParts !== 'function') {
+		// 9/04/2021 AD, 00:30:00
+		const string = formatter.format(time)
+		const [month, day, year, hours, minutes, seconds] = string.split(/[^0-9]/).filter(Boolean).map(Number)
+		return [string.includes('B') ? 1 - year : year, month - 1, day, hours % 24, minutes, seconds]
+	}
+	const parts = Object.create(null)
+	for (const {type, value} of formatter.formatToParts(time)) parts[type] = value
+	const year = Number(parts.year)
+	return [parts.era?.startsWith('B') ? 1 - year : year, parts.month - 1, Number(parts.day), parts.hour % 24, Number(parts.minute), Number(parts.second)]
+}
+
+// The nearest instant inside the Date range
+function clamp(time) {
+	return Math.min(Math.max(time, -maxTime), maxTime)
+}
