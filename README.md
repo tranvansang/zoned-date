@@ -16,7 +16,8 @@ It runs on Node.js 16.6 or later and needs no dependencies. `ZonedDate` also nee
 ## Usage
 
 ```js
-import {OffsetDate, ZonedDate} from 'zoned-date'
+import OffsetDate from 'zoned-date/OffsetDate'
+import ZonedDate from 'zoned-date/ZonedDate'
 
 const tokyo = new OffsetDate('2021-09-04T05:19:52', {offset: 9})
 console.log(tokyo.hours) // 5
@@ -29,14 +30,9 @@ newYork.hours = h => h + 1
 console.log(newYork.toDate().toISOString()) // 2021-09-03T21:19:52.000Z
 ```
 
-Each class can also be imported on its own:
+Each class is imported from its own path: `import 'zoned-date'` has no entry point.
 
-```js
-import OffsetDate from 'zoned-date/OffsetDate'
-import ZonedDate from 'zoned-date/ZonedDate'
-```
-
-The package is ES modules only. CommonJS code can load it with `import()`, or with `require()` on Node.js 20.19, 22.12 or later, where `require('zoned-date')` returns `{OffsetDate, ZonedDate}`. With Jest, use its ES module mode (`node --experimental-vm-modules`).
+The package is ES modules only. CommonJS code can load it with `import()`, or with `require()` on Node.js 20.19, 22.12 or later, where `require('zoned-date/OffsetDate').default` is the class.
 
 TypeScript declarations are included. The option types are `OffsetDate.Options` and `ZonedDate.Options`. TypeScript finds the declarations through the `exports` of `package.json`, which it reads when `moduleResolution` is `node16`, `nodenext` or `bundler`. They need a `target` of ES2015 or later (the default from TypeScript 6), or `skipLibCheck`.
 
@@ -73,7 +69,8 @@ The constructors take one of these argument lists, plus an optional options obje
 An option that is `undefined` or `null` takes its default (a copy keeps its own value). So does a missing or `undefined` options object, or a `null` one after other arguments: `new OffsetDate(time, null)` is `new OffsetDate(time)`. The defaults are static properties, read when an instance is created. If you change one, for example in a test, restore it afterwards:
 
 ```js
-import {OffsetDate, ZonedDate} from 'zoned-date'
+import OffsetDate from 'zoned-date/OffsetDate'
+import ZonedDate from 'zoned-date/ZonedDate'
 
 OffsetDate.defaultOffset = 9
 console.log(new OffsetDate('2021-09-04T05:00').toISOString()) // 2021-09-03T20:00:00.000Z
@@ -109,7 +106,7 @@ Each field also has a UTC version, named as in `Date`: `utcHours`, `getUTCHours(
 - As in `Date`, a setter also takes the smaller fields: `setFullYear(year, month, date)`, `setMonth(month, date)`, `setHours(hours, minutes, seconds, ms)`, `setMinutes(minutes, seconds, ms)` and `setSeconds(seconds, ms)`. `setDate()` and `setUTCDate()` go further and take `date, hours, minutes, seconds, ms`. The fields are applied together, as `Date` does, so `setMonth(1, 28)` on January 31 gives February 28.
 
 ```js
-import {OffsetDate} from 'zoned-date'
+import OffsetDate from 'zoned-date/OffsetDate'
 
 const date = new OffsetDate('2021-09-04T05:19', {offset: 9})
 date.hours = h => h + 1
@@ -134,7 +131,7 @@ console.log(date.date, date.hours, date.minutes, date.seconds, date.milliseconds
 Changing the offset keeps the instant, so the wallclock moves:
 
 ```js
-import {OffsetDate} from 'zoned-date'
+import OffsetDate from 'zoned-date/OffsetDate'
 
 const date = new OffsetDate('2021-09-04T05:00', {offset: 9})
 console.log(date.offset, date.timezoneOffset) // 9 -540
@@ -157,7 +154,7 @@ console.log(date.offset, date.hours, date.minutes) // 5.75 1 45
 `timezone` returns the name as given (`'asia/tokyo'` stays lower case). `offset` and `timezoneOffset` have the same units as in `OffsetDate`, but follow the time zone's rules, so they change with DST. `toDate()` returns a new `Date` at the same instant.
 
 ```js
-import {ZonedDate} from 'zoned-date'
+import ZonedDate from 'zoned-date/ZonedDate'
 
 const date = new ZonedDate('2021-09-04T05:19:52.001', {timezone: 'Asia/Tokyo'})
 console.log(date.hours, date.offset) // 5 9
@@ -203,7 +200,7 @@ With `'reject'`, the wallclock stays unresolved. The constructor and the wallclo
 An instant is never ambiguous. A `ZonedDate` made from an instant, a `Date` or a string with a zone keeps that instant, also in a repeated hour, and so do `setTime()` and the UTC setters. A wallclock setter that leaves the wallclock as it is keeps the instant. So does `setTimezone()`, when the instant already shows the wallclock in the new time zone, as with another name for the same zone. `setDisambiguation()` resolves the current wallclock again with the new option. Offsets are exact to the second, including the local mean time zones used before standard time.
 
 ```js
-import {ZonedDate} from 'zoned-date'
+import ZonedDate from 'zoned-date/ZonedDate'
 
 const timezone = 'America/Los_Angeles'
 const first = new ZonedDate('2023-11-05T01:30', {timezone, disambiguation: 'earlier'})
@@ -234,7 +231,8 @@ try {
 To show the same instant in another time zone, create a `ZonedDate` from the instant: `new ZonedDate(zonedDate.time, {timezone})`.
 
 ```js
-import {OffsetDate, ZonedDate} from 'zoned-date'
+import OffsetDate from 'zoned-date/OffsetDate'
+import ZonedDate from 'zoned-date/ZonedDate'
 
 const offsetDate = new OffsetDate('2021-09-04T05:00', {offset: 9})
 const atUtc = offsetDate.withOffset(0)
@@ -280,7 +278,7 @@ The fields must be in range: months 01 to 12, days that exist in the month, hour
 | `28:30` | `<tomorrow>T04:30:00.000` |
 
 ```js
-import {OffsetDate} from 'zoned-date'
+import OffsetDate from 'zoned-date/OffsetDate'
 
 // No zone: a wallclock at the instance's offset
 const local = new OffsetDate('2021-09-04 05:19', {offset: 9})
@@ -315,7 +313,7 @@ Any other string throws `Error('Invalid date string')` instead of returning an I
 - `toISOString()`, `toJSON()` and `toUTCString()` give the instant in UTC. The offset is not serialized, so pass it again when you read the string back. The constructors read the `toISOString()` and `toJSON()` form; for a `toUTCString()` string, pass `OffsetDate.parse(string)`:
 
 ```js
-import {OffsetDate} from 'zoned-date'
+import OffsetDate from 'zoned-date/OffsetDate'
 
 const date = new OffsetDate('2021-09-04T05:00', {offset: 9})
 const json = JSON.stringify({date})
@@ -337,7 +335,7 @@ console.log(parsed.hours, parsed.time === date.time) // 5 true
 Pass `toDate()` or `time` (the instant as a number) to an API that expects a `Date`, and call the other methods of `Date` on `toDate()`.
 
 ```js
-import {ZonedDate} from 'zoned-date'
+import ZonedDate from 'zoned-date/ZonedDate'
 
 const tokyo = new ZonedDate('2021-09-04T05:00', {timezone: 'Asia/Tokyo'})
 const utc = new ZonedDate('2021-09-04T05:00', {timezone: 'UTC'})

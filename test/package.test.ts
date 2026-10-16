@@ -1,5 +1,5 @@
 import {after, describe, test} from 'node:test'
-import {deepStrictEqual, notStrictEqual, strictEqual} from 'node:assert'
+import {deepStrictEqual, notStrictEqual, strictEqual, throws} from 'node:assert'
 import {execFileSync} from 'node:child_process'
 import {cpSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs'
 import {createRequire} from 'node:module'
@@ -8,7 +8,8 @@ import {join} from 'node:path'
 import {fileURLToPath, pathToFileURL} from 'node:url'
 import {runInNewContext} from 'node:vm'
 // The package imports itself by name (package.json has an exports map), so these are the published entry points
-import {OffsetDate, ZonedDate} from 'zoned-date'
+import OffsetDate from 'zoned-date/OffsetDate'
+import ZonedDate from 'zoned-date/ZonedDate'
 
 const packageRoot = fileURLToPath(new URL('..', import.meta.url))
 // Another copy of each class, as when two versions of the package are installed: the compiled package, copied into a
@@ -21,12 +22,11 @@ const {default: OtherOffsetDate}: {default: typeof OffsetDate} = await import(pa
 const {default: OtherZonedDate}: {default: typeof ZonedDate} = await import(pathToFileURL(join(copy, 'ZonedDate.js')).href)
 
 describe('package entry points', () => {
-	test('importing the package name gives dist/index.js, with OffsetDate and ZonedDate as named exports', async () => {
-		const namespace = await import('zoned-date')
-		strictEqual(namespace, await import('../dist/index.js'))
-		deepStrictEqual(Object.keys(namespace), ['OffsetDate', 'ZonedDate'])
+	test('the package name has no entry point', () => {
+		throws(() => import.meta.resolve('zoned-date'), {code: 'ERR_PACKAGE_PATH_NOT_EXPORTED'})
+		throws(() => createRequire(import.meta.url).resolve('zoned-date'), {code: 'ERR_PACKAGE_PATH_NOT_EXPORTED'})
 	})
-	test('the OffsetDate and ZonedDate subpaths default-export the classes of the package root', async () => {
+	test('the OffsetDate and ZonedDate subpaths only default-export their class', async () => {
 		for (const [specifier, expected] of [
 			['zoned-date/OffsetDate', OffsetDate],
 			['zoned-date/ZonedDate', ZonedDate],
@@ -38,15 +38,14 @@ describe('package entry points', () => {
 	})
 	test('each entry point resolves to its compiled module in dist', () => {
 		for (const [specifier, file] of [
-			['zoned-date', 'index'],
 			['zoned-date/OffsetDate', 'OffsetDate'],
 			['zoned-date/ZonedDate', 'ZonedDate'],
 		]) strictEqual(import.meta.resolve(specifier), new URL(`../dist/${file}.js`, import.meta.url).href, specifier)
 	})
 	test('require() gives the module namespaces where Node.js can require ES modules', {skip: !process.features.require_module}, () => {
 		const require = createRequire(import.meta.url)
-		strictEqual(require('zoned-date').ZonedDate, ZonedDate)
 		strictEqual(require('zoned-date/OffsetDate').default, OffsetDate)
+		strictEqual(require('zoned-date/ZonedDate').default, ZonedDate)
 	})
 })
 
@@ -60,8 +59,6 @@ describe('published files', () => {
 			'dist/OffsetDate.js',
 			'dist/ZonedDate.d.ts',
 			'dist/ZonedDate.js',
-			'dist/index.d.ts',
-			'dist/index.js',
 			'dist/shared.d.ts',
 			'dist/shared.js',
 			'package.json',
@@ -192,7 +189,8 @@ async function globalsChangedByImport() {
 	// The first scan makes Node define some lazy globals, so it is not compared.
 	propertiesOfGlobals()
 	const before = propertiesOfGlobals()
-	await import('zoned-date')
+	await import('zoned-date/OffsetDate')
+	await import('zoned-date/ZonedDate')
 	const after = propertiesOfGlobals()
 	return [...new Set([...before.keys(), ...after.keys()])].filter(key => !Object.is(before.get(key), after.get(key)))
 
@@ -218,7 +216,8 @@ async function globalsChangedByImport() {
 async function nowWithFakeDate(phase: string) {
 	const nativeDate = Date
 	globalThis.Date = fakeDate(Date.UTC(2001, 0, 1))
-	const {OffsetDate, ZonedDate} = await import('zoned-date')
+	const {default: OffsetDate} = await import('zoned-date/OffsetDate')
+	const {default: ZonedDate} = await import('zoned-date/ZonedDate')
 	if (phase === 'removed') {
 		globalThis.Date = nativeDate
 		const {mock} = await import('node:test')
