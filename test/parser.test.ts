@@ -23,18 +23,14 @@ describe('documented formats', () => {
 			['2021-09-04T05:19:52.000', '2021-09-04T05:19:52.000', '2021-09-03T20:19:52.000Z'],
 			['2021-09-04T05:19:52', '2021-09-04T05:19:52.000', '2021-09-03T20:19:52.000Z'],
 			['2021-09-04T05:19', '2021-09-04T05:19:00.000', '2021-09-03T20:19:00.000Z'],
-			['2021-09-04 05:19', '2021-09-04T05:19:00.000', '2021-09-03T20:19:00.000Z'],
-			['2021-09-04T05', '2021-09-04T05:00:00.000', '2021-09-03T20:00:00.000Z'],
 			['2021-09-04', '2021-09-04T00:00:00.000', '2021-09-03T15:00:00.000Z'],
 			['2021-09T05:19:52.000', '2021-09-01T05:19:52.000', '2021-08-31T20:19:52.000Z'],
 			['2021-09T05:19:52', '2021-09-01T05:19:52.000', '2021-08-31T20:19:52.000Z'],
 			['2021-09T05:19', '2021-09-01T05:19:00.000', '2021-08-31T20:19:00.000Z'],
-			['2021-09T05', '2021-09-01T05:00:00.000', '2021-08-31T20:00:00.000Z'],
 			['2021-09', '2021-09-01T00:00:00.000', '2021-08-31T15:00:00.000Z'],
 			['2021T05:19:52.000', '2021-01-01T05:19:52.000', '2020-12-31T20:19:52.000Z'],
 			['2021T05:19:52', '2021-01-01T05:19:52.000', '2020-12-31T20:19:52.000Z'],
 			['2021T05:19', '2021-01-01T05:19:00.000', '2020-12-31T20:19:00.000Z'],
-			['2021T05', '2021-01-01T05:00:00.000', '2020-12-31T20:00:00.000Z'],
 			['2021', '2021-01-01T00:00:00.000', '2020-12-31T15:00:00.000Z'],
 		]) {
 			for (const date of [...both(input, plusNine), ...both(input, minusNineThirty)]) strictEqual(wallclock(date), expected, label(date, input))
@@ -49,12 +45,6 @@ describe('documented formats', () => {
 			['T05:19:52.000', '2026-10-15T05:19:52.000', '2026-10-14T05:19:52.000'],
 			['T05:19:52', '2026-10-15T05:19:52.000', '2026-10-14T05:19:52.000'],
 			['T05:19', '2026-10-15T05:19:00.000', '2026-10-14T05:19:00.000'],
-			['T05', '2026-10-15T05:00:00.000', '2026-10-14T05:00:00.000'],
-			['05:19:52.000', '2026-10-15T05:19:52.000', '2026-10-14T05:19:52.000'],
-			['05:19:52', '2026-10-15T05:19:52.000', '2026-10-14T05:19:52.000'],
-			['05:19', '2026-10-15T05:19:00.000', '2026-10-14T05:19:00.000'],
-			['05', '2026-10-15T05:00:00.000', '2026-10-14T05:00:00.000'],
-			['28:30', '2026-10-16T04:30:00.000', '2026-10-15T04:30:00.000'],
 		]) {
 			for (const date of both(input, plusNine)) strictEqual(wallclock(date), atPlusNine, label(date, input))
 			for (const date of both(input, minusNineThirty)) strictEqual(wallclock(date), atMinusNineThirty, label(date, input))
@@ -64,32 +54,31 @@ describe('documented formats', () => {
 	test('time-only strings with a zone stay on today at the instance offset', t => {
 		pinClock(t, '2026-10-14T20:00:00Z')
 		assertInstants([
-			['20:00Z', plusNine, '2026-10-14T20:00:00.000Z'], // the README example: 05:00 today (2026-10-15) at +09:00
+			['T20:00Z', plusNine, '2026-10-14T20:00:00.000Z'], // the README example: 05:00 today (2026-10-15) at +09:00
 			['T05:19:52.000Z', plusNine, '2026-10-15T05:19:52.000Z'], // 2026-10-15 14:19:52 at +09:00
 			['T05:19:52+05:45', plusNine, '2026-10-14T23:34:52.000Z'],
 			['T05:19-09:30', plusNine, '2026-10-15T14:49:00.000Z'],
-			['T05+14', plusNine, '2026-10-14T15:00:00.000Z'], // 2026-10-15 00:00 at +09:00
-			['05:19:52.000Z', minusNineThirty, '2026-10-15T05:19:52.000Z'], // 2026-10-14 19:49:52 at -09:30
-			['05:19:52-1200', minusNineThirty, '2026-10-14T17:19:52.000Z'],
-			['05:19+09:00', minusNineThirty, '2026-10-14T20:19:00.000Z'],
-			['05-03', minusNineThirty, '2026-10-15T08:00:00.000Z'], // 2026-10-14 22:30 at -09:30
+			['T05:00+14:00', plusNine, '2026-10-14T15:00:00.000Z'], // 2026-10-15 00:00 at +09:00
+			['T05:19:52.000Z', minusNineThirty, '2026-10-15T05:19:52.000Z'], // 2026-10-14 19:49:52 at -09:30
+			['T05:19:52-12:00', minusNineThirty, '2026-10-14T17:19:52.000Z'],
+			['T05:19+09:00', minusNineThirty, '2026-10-14T20:19:00.000Z'],
+			['T05:00-03:00', minusNineThirty, '2026-10-15T08:00:00.000Z'], // 2026-10-14 22:30 at -09:30
 		])
 	})
 
 	test('dated strings with a zone give the exact instant', () => assertInstants([
-		// Temporal.Instant.from, after filling in the missing month, day and minutes
+		// Temporal.Instant.from, after filling in the missing month and day
 		['2021-09-04T05:19:52.000Z', minusNineThirty, '2021-09-04T05:19:52.000Z'],
 		['2021-09-04T05:19:52+09:00', minusNineThirty, '2021-09-03T20:19:52.000Z'],
-		['2021-09-04T05:19-0930', plusNine, '2021-09-04T14:49:00.000Z'],
-		['2021-09-04T05+05:45', plusNine, '2021-09-03T23:15:00.000Z'],
-		['2021-09T05:19:52.000-12', plusNine, '2021-09-01T17:19:52.000Z'],
+		['2021-09-04T05:19-09:30', plusNine, '2021-09-04T14:49:00.000Z'],
+		['2021-09T05:19:52.000-12:00', plusNine, '2021-09-01T17:19:52.000Z'],
 		['2021-09T05:19:52Z', plusNine, '2021-09-01T05:19:52.000Z'],
 		['2021-09T05:19+14:00', minusNine, '2021-08-31T15:19:00.000Z'],
-		['2021-09T05-0000', plusNine, '2021-09-01T05:00:00.000Z'],
-		['2021T05:19:52.000+0545', minusThree, '2020-12-31T23:34:52.000Z'],
+		['2021-09T05:00-00:00', plusNine, '2021-09-01T05:00:00.000Z'],
+		['2021T05:19:52.000+05:45', minusThree, '2020-12-31T23:34:52.000Z'],
 		['2021T05:19:52-03:30', plusNine, '2021-01-01T08:49:52.000Z'],
 		['2021T05:19Z', plusNine, '2021-01-01T05:19:00.000Z'],
-		['2021T05+13:45', utc, '2020-12-31T15:15:00.000Z'],
+		['2021T05:00+13:45', utc, '2020-12-31T15:15:00.000Z'],
 	]))
 
 	test('without options a string is read at the offset 0 or in UTC', t => {
@@ -97,39 +86,34 @@ describe('documented formats', () => {
 		for (const [input, expected] of [
 			['2021-09-04T05:00', '2021-09-04T05:00:00.000Z'],
 			['2021-09-04T05:00+09:00', '2021-09-03T20:00:00.000Z'],
-			['05:00', '2026-10-14T05:00:00.000Z'],
-			['20:00+09:00', '2026-10-14T11:00:00.000Z'],
+			['T05:00', '2026-10-14T05:00:00.000Z'],
+			['T20:00+09:00', '2026-10-14T11:00:00.000Z'],
 		]) for (const date of [new OffsetDate(input), new ZonedDate(input)]) {
 			strictEqual(instant(date), expected, label(date, input))
 			strictEqual(date.offset, 0, label(date, input))
 		}
 	})
+
+	test('the strings of toISOString() and toJSON() are read back', () => {
+		for (const time of [0, -1, 1630732792001, Date.UTC(-1, 0, 1), Date.UTC(10000, 0, 1), 8.64e15, -8.64e15]) {
+			const string = new Date(time).toISOString()
+			for (const date of both(string, plusNine)) strictEqual(date.time, time, label(date, string))
+		}
+	})
 })
 
 describe('zone designators', () => {
-	test('every documented spelling sets the instant', () => {
+	test('Z, +HH:mm and -HH:mm set the instant', () => {
 		// Temporal.Instant.from('2021-09-04T05:19:52.000' + zone)
 		for (const [zone, expected] of [
 			['Z', '2021-09-04T05:19:52.000Z'],
-			['z', '2021-09-04T05:19:52.000Z'],
-			['+00', '2021-09-04T05:19:52.000Z'],
-			['-00', '2021-09-04T05:19:52.000Z'],
 			['+00:00', '2021-09-04T05:19:52.000Z'],
 			['-00:00', '2021-09-04T05:19:52.000Z'],
-			['+0000', '2021-09-04T05:19:52.000Z'],
-			['-0000', '2021-09-04T05:19:52.000Z'],
-			['+09', '2021-09-03T20:19:52.000Z'],
-			['-09', '2021-09-04T14:19:52.000Z'],
 			['+09:00', '2021-09-03T20:19:52.000Z'],
 			['-09:00', '2021-09-04T14:19:52.000Z'],
-			['+0900', '2021-09-03T20:19:52.000Z'],
-			['-0900', '2021-09-04T14:19:52.000Z'],
 			['+05:45', '2021-09-03T23:34:52.000Z'],
-			['+0545', '2021-09-03T23:34:52.000Z'],
 			['-09:30', '2021-09-04T14:49:52.000Z'],
-			['-0930', '2021-09-04T14:49:52.000Z'],
 			['+13:45', '2021-09-03T15:34:52.000Z'],
-			['+1345', '2021-09-03T15:34:52.000Z'],
 			['+14:00', '2021-09-03T15:19:52.000Z'],
 			['-12:00', '2021-09-04T17:19:52.000Z'],
 			['+23:59', '2021-09-03T05:20:52.000Z'],
@@ -150,28 +134,28 @@ describe('zone designators', () => {
 		strictEqual(new ZonedDate('2021-09-04T05:19:52-04:00', plusNine).timezone, 'Asia/Tokyo')
 	})
 
-	test('offsets with seconds are applied exactly', () => assertInstants([
-		// Temporal.Instant.from
-		['1800-01-01 00:00:00-04:56:02', utc, '1800-01-01T04:56:02.000Z'],
-		['2021-09-04T05:00:00+05:30:00', utc, '2021-09-03T23:30:00.000Z'],
-	]))
-
-	test('offsets with seconds can omit the colons like other offsets', () => assertInstants([
-		// Temporal.Instant.from
-		['1800-01-01T00:00:00-045602', utc, '1800-01-01T04:56:02.000Z'],
-		['2021-09-04T05:00:00+053000', utc, '2021-09-03T23:30:00.000Z'],
-	]))
-
-	test('offsets mixing colons and no colons are rejected', () => assertRejected([
-		'2021-09-04T05:00+05:3000',
-		'2021-09-04T05:00+0530:00',
-	]))
-
-	test('a one-digit offset hour is rejected', () => assertRejected([
-		'2021-09-04T05:00+5:30',
-		'2021-09-04T05:00+530',
-		'2021-09-04T05:00-9:30',
-	]))
+	test('other spellings of a zone are rejected', t => {
+		pinClock(t, '2026-10-14T12:00:00Z')
+		assertRejected([
+			// the hours alone, and the basic format without the colon
+			'2021-09-04T05:19:52+09',
+			'2021-09-04T05:19:52-00',
+			'2021-09-04T05:19:52+0900',
+			'2021-09-04T05:19:52-0930',
+			'T05:19+09',
+			'T05:19+0900',
+			// seconds, which ISO 8601 offsets do not have
+			'2021-09-04T05:19:52+05:30:00',
+			'1800-01-01T00:00:00-04:56:02',
+			'1800-01-01T00:00:00-045602',
+			// a one-digit hour
+			'2021-09-04T05:00+5:30',
+			'2021-09-04T05:00+530',
+			'2021-09-04T05:00-9:30',
+			// the U+2212 minus sign
+			'2021-09-04T05:00−05:00',
+		])
+	})
 
 	test('offset hours above 23 and offset minutes above 59 are rejected', () => assertRejected([
 		// native Date and Temporal reject all of these
@@ -181,10 +165,6 @@ describe('zone designators', () => {
 		'2021-09-04T05:00+99:99',
 	]))
 
-	test('an offset with the U+2212 minus sign is rejected', () => assertRejected([
-		'2021-09-04T05:00\u221205:00',
-	]))
-
 	test('offsets that are not whole quarter hours keep millisecond precision', () => assertInstants([
 		// Temporal.Instant.from and native Date
 		['1970-01-01T00:31:00.334+00:31', utc, '1970-01-01T00:00:00.334Z'],
@@ -192,90 +172,92 @@ describe('zone designators', () => {
 	]))
 })
 
-describe('separators and case', () => {
-	test('lower-case t and z work like T and Z', () => assertInstants([
-		['2021-09-04t05:19:52.5z', plusNine, '2021-09-04T05:19:52.500Z'],
-		['1985-04-12t23:20:50.52z', plusNine, '1985-04-12T23:20:50.520Z'],
-		['2021-09t05:19z', plusNine, '2021-09-01T05:19:00.000Z'],
-		['2021t05', plusNine, '2020-12-31T20:00:00.000Z'],
-	]))
-
-	test('a space can replace the T between the date and the time', () => assertInstants([
-		['2021-09-04 05:19:52', plusNine, '2021-09-03T20:19:52.000Z'],
-		['2021-09-04 05:19:52.001-03:30', plusNine, '2021-09-04T08:49:52.001Z'],
-		['2021-09 05:19Z', plusNine, '2021-09-01T05:19:00.000Z'],
-		['2021 05', plusNine, '2020-12-31T20:00:00.000Z'],
-	]))
-
-	test('a time-only string may start with T, t or one space', t => {
-		pinClock(t, '2026-10-14T12:00:00Z') // 2026-10-14 21:00 at +09:00
-		assertInstants([
-			['T05:19', plusNine, '2026-10-13T20:19:00.000Z'],
-			['t05:19', plusNine, '2026-10-13T20:19:00.000Z'],
-			[' 05:19', plusNine, '2026-10-13T20:19:00.000Z'],
-			['t05:19z', plusNine, '2026-10-14T05:19:00.000Z'],
-			[' 05:19Z', plusNine, '2026-10-14T05:19:00.000Z'],
+describe('times', () => {
+	test('a time needs the T, also on its own', t => {
+		pinClock(t, '2026-10-14T12:00:00Z')
+		assertRejected([
+			'05:19',
+			'05:19:52',
+			'05:19Z',
+			'05',
+			' 05:19',
+			'2021-09-04 05:19',
+			'2021-09-04 05:19:52.001-03:30',
+			'2021 05:00',
+			'2021-09-0405:19Z',
 		])
 	})
-})
 
-describe('fractional seconds', () => {
-	test('one to three digits are milliseconds', () => {
+	test('a time needs the hours and the minutes', t => {
+		pinClock(t, '2026-10-14T12:00:00Z')
+		assertRejected(['2021-09-04T05', '2021-09T05', '2021T05', 'T05', 'T05Z', '2021-09-04T05+09:00'])
+	})
+
+	test('the T and the Z are upper case', t => {
+		pinClock(t, '2026-10-14T12:00:00Z')
+		assertRejected(['2021-09-04t05:19:52.500z', '2021-09-04t05:19', '2021-09-04T05:19z', 't05:19', 'T05:19z'])
+	})
+
+	test('the fraction of a second is three digits: the milliseconds', () => {
 		for (const [fraction, expected] of [
-			['5', '2021-09-04T05:19:52.500Z'],
-			['05', '2021-09-04T05:19:52.050Z'],
-			['52', '2021-09-04T05:19:52.520Z'],
 			['001', '2021-09-04T05:19:52.001Z'],
 			['010', '2021-09-04T05:19:52.010Z'],
 			['123', '2021-09-04T05:19:52.123Z'],
 			['999', '2021-09-04T05:19:52.999Z'],
 			['000', '2021-09-04T05:19:52.000Z'],
 		]) for (const date of both(`2021-09-04T05:19:52.${fraction}Z`, plusNine)) strictEqual(instant(date), expected, label(date, fraction))
-		assertInstants([['2021-09-04T05:19:52.52', plusNine, '2021-09-03T20:19:52.520Z']])
-	})
-
-	test('digits after the millisecond are truncated', () => assertInstants([
-		// Temporal.Instant.from(...).epochMilliseconds and native Date truncate
-		['2021-01-01T00:00:00.9995Z', utc, '2021-01-01T00:00:00.999Z'],
-		['2021-12-31T23:59:59.9999Z', utc, '2021-12-31T23:59:59.999Z'],
-		['2021-01-01T00:00:00.0005Z', utc, '2021-01-01T00:00:00.000Z'],
-	]))
-
-	test('a comma decimal mark is rejected', () => assertRejected([
-		'2021-09-04T05:19:52,5Z',
-		'2021-09-04T05:19:52,123456789+09:00',
-	]))
-})
-
-describe('database and RFC 3339 output', () => {
-	// Temporal.Instant.from, or the wallclock at the instance offset when there is no zone
-	test('PostgreSQL date, timestamp and timestamptz give the exact instant', () => assertInstants([
-		['2023-10-05', minusThree, '2023-10-05T03:00:00.000Z'],
-		['2023-10-29 01:44:45', minusThree, '2023-10-29T04:44:45.000Z'],
-		['2023-10-25 01:44:59.32+11', minusThree, '2023-10-24T14:44:59.320Z'],
-		['2023-10-25 01:44:59+05:45', minusThree, '2023-10-24T19:59:59.000Z'],
-		['2023-10-25 01:44:59-03:30', minusThree, '2023-10-25T05:14:59.000Z'],
-		['2023-10-25 01:44:59.123456+00', minusThree, '2023-10-25T01:44:59.123Z'],
-	]))
-
-	test('PostgreSQL time and timetz take today at the instance offset', t => {
-		pinClock(t, '2026-10-14T12:00:00Z') // 2026-10-14 09:00 at -03:00
-		assertInstants([
-			['17:00:00', minusThree, '2026-10-14T20:00:00.000Z'],
-			['03:20:00+11', minusThree, '2026-10-14T16:20:00.000Z'], // 13:20 at -03:00
+		assertInstants([['2021-09-04T05:19:52.520', plusNine, '2021-09-03T20:19:52.520Z']])
+		assertRejected([
+			'2021-09-04T05:19:52.5Z',
+			'2021-09-04T05:19:52.52',
+			'2021-09-04T05:19:52.9995Z',
+			'2021-09-04T05:19:52.123456+09:00',
+			'2021-09-04T05:19:52.Z',
+			'2021-09-04T05:19.500',
+			// a comma decimal mark
+			'2021-09-04T05:19:52,500Z',
 		])
 	})
 
-	test('MySQL DATETIME gives the exact instant from its minimum to its maximum', () => assertInstants([
-		['1000-01-01 00:00:00', utc, '1000-01-01T00:00:00.000Z'],
-		['2023-10-29 01:44:45.123', minusThree, '2023-10-29T04:44:45.123Z'],
-		['9999-12-31 23:59:59', utc, '9999-12-31T23:59:59.000Z'],
+	test('24:00 is the midnight at the end of the day', () => {
+		// native Date
+		assertInstants([
+			['2021-09-04T24:00Z', plusNine, '2021-09-05T00:00:00.000Z'],
+			['2021-12-31T24:00:00Z', plusNine, '2022-01-01T00:00:00.000Z'],
+			['2021-02-28T24:00:00.000Z', plusNine, '2021-03-01T00:00:00.000Z'],
+			['2021T24:00Z', plusNine, '2021-01-02T00:00:00.000Z'],
+			['+275760-09-12T24:00Z', plusNine, '+275760-09-13T00:00:00.000Z'],
+		])
+		for (const date of both('2021-09-04T24:00', minusNineThirty)) strictEqual(wallclock(date), '2021-09-05T00:00:00.000', label(date, '2021-09-04T24:00'))
+		// native Date rejects all of these
+		assertRejected(['2021-09-04T24:01', '2021-09-04T24:00:01', '2021-09-04T24:00:00.001Z', '2021-09-04T25:00Z', '2021-09-04T99:00'])
+	})
+
+	test('a minute or second of 60 is rejected', t => {
+		pinClock(t, '2026-10-14T12:00:00Z')
+		// native Date rejects the leap second 23:59:60 too
+		assertRejected(['T23:60Z', 'T23:60', '2021-09-04T05:60', '2021-12-31T23:59:60Z'])
+	})
+})
+
+describe('other formats', () => {
+	test('PostgreSQL and MySQL output, which has a space before the time, is rejected', () => assertRejected([
+		'2023-10-29 01:44:45',
+		'2023-10-25 01:44:59.32+11',
+		'2023-10-25 01:44:59+05:45',
+		'2023-10-25 01:44:59.123456+00',
+		'1000-01-01 00:00:00',
+		'9999-12-31 23:59:59',
 	]))
 
-	test('the RFC 3339 examples give their exact instants', () => assertInstants([
-		['1985-04-12T23:20:50.52Z', plusNine, '1985-04-12T23:20:50.520Z'],
-		['1996-12-19T16:39:57-08:00', plusNine, '1996-12-20T00:39:57.000Z'],
-		['1937-01-01T12:00:27.87+00:20', plusNine, '1937-01-01T11:40:27.870Z'],
+	test('RFC 3339 strings are read when they are in the format', () => {
+		// the RFC 3339 examples: Temporal.Instant.from
+		assertInstants([['1996-12-19T16:39:57-08:00', plusNine, '1996-12-20T00:39:57.000Z']])
+		assertRejected(['1985-04-12T23:20:50.52Z', '1937-01-01T12:00:27.87+00:20', '1985-04-12t23:20:50.520z'])
+	})
+
+	test('PostgreSQL dates, which are in the format, are read', () => assertInstants([
+		['2023-10-05', minusThree, '2023-10-05T03:00:00.000Z'],
 	]))
 })
 
@@ -319,73 +301,71 @@ describe('today for time-only strings', () => {
 	test('a time without a zone is today at the instance offset', t => {
 		pinClock(t, '2026-10-14T12:00:00Z')
 		assertInstants([
-			['05:00', utc, '2026-10-14T05:00:00.000Z'],
-			['05:00', plusNine, '2026-10-13T20:00:00.000Z'], // 2026-10-14 21:00 at +09:00
-			['05:00', minusNine, '2026-10-14T14:00:00.000Z'], // 2026-10-14 03:00 at -09:00
-			['00:00', plusNine, '2026-10-13T15:00:00.000Z'],
-			['23:59:59.999', minusNine, '2026-10-15T08:59:59.999Z'],
+			['T05:00', utc, '2026-10-14T05:00:00.000Z'],
+			['T05:00', plusNine, '2026-10-13T20:00:00.000Z'], // 2026-10-14 21:00 at +09:00
+			['T05:00', minusNine, '2026-10-14T14:00:00.000Z'], // 2026-10-14 03:00 at -09:00
+			['T00:00', plusNine, '2026-10-13T15:00:00.000Z'],
+			['T23:59:59.999', minusNine, '2026-10-15T08:59:59.999Z'],
 			['T05:19:52.120', minusNineThirty, '2026-10-14T14:49:52.120Z'],
-			['05', minusThree, '2026-10-14T08:00:00.000Z'],
+			['T05:00:00', minusThree, '2026-10-14T08:00:00.000Z'],
 		])
 	})
 
 	test('a time with a zone stays on today at the instance offset', t => {
 		pinClock(t, '2026-10-14T12:00:00Z')
 		assertInstants([
-			['15:00Z', plusNine, '2026-10-13T15:00:00.000Z'], // 2026-10-14 00:00 at +09:00
-			['14:59Z', plusNine, '2026-10-14T14:59:00.000Z'], // 2026-10-14 23:59 at +09:00
-			['08:00Z', minusNine, '2026-10-15T08:00:00.000Z'], // 2026-10-14 23:00 at -09:00
-			['09:00Z', minusNine, '2026-10-14T09:00:00.000Z'], // 2026-10-14 00:00 at -09:00
+			['T15:00Z', plusNine, '2026-10-13T15:00:00.000Z'], // 2026-10-14 00:00 at +09:00
+			['T14:59Z', plusNine, '2026-10-14T14:59:00.000Z'], // 2026-10-14 23:59 at +09:00
+			['T08:00Z', minusNine, '2026-10-15T08:00:00.000Z'], // 2026-10-14 23:00 at -09:00
+			['T09:00Z', minusNine, '2026-10-14T09:00:00.000Z'], // 2026-10-14 00:00 at -09:00
 			['T05:19:52.120+05:45', minusNineThirty, '2026-10-14T23:34:52.120Z'], // 2026-10-14 14:04:52.120 at -09:30
-			['21:00+05:45', plusFiveFortyFive, '2026-10-14T15:15:00.000Z'],
-			['02:00-09:30', plusFiveFortyFive, '2026-10-14T11:30:00.000Z'], // 2026-10-14 17:15 at +05:45
-			['00:00+14:00', minusTen, '2026-10-14T10:00:00.000Z'], // 24 h apart: 2026-10-14 00:00 at -10:00
-			['23:59-10:00', plusFourteen, '2026-10-15T09:59:00.000Z'], // 24 h apart: 2026-10-15 23:59 at +14:00
+			['T21:00+05:45', plusFiveFortyFive, '2026-10-14T15:15:00.000Z'],
+			['T02:00-09:30', plusFiveFortyFive, '2026-10-14T11:30:00.000Z'], // 2026-10-14 17:15 at +05:45
+			['T00:00+14:00', minusTen, '2026-10-14T10:00:00.000Z'], // 24 h apart: 2026-10-14 00:00 at -10:00
+			['T23:59-10:00', plusFourteen, '2026-10-15T09:59:00.000Z'], // 24 h apart: 2026-10-15 23:59 at +14:00
 		])
 	})
 
-	test('hours of 24 and more move to the following days', t => {
+	test('T24:00 is the midnight at the end of today', t => {
 		pinClock(t, '2026-10-14T12:00:00Z')
 		assertInstants([
-			['24:00', plusNine, '2026-10-14T15:00:00.000Z'], // 2026-10-15 00:00 at +09:00
-			['24:00Z', plusNine, '2026-10-15T00:00:00.000Z'], // 2026-10-15 09:00 at +09:00
-			['47:59', plusNine, '2026-10-15T14:59:00.000Z'],
-			['48:00', plusNine, '2026-10-15T15:00:00.000Z'],
-			['71:00Z', minusNine, '2026-10-16T23:00:00.000Z'], // 2026-10-16 14:00 at -09:00
-			['99:00-09:30', minusThree, '2026-10-18T12:30:00.000Z'], // 2026-10-18 09:30 at -03:00
-			['28:30', utc, '2026-10-15T04:30:00.000Z'],
+			['T24:00', plusNine, '2026-10-14T15:00:00.000Z'], // 2026-10-15 00:00 at +09:00
+			['T24:00:00.000', minusNine, '2026-10-15T09:00:00.000Z'], // 2026-10-15 00:00 at -09:00
+			['T24:00Z', plusNine, '2026-10-15T00:00:00.000Z'], // 24 hours after T00:00Z, which is 2026-10-14 09:00 at +09:00
 		])
+		// hours past 24 are not times of day
+		assertRejected(['T24:30', 'T28:30', 'T47:59', 'T48:00Z', 'T99:00-09:30'])
 	})
 
 	for (const [name, now, rows] of [
 		['today rolls over at the end of a year', '2026-12-31T23:30:00Z', [
-			['05:00', utc, '2026-12-31T05:00:00.000Z'],
-			['05:00', plusNine, '2026-12-31T20:00:00.000Z'], // 2027-01-01 05:00 at +09:00
-			['23:30Z', plusNine, '2026-12-31T23:30:00.000Z'], // 2027-01-01 08:30 at +09:00
-			['03:00Z', minusThree, '2026-12-31T03:00:00.000Z'], // 2026-12-31 00:00 at -03:00
-			['24:00', minusThree, '2027-01-01T03:00:00.000Z'],
-			['00:00', plusFourteen, '2026-12-31T10:00:00.000Z'],
-			['10:00+14:00', minusThree, '2026-12-31T20:00:00.000Z'], // 2026-12-31 17:00 at -03:00
+			['T05:00', utc, '2026-12-31T05:00:00.000Z'],
+			['T05:00', plusNine, '2026-12-31T20:00:00.000Z'], // 2027-01-01 05:00 at +09:00
+			['T23:30Z', plusNine, '2026-12-31T23:30:00.000Z'], // 2027-01-01 08:30 at +09:00
+			['T03:00Z', minusThree, '2026-12-31T03:00:00.000Z'], // 2026-12-31 00:00 at -03:00
+			['T24:00', minusThree, '2027-01-01T03:00:00.000Z'],
+			['T00:00', plusFourteen, '2026-12-31T10:00:00.000Z'],
+			['T10:00+14:00', minusThree, '2026-12-31T20:00:00.000Z'], // 2026-12-31 17:00 at -03:00
 		]],
 		['today rolls over at the end of a month', '2026-10-31T23:30:00Z', [
-			['24:00', utc, '2026-11-01T00:00:00.000Z'],
-			['24:00Z', minusNine, '2026-11-02T00:00:00.000Z'], // 2026-11-01 15:00 at -09:00
-			['48:00', plusNine, '2026-11-02T15:00:00.000Z'], // 2026-11-03 00:00 at +09:00
-			['00:30', minusTwelve, '2026-10-31T12:30:00.000Z'],
-			['15:00Z', plusNine, '2026-10-31T15:00:00.000Z'], // 2026-11-01 00:00 at +09:00
-			['14:59Z', plusNine, '2026-11-01T14:59:00.000Z'], // 2026-11-01 23:59 at +09:00
+			['T24:00', utc, '2026-11-01T00:00:00.000Z'],
+			['T24:00Z', minusNine, '2026-11-02T00:00:00.000Z'], // 2026-11-01 15:00 at -09:00
+			['T24:00', plusNine, '2026-11-01T15:00:00.000Z'], // 2026-11-02 00:00 at +09:00
+			['T00:30', minusTwelve, '2026-10-31T12:30:00.000Z'],
+			['T15:00Z', plusNine, '2026-10-31T15:00:00.000Z'], // 2026-11-01 00:00 at +09:00
+			['T14:59Z', plusNine, '2026-11-01T14:59:00.000Z'], // 2026-11-01 23:59 at +09:00
 		]],
 		['today rolls over into a leap day', '2028-02-28T12:00:00Z', [
-			['24:00', utc, '2028-02-29T00:00:00.000Z'],
-			['12:00Z', plusFourteen, '2028-02-28T12:00:00.000Z'], // 2028-02-29 02:00 at +14:00
-			['23:30', minusTwelve, '2028-02-29T11:30:00.000Z'],
+			['T24:00', utc, '2028-02-29T00:00:00.000Z'],
+			['T12:00Z', plusFourteen, '2028-02-28T12:00:00.000Z'], // 2028-02-29 02:00 at +14:00
+			['T23:30', minusTwelve, '2028-02-29T11:30:00.000Z'],
 		]],
 		['today rolls over after a leap day', '2028-02-29T12:00:00Z', [
-			['24:00', utc, '2028-03-01T00:00:00.000Z'],
-			['23:30', minusTwelve, '2028-03-01T11:30:00.000Z'], // 2028-02-29 23:30 at -12:00
-			['05:00', plusFourteen, '2028-02-29T15:00:00.000Z'], // 2028-03-01 05:00 at +14:00
-			['00:30+14:00', utc, '2028-02-29T10:30:00.000Z'],
-			['23:00Z', minusEleven, '2028-02-29T23:00:00.000Z'], // 2028-02-29 12:00 at -11:00
+			['T24:00', utc, '2028-03-01T00:00:00.000Z'],
+			['T23:30', minusTwelve, '2028-03-01T11:30:00.000Z'], // 2028-02-29 23:30 at -12:00
+			['T05:00', plusFourteen, '2028-02-29T15:00:00.000Z'], // 2028-03-01 05:00 at +14:00
+			['T00:30+14:00', utc, '2028-02-29T10:30:00.000Z'],
+			['T23:00Z', minusEleven, '2028-02-29T23:00:00.000Z'], // 2028-02-29 12:00 at -11:00
 		]],
 	] as const) test(name, t => {
 		pinClock(t, now)
@@ -395,25 +375,25 @@ describe('today for time-only strings', () => {
 	// Temporal: the wallclock on today's date in the zone, at the offset in force then
 	for (const [name, now, timezone, rows] of [
 		['ZonedDate takes today in its zone on a spring-forward day', '2024-03-10T09:30:00Z', 'America/Los_Angeles', [
-			['00:30', '2024-03-10T08:30:00.000Z'], // -08:00, before the gap
-			['12:00', '2024-03-10T19:00:00.000Z'], // -07:00
-			['06:30Z', '2024-03-11T06:30:00.000Z'], // 23:30 at -07:00
-			['23:30-07:00', '2024-03-11T06:30:00.000Z'],
+			['T00:30', '2024-03-10T08:30:00.000Z'], // -08:00, before the gap
+			['T12:00', '2024-03-10T19:00:00.000Z'], // -07:00
+			['T06:30Z', '2024-03-11T06:30:00.000Z'], // 23:30 at -07:00
+			['T23:30-07:00', '2024-03-11T06:30:00.000Z'],
 		]],
 		['ZonedDate takes today in its zone on a fall-back day', '2024-11-03T07:30:00Z', 'America/Los_Angeles', [
-			['12:00', '2024-11-03T20:00:00.000Z'], // -08:00
-			['23:30', '2024-11-04T07:30:00.000Z'],
-			['03:30-08:00', '2024-11-03T11:30:00.000Z'],
-			['22:30-08:00', '2024-11-04T06:30:00.000Z'],
+			['T12:00', '2024-11-03T20:00:00.000Z'], // -08:00
+			['T23:30', '2024-11-04T07:30:00.000Z'],
+			['T03:30-08:00', '2024-11-03T11:30:00.000Z'],
+			['T22:30-08:00', '2024-11-04T06:30:00.000Z'],
 		]],
 		['ZonedDate takes today in its zone on a day that starts at 01:00', '2024-09-08T15:00:00Z', 'America/Santiago', [
-			['01:30', '2024-09-08T04:30:00.000Z'], // -03:00
-			['00:30-04:00', '2024-09-08T04:30:00.000Z'],
-			['23:30', '2024-09-09T02:30:00.000Z'],
+			['T01:30', '2024-09-08T04:30:00.000Z'], // -03:00
+			['T00:30-04:00', '2024-09-08T04:30:00.000Z'],
+			['T23:30', '2024-09-09T02:30:00.000Z'],
 		]],
 		['ZonedDate takes today in its zone on a 30-minute DST day', '2024-10-05T14:00:00Z', 'Australia/Lord_Howe', [
-			['01:00', '2024-10-05T14:30:00.000Z'], // +10:30
-			['12:00', '2024-10-06T01:00:00.000Z'], // +11:00
+			['T01:00', '2024-10-05T14:30:00.000Z'], // +10:30
+			['T12:00', '2024-10-06T01:00:00.000Z'], // +11:00
 		]],
 	] as const) test(name, t => {
 		pinClock(t, now)
@@ -429,7 +409,7 @@ describe('today for time-only strings', () => {
 		['2024-11-03T20:00:00Z', '2024-11-03T07:30:00.000Z'], // 12:00 -08:00
 	]) test(`on a DST day, a time with a zone takes the first instant on or after today (now ${now})`, t => {
 		pinClock(t, now)
-		strictEqual(instant(new ZonedDate('07:30Z', {timezone: 'America/Los_Angeles'})), expected)
+		strictEqual(instant(new ZonedDate('T07:30Z', {timezone: 'America/Los_Angeles'})), expected)
 	})
 
 	test('an invalid clock gives an invalid date for a time-only string, like new Date()', t => {
@@ -438,7 +418,7 @@ describe('today for time-only strings', () => {
 		t.mock.method(Date, 'now', () => clock)
 		for (const now of [NaN, 8.64e15 + 1, -Infinity]) {
 			clock = now
-			for (const input of ['00:00', '09:00', '09:00Z']) for (const date of both(input, plusNine)) ok(Number.isNaN(date.time), `${label(date, input)}, clock ${now}`)
+			for (const input of ['T00:00', 'T09:00', 'T09:00Z']) for (const date of both(input, plusNine)) ok(Number.isNaN(date.time), `${label(date, input)}, clock ${now}`)
 		}
 	})
 
@@ -446,25 +426,19 @@ describe('today for time-only strings', () => {
 		useRuntimeTimezone(t, 'Pacific/Kiritimati')
 		pinClock(t, '2026-12-31T23:00:00Z') // already 2027-01-01 13:00 in the runtime zone
 		assertInstants([
-			['05:00', utc, '2026-12-31T05:00:00.000Z'],
-			['05:00', minusNine, '2026-12-31T14:00:00.000Z'],
-			['23:30', minusTwelve, '2027-01-01T11:30:00.000Z'], // 2026-12-31 23:30 at -12:00
+			['T05:00', utc, '2026-12-31T05:00:00.000Z'],
+			['T05:00', minusNine, '2026-12-31T14:00:00.000Z'],
+			['T23:30', minusTwelve, '2027-01-01T11:30:00.000Z'], // 2026-12-31 23:30 at -12:00
 		])
 	})
 
 	test('a zone more than 24 hours from the instance offset still gives today', t => {
 		pinClock(t, '2026-10-14T12:00:00Z') // 2026-10-15 02:00 at +14:00, 2026-10-14 00:00 at -12:00
 		assertInstants([
-			['22:00-12:00', plusFourteen, '2026-10-14T10:00:00.000Z'], // 2026-10-15 00:00 at +14:00
-			['23:00-11:00', plusFourteen, '2026-10-14T10:00:00.000Z'],
-			['00:00+14:00', minusTwelve, '2026-10-15T10:00:00.000Z'], // 2026-10-14 22:00 at -12:00
+			['T22:00-12:00', plusFourteen, '2026-10-14T10:00:00.000Z'], // 2026-10-15 00:00 at +14:00
+			['T23:00-11:00', plusFourteen, '2026-10-14T10:00:00.000Z'],
+			['T00:00+14:00', minusTwelve, '2026-10-15T10:00:00.000Z'], // 2026-10-14 22:00 at -12:00
 		])
-	})
-
-	test('a minute or second of 60 is rejected', t => {
-		pinClock(t, '2026-10-14T12:00:00Z')
-		// native Date rejects the leap second 23:59:60 too
-		assertRejected(['23:60Z', '23:60', '2021-09-04T05:60', '2021-12-31T23:59:60Z'])
 	})
 })
 
@@ -478,12 +452,13 @@ describe('malformed strings', () => {
 		'2021-09-04T',
 		'2021-09-04 ',
 		'2021-09-04  05:00',
-		'2021-09-04 05:00 +09:00',
+		'2021-09-04T05:00 +09:00',
 		'2021-09-04T05:00T',
+		'2021-09-04TT05:00',
 		'infinity',
 		'-infinity',
 		'0044-03-15 BC',
-		'0044-03-15 12:00:00+00 BC',
+		'0044-03-15T12:00:00+00:00 BC',
 		'2021-W35-6',
 		'2021-xx-04',
 		'2021-09-04-01',
@@ -498,7 +473,7 @@ describe('malformed strings', () => {
 		'2021-09-04T05:19:52.000Z\n',
 		'２０２１-09-04',
 		'-838:59:59',
-		'05:19:xx',
+		'T05:19:xx',
 	]))
 
 	test('months and days outside their ranges are rejected', () => assertRejected([
@@ -507,12 +482,12 @@ describe('malformed strings', () => {
 		'2021-00-10',
 		'2021-09-00',
 		'2021-09-32',
-		'0000-00-00 00:00:00',
+		'0000-00-00T00:00:00',
 	]))
 
-	test('a day past the end of its month and an hour past 23 after a date are rejected', () => {
+	test('a day past the end of its month is rejected', () => {
 		// Temporal rejects all of these
-		assertRejected(['2021-02-29', '2021-04-31', '1900-02-29', '2021-09-04T24:00', '2021-09-04 25:00Z'])
+		assertRejected(['2021-02-29', '2021-02-30', '2021-04-31', '1900-02-29', '2021-02-29T24:00'])
 		// leap days
 		assertInstants([
 			['2024-02-29', utc, '2024-02-29T00:00:00.000Z'],
@@ -524,7 +499,6 @@ describe('malformed strings', () => {
 		'2021-09-04abc',
 		'2021-09-04T05:19abc',
 		'2021-09-04T05:19:52xyz',
-		'2021-09-0405:19Z',
 		'2021-09-04T05:00Z+09:00',
 	]))
 
@@ -536,7 +510,7 @@ describe('malformed strings', () => {
 
 	test('a T followed by four digits is rejected', t => {
 		pinClock(t, '2026-10-14T12:00:00Z')
-		assertRejected(['T2021', 'T0519', 't2021Z'])
+		assertRejected(['T2021', 'T0519', 'T2021Z'])
 	})
 
 	test('ISO 8601 basic format and ordinal dates are rejected', () => assertRejected([
@@ -554,12 +528,12 @@ describe('malformed strings', () => {
 
 	test('leading whitespace before a date is rejected', t => {
 		pinClock(t, '2026-10-14T12:00:00Z')
-		assertRejected([' 2021-09-04', '\t2021-09-04', '\n2021-09-04', '\u00a02021-09-04'])
+		assertRejected([' 2021-09-04', '\t2021-09-04', '\n2021-09-04', ' 2021-09-04'])
 	})
 
 	test('slash, dot and week dates are rejected', () => assertRejected([
 		'2021/09/04',
-		'2021/09/04 05:19:52',
+		'2021/09/04T05:19:52',
 		'2021.09.04',
 		'2021W356',
 	]))
@@ -567,7 +541,7 @@ describe('malformed strings', () => {
 	test('a 12-hour clock suffix is rejected', () => assertRejected([
 		'2021-09-04T05:00PM',
 		'2021-09-04T05:00 PM',
-		'2021-09-04 5PM',
+		'T05:00PM',
 	]))
 
 	test('a bracketed time zone annotation is rejected', () => assertRejected([

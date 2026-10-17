@@ -22,17 +22,14 @@ describe('OffsetDate', () => {
 		assert.strictEqual(new OffsetDate('2021-09-04T05:19:52.000').time, new OffsetDate('2021-09-04T05:19:52.000').time)
 		assert.strictEqual(new OffsetDate('2021-09-04T05:19:52').time, new OffsetDate('2021-09-04T05:19:52.000').time)
 		assert.strictEqual(new OffsetDate('2021-09-04T05:19').time, new OffsetDate('2021-09-04T05:19:00.000').time)
-		assert.strictEqual(new OffsetDate('2021-09-04T05').time, new OffsetDate('2021-09-04T05:00:00.000').time)
 		assert.strictEqual(new OffsetDate('2021-09-04').time, new OffsetDate('2021-09-04T00:00:00.000').time)
 		assert.strictEqual(new OffsetDate('2021-09T05:19:52.000').time, new OffsetDate('2021-09-01T05:19:52.000').time)
 		assert.strictEqual(new OffsetDate('2021-09T05:19:52').time, new OffsetDate('2021-09-01T05:19:52.000').time)
 		assert.strictEqual(new OffsetDate('2021-09T05:19').time, new OffsetDate('2021-09-01T05:19:00.000').time)
-		assert.strictEqual(new OffsetDate('2021-09T05').time, new OffsetDate('2021-09-01T05:00:00.000').time)
 		assert.strictEqual(new OffsetDate('2021-09').time, new OffsetDate('2021-09-01T00:00:00.000').time)
 		assert.strictEqual(new OffsetDate('2021T05:19:52.000').time, new OffsetDate('2021-01-01T05:19:52.000').time)
 		assert.strictEqual(new OffsetDate('2021T05:19:52').time, new OffsetDate('2021-01-01T05:19:52.000').time)
 		assert.strictEqual(new OffsetDate('2021T05:19').time, new OffsetDate('2021-01-01T05:19:00.000').time)
-		assert.strictEqual(new OffsetDate('2021T05').time, new OffsetDate('2021-01-01T05:00:00.000').time)
 		assert.strictEqual(new OffsetDate('2021').time, new OffsetDate('2021-01-01T00:00:00.000').time)
 
 		const today = new OffsetDate(Date.now())
@@ -40,11 +37,6 @@ describe('OffsetDate', () => {
 		assert.strictEqual(new OffsetDate('T05:19:52.000').time, new OffsetDate(`${todayStr}T05:19:52.000`).time)
 		assert.strictEqual(new OffsetDate('T05:19:52').time, new OffsetDate(`${todayStr}T05:19:52.000`).time)
 		assert.strictEqual(new OffsetDate('T05:19').time, new OffsetDate(`${todayStr}T05:19:00.000`).time)
-		assert.strictEqual(new OffsetDate('T05').time, new OffsetDate(`${todayStr}T05:00:00.000`).time)
-		assert.strictEqual(new OffsetDate('05:19:52.000').time, new OffsetDate(`${todayStr}T05:19:52.000`).time)
-		assert.strictEqual(new OffsetDate('05:19:52').time, new OffsetDate(`${todayStr}T05:19:52.000`).time)
-		assert.strictEqual(new OffsetDate('05:19').time, new OffsetDate(`${todayStr}T05:19:00.000`).time)
-		assert.strictEqual(new OffsetDate('05').time, new OffsetDate(`${todayStr}T05:00:00.000`).time)
 	})
 	test('OffsetDate', () => {
 		const date = new OffsetDate(Date.UTC(2020, 1, 2, 3, 4, 5, 6), {offset: 7.5})
@@ -71,14 +63,14 @@ describe('OffsetDate', () => {
 	})
 	test('hour parse', t => {
 		t.mock.timers.enable({apis: ['Date'], now: pinnedNow})
-		const date = new OffsetDate('02:00', {offset: 7})
+		const date = new OffsetDate('T02:00', {offset: 7})
 		assert.strictEqual(date.hours, 2)
 		const todayGMT7	= new Date(Date.now() + 7 * 60 * 60 * 1000)
 		assert.strictEqual(date.date, todayGMT7.getUTCDate())
 	})
 	test('hour parse neg', t => {
 		t.mock.timers.enable({apis: ['Date'], now: pinnedNow})
-		const date = new OffsetDate('03:00Z', {offset: -3.5})
+		const date = new OffsetDate('T03:00Z', {offset: -3.5})
 		assert.strictEqual(date.hours, 23)
 		assert.strictEqual(date.minutes, 30)
 		const todayGMT	= new Date(Date.now() - 3.5 * 60 * 60 * 1000)
@@ -102,8 +94,9 @@ describe('OffsetDate', () => {
 		assert.strictEqual(date.milliseconds, 0)
 
 		// time: 1083
-		// 17:00:00
-		date = new OffsetDate('17:00:00', {offset})
+		// 17:00:00, which needs the T
+		assert.throws(() => new OffsetDate('17:00:00', {offset}), /Invalid date string/)
+		date = new OffsetDate('T17:00:00', {offset})
 		assert.strictEqual(date.fullYear, now.fullYear)
 		assert.strictEqual(date.month, now.month)
 		assert.strictEqual(date.date, now.date)
@@ -113,8 +106,9 @@ describe('OffsetDate', () => {
 		assert.strictEqual(date.milliseconds, 0)
 
 		// timetz: 1266
-		// 03:20:00+00
-		date = new OffsetDate('03:20:00+11', {offset})
+		// 03:20:00+00, which needs the T and the minutes of the offset
+		assert.throws(() => new OffsetDate('03:20:00+11', {offset}), /Invalid date string/)
+		date = new OffsetDate('T03:20:00+11:00', {offset})
 		assert.strictEqual(date.fullYear, now.fullYear)
 		assert.strictEqual(date.month, now.month)
 		assert.strictEqual(date.date, now.date)
@@ -124,8 +118,9 @@ describe('OffsetDate', () => {
 		assert.strictEqual(date.withOffset(11).milliseconds, 0)
 
 		// timestamp: 1114
-		// 2023-10-29 01:44:45
-		date = new OffsetDate('2023-10-29 01:44:45', {offset})
+		// 2023-10-29 01:44:45, which needs a T instead of the space
+		assert.throws(() => new OffsetDate('2023-10-29 01:44:45', {offset}), /Invalid date string/)
+		date = new OffsetDate('2023-10-29T01:44:45', {offset})
 		assert.strictEqual(date.fullYear, 2023)
 		assert.strictEqual(date.month, 9)
 		assert.strictEqual(date.date, 29)
@@ -135,8 +130,9 @@ describe('OffsetDate', () => {
 		assert.strictEqual(date.milliseconds, 0)
 
 		// timestamptz: 1184
-		// 2023-10-25 01:44:59.32+00
-		date = new OffsetDate('2023-10-25 01:44:59.32+11', {offset}).withOffset(11)
+		// 2023-10-25 01:44:59.32+00, which needs the T, three digits of milliseconds and the minutes of the offset
+		assert.throws(() => new OffsetDate('2023-10-25 01:44:59.32+11', {offset}), /Invalid date string/)
+		date = new OffsetDate('2023-10-25T01:44:59.320+11:00', {offset}).withOffset(11)
 		assert.strictEqual(date.fullYear, 2023)
 		assert.strictEqual(date.month, 9)
 		assert.strictEqual(date.date, 25)
@@ -151,111 +147,95 @@ describe('OffsetDate', () => {
 		let date
 
 		// no timezone specified
-		date = new OffsetDate('00:00', {offset: 9})
+		date = new OffsetDate('T00:00', {offset: 9})
 		assert.strictEqual(date.hours, 0)
 		assert.strictEqual(date.date, new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDate())
 
 		// z timezone
-		date = new OffsetDate('00:00Z', {offset: 9})
+		date = new OffsetDate('T00:00Z', {offset: 9})
 		assert.strictEqual(date.hours, 9)
 		assert.strictEqual(date.date, new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDate())
 
 		// should stay in today even if 15 + 9 >= 24
-		date = new OffsetDate('15:00Z', {offset: 9})
+		date = new OffsetDate('T15:00Z', {offset: 9})
 		assert.strictEqual(date.hours, 0)
 		assert.strictEqual(date.date, new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDate())
 
-		// tomorrow only when >= 24
-		date = new OffsetDate('24:00Z', {offset: 9})
+		// tomorrow at 24:00
+		date = new OffsetDate('T24:00Z', {offset: 9})
 		assert.strictEqual(date.hours, 9)
 		assert.strictEqual(date.date, new Date(Date.now() + 9 * 60 * 60 * 1000 + day(1)).getUTCDate())
-		date = new OffsetDate('48:00Z', {offset: 9})
-		assert.strictEqual(date.date, new Date(Date.now() + 9 * 60 * 60 * 1000 + day(2)).getUTCDate())
-		date = new OffsetDate('71:00Z', {offset: 9})
-		assert.strictEqual(date.date, new Date(Date.now() + 9 * 60 * 60 * 1000 + day(2)).getUTCDate())
 
 		// repeat with half hour
 		// no timezone specified
-		date = new OffsetDate('00:00', {offset: 3.5})
+		date = new OffsetDate('T00:00', {offset: 3.5})
 		assert.strictEqual(date.hours, 0)
 		assert.strictEqual(date.date, new Date(Date.now() + 3.5 * 60 * 60 * 1000).getUTCDate())
 
 		// z timezone
-		date = new OffsetDate('00:00Z', {offset: 3.5})
+		date = new OffsetDate('T00:00Z', {offset: 3.5})
 		assert.strictEqual(date.hours, 3)
 		assert.strictEqual(date.minutes, 30)
 		assert.strictEqual(date.date, new Date(Date.now() + 3.5 * 60 * 60 * 1000).getUTCDate())
 
 		// should stay in today even if 15 + 3.5 >= 24
-		date = new OffsetDate('23:29Z', {offset: 3.5})
+		date = new OffsetDate('T23:29Z', {offset: 3.5})
 		assert.strictEqual(date.hours, 2)
 		assert.strictEqual(date.date, new Date(Date.now() + 3.5 * 60 * 60 * 1000).getUTCDate())
-		date = new OffsetDate('23:30Z', {offset: 3.5})
+		date = new OffsetDate('T23:30Z', {offset: 3.5})
 		assert.strictEqual(date.hours, 3)
 		assert.strictEqual(date.date, new Date(Date.now() + 3.5 * 60 * 60 * 1000).getUTCDate())
 
-		// tomorrow only when >= 24
-		date = new OffsetDate('24:00Z', {offset: 3.5})
+		// tomorrow at 24:00
+		date = new OffsetDate('T24:00Z', {offset: 3.5})
 		assert.strictEqual(date.hours, 3)
 		assert.strictEqual(date.date, new Date(Date.now() + 3.5 * 60 * 60 * 1000 + day(1)).getUTCDate())
-		date = new OffsetDate('48:00Z', {offset: 3.5})
-		assert.strictEqual(date.date, new Date(Date.now() + 3.5 * 60 * 60 * 1000 + day(2)).getUTCDate())
-		date = new OffsetDate('71:00Z', {offset: 3.5})
-		assert.strictEqual(date.date, new Date(Date.now() + 3.5 * 60 * 60 * 1000 + day(2)).getUTCDate())
 
 		// repeat with negative timezone
 		// no timezone specified
-		date = new OffsetDate('00:00', {offset: -9})
+		date = new OffsetDate('T00:00', {offset: -9})
 		assert.strictEqual(date.hours, 0)
 		assert.strictEqual(date.date, new Date(Date.now() + -9 * 60 * 60 * 1000).getUTCDate())
 
 		// z timezone
-		date = new OffsetDate('00:00Z', {offset: -9})
+		date = new OffsetDate('T00:00Z', {offset: -9})
 		assert.strictEqual(date.hours, 15)
 		assert.strictEqual(date.date, new Date(Date.now() + -9 * 60 * 60 * 1000).getUTCDate())
 
 		// should stay in today even if 15 + 9 >= 24
-		date = new OffsetDate('08:00Z', {offset: -9})
+		date = new OffsetDate('T08:00Z', {offset: -9})
 		assert.strictEqual(date.hours, 23)
 		assert.strictEqual(date.date, new Date(Date.now() + -9 * 60 * 60 * 1000).getUTCDate())
 
-		// tomorrow only when >= 24
-		date = new OffsetDate('24:00Z', {offset: -9})
+		// tomorrow at 24:00
+		date = new OffsetDate('T24:00Z', {offset: -9})
 		assert.strictEqual(date.hours, 15)
 		assert.strictEqual(date.date, new Date(Date.now() + -9 * 60 * 60 * 1000 + day(1)).getUTCDate())
-		date = new OffsetDate('48:00Z', {offset: -9})
-		assert.strictEqual(date.date, new Date(Date.now() + -9 * 60 * 60 * 1000 + day(2)).getUTCDate())
-		date = new OffsetDate('71:00Z', {offset: -9})
-		assert.strictEqual(date.date, new Date(Date.now() + -9 * 60 * 60 * 1000 + day(2)).getUTCDate())
 
 		// repeat with half hour
 		// no timezone specified
-		date = new OffsetDate('00:00', {offset: -3.5})
+		date = new OffsetDate('T00:00', {offset: -3.5})
 		assert.strictEqual(date.hours, 0)
 		assert.strictEqual(date.date, new Date(Date.now() + -3.5 * 60 * 60 * 1000).getUTCDate())
 
 		// z timezone
-		date = new OffsetDate('00:00Z', {offset: -3.5})
+		date = new OffsetDate('T00:00Z', {offset: -3.5})
 		assert.strictEqual(date.hours, 20)
 		assert.strictEqual(date.minutes, 30)
 		assert.strictEqual(date.date, new Date(Date.now() + -3.5 * 60 * 60 * 1000).getUTCDate())
 
 		// should stay in today even if 15 + 3.5 >= 24
-		date = new OffsetDate('23:29Z', {offset: -3.5})
+		date = new OffsetDate('T23:29Z', {offset: -3.5})
 		assert.strictEqual(date.hours, 19)
 		assert.strictEqual(date.date, new Date(Date.now() + -3.5 * 60 * 60 * 1000).getUTCDate())
-		date = new OffsetDate('23:30Z', {offset: -3.5})
+		date = new OffsetDate('T23:30Z', {offset: -3.5})
 		assert.strictEqual(date.hours, 20)
 		assert.strictEqual(date.date, new Date(Date.now() + -3.5 * 60 * 60 * 1000).getUTCDate())
 
-		// tomorrow only when >= 24
-		date = new OffsetDate('24:00Z', {offset: -3.5})
+		// tomorrow at 24:00
+		date = new OffsetDate('T24:00Z', {offset: -3.5})
 		assert.strictEqual(date.hours, 20)
 		assert.strictEqual(date.date, new Date(Date.now() + -3.5 * 60 * 60 * 1000 + day(1)).getUTCDate())
-		date = new OffsetDate('48:00Z', {offset: -3.5})
-		assert.strictEqual(date.date, new Date(Date.now() + -3.5 * 60 * 60 * 1000 + day(2)).getUTCDate())
-		date = new OffsetDate('71:00Z', {offset: -3.5})
-		assert.strictEqual(date.date, new Date(Date.now() + -3.5 * 60 * 60 * 1000 + day(2)).getUTCDate())
 	})
 	test('hourZ parse', t => {
 		t.mock.timers.enable({apis: ['Date'], now: pinnedNow})
@@ -263,11 +243,11 @@ describe('OffsetDate', () => {
 		const offsetList = [0, 5.5, -3.5, 7, -9]
 		for (const offset of offsetList) {
 			const todayGMT	= new Date(Date.now() + offset * 60 * 60 * 1000)
-			for (const i of Array(100).keys()) {
+			for (const i of Array(25).keys()) {
 				for (const min of Array(1).keys()) {
 					const hours = i.toString().padStart(2, '0')
 					const mins = min.toString().padStart(2, '0')
-					const timeStr = `${hours}:${mins}`
+					const timeStr = `T${hours}:${mins}`
 
 					date = new OffsetDate(`${timeStr}Z`, {offset})
 					assert.strictEqual(date.hours, ((i + Math.floor(offset)) % 24 + 24) % 24)
@@ -277,20 +257,20 @@ describe('OffsetDate', () => {
 					assert.strictEqual(date.hours, i % 24)
 					assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 
-					date = new OffsetDate(`${timeStr}${offsetToZoneStr(offset, i % 2 === 0)}`, {offset})
+					date = new OffsetDate(`${timeStr}${offsetToZoneStr(offset)}`, {offset})
 					assert.strictEqual(date.hours, i % 24)
 					assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 
 					for (const parsedOffset of offsetList) {
-						date = new OffsetDate(`${timeStr}${offsetToZoneStr(parsedOffset, i % 2 === 0)}`, {offset})
+						date = new OffsetDate(`${timeStr}${offsetToZoneStr(parsedOffset)}`, {offset})
 						assert.strictEqual(date.hours, ((i + Math.floor(offset - parsedOffset)) % 24 + 24) % 24)
 						assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 					}
 				}
 			}
 		}
-		function offsetToZoneStr(offset: number, colon: boolean) {
-			return offset === 0 ? 'Z' : `${offset > 0 ? '+' : '-'}${Math.abs(Math.trunc(offset)).toString().padStart(2, '0')}${colon ? ':' : ''}${
+		function offsetToZoneStr(offset: number) {
+			return offset === 0 ? 'Z' : `${offset > 0 ? '+' : '-'}${Math.abs(Math.trunc(offset)).toString().padStart(2, '0')}:${
 				((offset - Math.floor(offset)) * 60).toString().padStart(2, '0')
 			}`
 		}
@@ -308,26 +288,18 @@ describe('OffsetDate', () => {
 			['2021-09-04T05:19:52.001Z', {fullYear: 2021, month: 8, date: 4, hours: 5, minutes: 19, seconds: 52, milliseconds: 1}],
 			['2021-09-04T05:19:52Z', {fullYear: 2021, month: 8, date: 4, hours: 5, minutes: 19, seconds: 52}],
 			['2021-09-04T05:19Z', {fullYear: 2021, month: 8, date: 4, hours: 5, minutes: 19}],
-			['2021-09-04T05Z', {fullYear: 2021, month: 8, date: 4, hours: 5}],
 			['2021-09-04', {fullYear: 2021, month: 8, date: 4}],
 			['2021-09T05:19:52.010Z', {fullYear: 2021, month: 8, hours: 5, minutes: 19, seconds: 52, milliseconds: 10}],
 			['2021-09T05:19:52Z', {fullYear: 2021, month: 8, hours: 5, minutes: 19, seconds: 52}],
 			['2021-09T05:19Z', {fullYear: 2021, month: 8, hours: 5, minutes: 19}],
-			['2021-09T05Z', {fullYear: 2021, month: 8, hours: 5}],
 			['2021-09', {fullYear: 2021, month: 8}],
 			['2021T05:19:52.900Z', {fullYear: 2021, hours: 5, minutes: 19, seconds: 52, milliseconds: 900}],
 			['2021T05:19:52Z', {fullYear: 2021, hours: 5, minutes: 19, seconds: 52}],
 			['2021T05:19Z', {fullYear: 2021, hours: 5, minutes: 19}],
-			['2021T05Z', {fullYear: 2021, hours: 5}],
 			['2021', {fullYear: 2021}],
 			['T05:19:52.120Z', {hours: 5, minutes: 19, seconds: 52, milliseconds: 120}],
 			['T05:19:52Z', {hours: 5, minutes: 19, seconds: 52}],
 			['T05:19Z', {hours: 5, minutes: 19}],
-			['T05Z', {hours: 5}],
-			['05:19:52.023Z', {hours: 5, minutes: 19, seconds: 52, milliseconds: 23}],
-			['05:19:52Z', {hours: 5, minutes: 19, seconds: 52}],
-			['05:19Z', {hours: 5, minutes: 19}],
-			['05Z', {hours: 5}],
 		]
 		const zones = [
 			['', undefined],
@@ -335,22 +307,12 @@ describe('OffsetDate', () => {
 
 			['+00:00', 0],
 			['-00:00', 0],
-			['+0000', 0],
-			['-0000', 0],
-			['+00', 0],
-			['-00', 0],
 
 			['+09:00', 9],
 			['-09:00', -9],
-			['+0900', 9],
-			['-0900', -9],
-			['+09', 9],
-			['-09', -9],
 
 			['+09:30', 9.5],
 			['-09:30', -9.5],
-			['+0930', 9.5],
-			['-0930', -9.5],
 		] as const
 
 		const defaultOffsets = [
@@ -394,8 +356,9 @@ describe('OffsetDate', () => {
 	})
 
 	test('special cases', () => {
-		assert.strictEqual(new OffsetDate('28:30').hours, 4)
-		assert.strictEqual(new OffsetDate('28:30').minutes, 30)
+		assert.throws(() => new OffsetDate('28:30'), /Invalid date string/)
+		assert.throws(() => new OffsetDate('T28:30'), /Invalid date string/)
+		assert.strictEqual(new OffsetDate('T24:00').hours, 0)
 	})
 })
 
@@ -418,14 +381,14 @@ describe('zoned date', () => {
 	})
 	test('hour parse', t => {
 		t.mock.timers.enable({apis: ['Date'], now: pinnedNow})
-		const date = new ZonedDate('02:00', {timezone: 'Asia/Bangkok'})
+		const date = new ZonedDate('T02:00', {timezone: 'Asia/Bangkok'})
 		assert.strictEqual(date.hours, 2)
 		const todayGMT7	= new Date(Date.now() + 7 * 60 * 60 * 1000)
 		assert.strictEqual(date.date, todayGMT7.getUTCDate())
 	})
 	test('hour parse neg', t => {
 		t.mock.timers.enable({apis: ['Date'], now: pinnedNow})
-		const date = new ZonedDate('23:00Z', {timezone: 'Asia/Bangkok'})
+		const date = new ZonedDate('T23:00Z', {timezone: 'Asia/Bangkok'})
 		assert.strictEqual(date.hours, 6)
 		const todayGMT7	= new Date(Date.now() + 7 * 60 * 60 * 1000)
 		assert.strictEqual(date.date, todayGMT7.getUTCDate())
@@ -443,11 +406,11 @@ describe('zoned date', () => {
 		] as const
 		for (const [timezone, offset] of timezoneList) {
 			const todayGMT	= new Date(Date.now() + offset * 60 * 60 * 1000)
-			for (const i of Array(100).keys()) {
+			for (const i of Array(25).keys()) {
 				for (const min of Array(1).keys()) {
 					const hours = i.toString().padStart(2, '0')
 					const mins = min.toString().padStart(2, '0')
-					const timeStr = `${hours}:${mins}`
+					const timeStr = `T${hours}:${mins}`
 
 					date = new ZonedDate(`${timeStr}Z`, {timezone})
 					assert.strictEqual(date.hours, ((i + Math.floor(offset)) % 24 + 24) % 24)
@@ -457,20 +420,20 @@ describe('zoned date', () => {
 					assert.strictEqual(date.hours, i % 24)
 					assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 
-					date = new ZonedDate(`${timeStr}${offsetToZoneStr(offset, i % 2 === 0)}`, {timezone})
+					date = new ZonedDate(`${timeStr}${offsetToZoneStr(offset)}`, {timezone})
 					assert.strictEqual(date.hours, i % 24)
 					assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 
 					for (const [parsedTimezone, parsedOffset] of timezoneList) {
-						date = new ZonedDate(`${timeStr}${offsetToZoneStr(parsedOffset, i % 2 === 0)}`, {timezone})
+						date = new ZonedDate(`${timeStr}${offsetToZoneStr(parsedOffset)}`, {timezone})
 						assert.strictEqual(date.hours, ((i + Math.floor(offset - parsedOffset)) % 24 + 24) % 24)
 						assert.strictEqual(date.date, new Date(todayGMT.getTime() + day(Math.floor(i / 24))).getUTCDate())
 					}
 				}
 			}
 		}
-		function offsetToZoneStr(offset: number, colon: boolean) {
-			return offset === 0 ? 'Z' : `${offset > 0 ? '+' : '-'}${Math.abs(Math.trunc(offset)).toString().padStart(2, '0')}${colon ? ':' : ''}${
+		function offsetToZoneStr(offset: number) {
+			return offset === 0 ? 'Z' : `${offset > 0 ? '+' : '-'}${Math.abs(Math.trunc(offset)).toString().padStart(2, '0')}:${
 				((offset - Math.floor(offset)) * 60).toString().padStart(2, '0')
 			}`
 		}

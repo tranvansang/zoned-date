@@ -8,14 +8,15 @@ export const maxTime = 8.64e15
 // The Gregorian calendar and the days of the week repeat every 400 years: 146,097 days
 const cycle = 146_097 * oneDay
 const {getTime} = Date.prototype
+// The Date Time String Format of ECMAScript, which toISOString() writes: https://tc39.es/ecma262/#sec-date-time-string-format
 // <date>: YYYY, YYYY-MM or YYYY-MM-DD, where the year can also be ±YYYYYY, as toISOString() writes years past 9999
 const datePattern = String.raw`(?<year>\d{4}|[+-]\d{6})(?:-(?<month>\d{2})(?:-(?<day>\d{2}))?)?`
-// <time>: HH, HH:mm, HH:mm:ss or HH:mm:ss.sss, with any number of fraction digits
-const timePattern = String.raw`(?<hours>\d{2})(?::(?<minutes>\d{2})(?::(?<seconds>\d{2})(?:\.(?<fraction>\d+))?)?)?`
-// <zone>: Z, ±HH, ±HH:mm, ±HHmm, ±HH:mm:ss or ±HHmmss
-const zonePattern = String.raw`(?<utc>Z)|(?<sign>[+-])(?<zoneHours>\d{2})(?:(?<colon>:?)(?<zoneMinutes>\d{2})(?:\k<colon>(?<zoneSeconds>\d{2}))?)?`
-// The string formats of README.md: <date>, <date>T<time>[<zone>] and [T]<time>[<zone>], where a space can replace the T
-const stringPattern = new RegExp(`^(?:${datePattern})?(?:(?<separator>[T ])?${timePattern}(?:${zonePattern})?)?$`, 'i')
+// <time>: THH:mm, THH:mm:ss or THH:mm:ss.sss
+const timePattern = String.raw`T(?<hours>\d{2}):(?<minutes>\d{2})(?::(?<seconds>\d{2})(?:\.(?<milliseconds>\d{3}))?)?`
+// <zone>: Z, +HH:mm or -HH:mm
+const zonePattern = String.raw`(?<utc>Z)|(?<sign>[+-])(?<zoneHours>\d{2}):(?<zoneMinutes>\d{2})`
+// The strings of README.md: <date>, <date><time>[<zone>] and <time>[<zone>]
+const stringPattern = new RegExp(`^(?:${datePattern})?(?:${timePattern}(?:${zonePattern})?)?$`)
 
 /** A value, a function that takes the current value and returns the new one, or undefined to keep the current value */
 export type ValueSetter<T = number> = T | undefined | ((value: T) => T | undefined)
@@ -32,43 +33,37 @@ export interface DateLike {
 	sign?: undefined
 }
 
-// Reads a string of stringPattern: [days since 1970 (undefined without a date), the time of day in milliseconds (past
-// 24 hours for hours past 23 without a date), the offset of the zone in milliseconds (undefined without a zone)]
+// Reads a string of stringPattern: [days since 1970 (undefined without a date), the time of day in milliseconds, the
+// offset of the zone in milliseconds (undefined without a zone)]
 export function parseString(string: string) {
 	const groups: Partial<Record<string, string>> | undefined = stringPattern.exec(string)?.groups
 	const dated = groups?.year !== undefined
-	// a date and a time need a separator, and the year 0 has no negative form
-	if (
-		!groups
-		|| !dated && groups.hours === undefined
-		|| dated && groups.hours !== undefined && groups.separator === undefined
-		|| groups.year === '-000000'
-	) throw new Error('Invalid date string')
-	const [year, month, day, hours, minutes, seconds, zoneHours, zoneMinutes, zoneSeconds] = [
+	// the empty string has neither a date nor a time, and the year 0 has no negative form
+	if (!groups || !dated && groups.hours === undefined || groups.year === '-000000') throw new Error('Invalid date string')
+	const [year, month, day, hours, minutes, seconds, milliseconds, zoneHours, zoneMinutes] = [
 		groups.year,
 		groups.month ?? 1,
 		groups.day ?? 1,
 		groups.hours ?? 0,
 		groups.minutes ?? 0,
 		groups.seconds ?? 0,
+		groups.milliseconds ?? 0,
 		groups.zoneHours ?? 0,
 		groups.zoneMinutes ?? 0,
-		groups.zoneSeconds ?? 0,
 	].map(Number)
-	if (
-		dated && (month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month - 1) || hours > 23)
-		|| minutes > 59 || seconds > 59 || zoneHours > 23 || zoneMinutes > 59 || zoneSeconds > 59
-	) throw new Error('Invalid date string')
-	// digits after the milliseconds are dropped
-	const milliseconds = Number((groups.fraction ?? '').padEnd(3, '0').slice(0, 3))
 	const time = ((hours * 60 + minutes) * 60 + seconds) * 1000 + milliseconds
-	const zone = groups.utc ? 0 : groups.sign === undefined ? undefined : (groups.sign === '-' ? -1 : 1) * ((zoneHours * 60 + zoneMinutes) * 60 + zoneSeconds) * 1000
+	// the time goes up to 24:00, the midnight at the end of the day
+	if (
+		dated && (month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month - 1))
+		|| time > oneDay || minutes > 59 || seconds > 59 || zoneHours > 23 || zoneMinutes > 59
+	) throw new Error('Invalid date string')
+	const zone = groups.utc ? 0 : groups.sign === undefined ? undefined : (groups.sign === '-' ? -1 : 1) * (zoneHours * 60 + zoneMinutes) * 60_000
 	return [dated ? daysOf(year, month - 1, day) : undefined, time, zone] as const
 }
 
 // The instant of a time of day at a zone offset, whose wallclock falls on today's date at an offset that can change
 // with the instant. On a day with a DST change, two such instants or none can exist: this is the first one on or after
-// today. Hours past 23 continue into the next days.
+// today. 24:00 is the midnight at the end of that day.
 export function todayTime(time: number, zone: number, now: number, offsetAt: (time: number) => number) {
 	const timeOfDay = time % oneDay
 	const today = Math.floor((now + offsetAt(now)) / oneDay)

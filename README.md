@@ -226,38 +226,52 @@ try {
 
 ## Parsing strings
 
-The constructors read strings with this package's own parser, not `Date.parse()`. It accepts a subset of ISO 8601, with a few extensions:
+The constructors read strings with this package's own parser, not `Date.parse()`. A string must have one of these forms, where `[...]` is optional:
+
+| Form | Syntax | Example |
+|---|---|---|
+| date | `<date>` | `2021-09-04` |
+| date and time | `<date><time>[<zone>]` | `2021-09-04T05:19:52.000+09:00` |
+| time | `<time>[<zone>]` | `T05:19` |
 
 | Part | Forms |
 |---|---|
-| `<date>` | `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, where `±YYYYYY` can replace `YYYY`, as `toISOString()` writes the years before 0000 and after 9999 |
-| `<time>` | `HH`, `HH:mm`, `HH:mm:ss`, `HH:mm:ss.sss` |
-| `<zone>` | `Z`, `+HH`, `+HH:mm`, `+HHmm`, `+HH:mm:ss`, `+HHmmss`, and the same with `-` |
+| `<date>` | `YYYY`, `YYYY-MM`, `YYYY-MM-DD` |
+| `<time>` | `THH:mm`, `THH:mm:ss`, `THH:mm:ss.sss` |
+| `<zone>` | `Z`, `+HH:mm`, `-HH:mm` |
 
-A string is `<date>`, `<date>T<time>[<zone>]` or `[T]<time>[<zone>]`, where `[...]` is optional. A space can replace the `T`, and `T` and `Z` can be lower case. The fraction of a second can have any number of digits: `.32` is 320 ms, and digits after the milliseconds are dropped.
+The first two forms are the [Date Time String Format](https://tc39.es/ecma262/#sec-date-time-string-format) of ECMAScript, which `toISOString()` writes. The third is its time on its own. The fields must be in range:
 
-- The fields must be in range: months 01 to 12, days that exist in the month, hours 00 to 23 (up to 99 in a time-only string), minutes and seconds 00 to 59, and zones up to `±23:59:59`. A missing month or day is 1, and missing time fields are 0.
-- Without a zone, the string is a wallclock in the instance's offset or time zone: `2021-09-04` is midnight there, not midnight UTC as with `Date`. With a zone, it is an exact instant, and the zone does not change the instance's offset or time zone.
-- A time-only string falls on today's date in the instance's offset or time zone, not the runtime's or the string's: at UTC+09:00, `20:00Z` is 05:00 today. Hours of 24 or more continue into the next days: `28:30` is 04:30 tomorrow. On a day with a DST change, a time with a zone can fall on today's date twice or not at all; it then takes the first instant on or after today.
+- `YYYY` is four digits, or `+` or `-` and six digits, as `toISOString()` writes the years before 0000 and after 9999. `-000000` is not a year.
+- `MM` is 01 to 12, and `DD` a day that the month has: `2021-02-29` throws.
+- `HH` is 00 to 23, `mm` and `ss` are 00 to 59, and `sss` is three digits: the milliseconds. `24:00`, `24:00:00` and `24:00:00.000` are the midnight at the end of the day.
+- In `<zone>`, `HH` is 00 to 23 and `mm` 00 to 59.
 
-| Input | Wallclock |
+Any other string throws `Error('Invalid date string')`, for example `05:19` (a time starts with `T`), `2021-09-04 05:19` (a space instead of the `T`), `2021-09-04T05` (no minutes), `2021-09-04T05:19:52.5` (one digit for the milliseconds), `2021-09-04T05:19+09` and `+0900` (a zone is `±HH:mm`), lower case `t` or `z`, `2021-02-30`, `2021/09/04` and `20210904`.
+
+A string means:
+
+- **Without a zone**, a wallclock in the instance's offset or time zone: `2021-09-04` is midnight there, not midnight UTC as with `Date`. A missing month or day is 1, and missing seconds and milliseconds are 0.
+- **With a zone**, an exact instant. The zone does not change the instance's offset or time zone.
+- **A time** falls on today's date in the instance's offset or time zone, never the runtime's or the string's: the date that the instance's wallclock shows at `Date.now()`. At UTC+09:00, `T20:00Z` is 05:00 today, and `T24:00` is the midnight at the end of today. On a day with a DST change, a time with a zone can fall on today's date twice or not at all; it then takes the first instant on or after today.
+
+| Input | Wallclock in the instance's offset or time zone |
 |---|---|
 | `2021-09-04T05:19:52.000` | `2021-09-04T05:19:52.000` |
-| `2021-09-04 05:19` | `2021-09-04T05:19:00.000` |
-| `2021-09-04T05` | `2021-09-04T05:00:00.000` |
+| `2021-09-04T05:19` | `2021-09-04T05:19:00.000` |
+| `2021-09-04T24:00` | `2021-09-05T00:00:00.000` |
 | `2021-09-04` | `2021-09-04T00:00:00.000` |
 | `2021-09T05:19` | `2021-09-01T05:19:00.000` |
 | `2021-09` | `2021-09-01T00:00:00.000` |
 | `2021` | `2021-01-01T00:00:00.000` |
 | `T05:19:52` | `<today>T05:19:52.000` |
-| `05` | `<today>T05:00:00.000` |
-| `28:30` | `<tomorrow>T04:30:00.000` |
+| `T24:00` | `<tomorrow>T00:00:00.000` |
 
 ```js
 import OffsetDate from 'zoned-date/OffsetDate'
 
 // No zone: a wallclock at the instance's offset
-const local = new OffsetDate('2021-09-04 05:19', {offset: 9})
+const local = new OffsetDate('2021-09-04T05:19', {offset: 9})
 console.log(local.toISOString()) // 2021-09-03T20:19:00.000Z
 
 // A zone: an exact instant, read at the instance's offset
@@ -265,13 +279,11 @@ const exact = new OffsetDate('2021-09-04T05:19Z', {offset: 9})
 console.log(exact.hours, exact.offset) // 14 9
 ```
 
-Any other string throws `Error('Invalid date string')` instead of giving an Invalid Date, for example `2021-02-30`, `2021-09-04T24:00`, `2021/09/04`, `20210904`, `+5:30`, a comma before the fraction, tabs, newlines, extra spaces and bracketed time zone names.
-
 ## Errors
 
 | Cause | Thrown by | Error |
 |---|---|---|
-| A string the parser cannot read | the constructors | `Error('Invalid date string')` |
+| A string in none of the forms of [Parsing strings](#parsing-strings) | the constructors | `Error('Invalid date string')` |
 | An unknown time zone | the `ZonedDate` constructor, `setTimezone()` and `withTimezone()` | `RangeError` from `Intl.DateTimeFormat` |
 | An unknown disambiguation | the `ZonedDate` constructor, `setDisambiguation()` and `withDisambiguation()` | `Error('Invalid disambiguation option')` |
 | An offset that is not a finite number | the `OffsetDate` constructor and the offset setters | `RangeError('Invalid offset: …')` |

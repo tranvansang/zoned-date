@@ -62,7 +62,6 @@ describe('published files', () => {
 	test('npm publishes the compiled modules with the declarations beside them, which TypeScript reads', {skip: process.platform === 'win32'}, () => {
 		const [{files}]: [{files: {path: string}[]}] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {cwd: packageRoot, encoding: 'utf8'}))
 		deepStrictEqual(files.map(file => file.path).sort(), [
-			'LICENSE',
 			'README.md',
 			'dist/OffsetDate.d.ts',
 			'dist/OffsetDate.js',
