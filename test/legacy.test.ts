@@ -358,7 +358,6 @@ describe('OffsetDate', () => {
 		]
 
 		for (const defaultOffset of defaultOffsets) {
-			// OffsetDate.defaultOffset = defaultOffset
 			for (const [dateStr, info] of cases) {
 				for (let [zoneStr, zoneOffset] of zones) {
 					// we disable offset because it does not show in the date string

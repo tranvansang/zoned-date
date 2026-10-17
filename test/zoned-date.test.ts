@@ -119,19 +119,16 @@ describe('ZonedDate options', () => {
 		}
 	})
 
-	test('defaultTimezone and defaultDisambiguation apply when the options omit them', t => {
-		restoreDefaults(t)
-		ZonedDate.defaultTimezone = 'Asia/Tokyo'
-		ZonedDate.defaultDisambiguation = 'later'
-
-		const zd = new ZonedDate(epoch, {})
-		strictEqual(zd.timezone, 'Asia/Tokyo')
-		strictEqual(zd.disambiguation, 'later')
-		strictEqual(wallclockOf(zd), '2021-09-04T14:19:52.001')
-		strictEqual(new ZonedDate(epoch).timezone, 'Asia/Tokyo')
-		strictEqual(new ZonedDate(epoch, {timezone: 'UTC'}).disambiguation, 'later')
-		strictEqual(instantOf(new ZonedDate(2021, 8, 4, 14, 19, 52, 1)), '2021-09-04T05:19:52.001Z')
-		strictEqual(instantOf(new ZonedDate('2021-09-04T14:19:52.001', {})), '2021-09-04T05:19:52.001Z')
+	test('options that omit the time zone and the disambiguation give UTC and compatible, in every form', () => {
+		for (const [label, zd] of [
+			['an instant', new ZonedDate(epoch, {})],
+			['a wallclock', new ZonedDate(2021, 8, 4, 5, 19, 52, 1)],
+			['a string', new ZonedDate('2021-09-04T05:19:52.001', {})],
+		] as const) {
+			strictEqual(zd.timezone, 'UTC', label)
+			strictEqual(zd.disambiguation, 'compatible', label)
+			strictEqual(instantOf(zd), '2021-09-04T05:19:52.001Z', label)
+		}
 	})
 
 	test('a copy takes the timezone and disambiguation options', () => {
@@ -155,13 +152,9 @@ describe('ZonedDate options', () => {
 		strictEqual(instantOf(zd), '2030-06-15T12:00:00.000Z')
 	})
 
-	test('without an options object the default disambiguation applies', t => {
-		restoreDefaults(t)
+	test('without an options object the disambiguation is compatible', () => {
 		strictEqual(new ZonedDate(epoch).disambiguation, 'compatible')
-
-		ZonedDate.defaultDisambiguation = 'later'
-		strictEqual(new ZonedDate(epoch).disambiguation, 'later')
-		strictEqual(new ZonedDate(2021, 8, 4).disambiguation, 'later')
+		strictEqual(new ZonedDate(2021, 8, 4).disambiguation, 'compatible')
 	})
 
 	test('a copy treats null option values as missing and keeps its own', () => {
@@ -178,9 +171,8 @@ describe('ZonedDate options', () => {
 })
 
 describe('ZonedDate statics', () => {
-	test('the defaults are UTC and compatible', () => {
-		strictEqual(ZonedDate.defaultTimezone, 'UTC')
-		strictEqual(ZonedDate.defaultDisambiguation, 'compatible')
+	test('the defaults UTC and compatible are fixed: ZonedDate has no static defaults to change', () => {
+		for (const name of ['defaultTimezone', 'defaultDisambiguation']) strictEqual(name in ZonedDate, false, name)
 	})
 
 	test('UTC and parse work like Date.UTC and Date.parse', () => {
@@ -869,11 +861,19 @@ describe('ZonedDate validation', () => {
 		strictEqual(zd.disambiguation, 'later')
 	})
 
-	test('an undefined defaultTimezone throws RangeError instead of using the runtime time zone', t => {
-		restoreDefaults(t)
-		// @ts-expect-error defaultTimezone is a string
-		ZonedDate.defaultTimezone = undefined
-		throws(() => new ZonedDate(epoch), RangeError)
+	test('a copied undefined time zone throws RangeError instead of using the runtime time zone', () => {
+		// a ZonedDate of another copy of the package, whose getTimezone() returns undefined
+		const other = {
+			getTime() {
+				return epoch
+			},
+			getTimezone() {},
+			getDisambiguation() {
+				return 'compatible'
+			},
+		}
+		// @ts-expect-error a stub of a ZonedDate of another copy of the package
+		throws(() => new ZonedDate(other), {name: 'RangeError', message: 'Invalid time zone specified: undefined'})
 	})
 })
 
@@ -1035,14 +1035,6 @@ function instantOf(zd: ZonedDate) {
 
 function pad(value: number, length: number) {
 	return String(value).padStart(length, '0')
-}
-
-function restoreDefaults(t: TestContext) {
-	const {defaultTimezone, defaultDisambiguation} = ZonedDate
-	t.after(() => {
-		ZonedDate.defaultTimezone = defaultTimezone
-		ZonedDate.defaultDisambiguation = defaultDisambiguation
-	})
 }
 
 function setRuntimeTimezone(t: TestContext, timezone: string) {

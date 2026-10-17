@@ -69,23 +69,9 @@ describe('constructor', () => {
 		}
 	})
 
-	test('OffsetDate.defaultOffset is the offset of later instances without an offset option', t => {
-		strictEqual(OffsetDate.defaultOffset, 0)
-		const previous = OffsetDate.defaultOffset
-		t.after(() => OffsetDate.defaultOffset = previous)
-		const before = new OffsetDate(instant)
-		OffsetDate.defaultOffset = 5.75
-		for (const [label, date] of [
-			['an epoch', new OffsetDate(instant)],
-			['a Date', new OffsetDate(new Date(instant))],
-			['{offset: null}', new OffsetDate(instant, {offset: null})],
-		] as const) {
-			strictEqual(date.offset, 5.75, label)
-			strictEqual(wallclock(date), '2024-02-01T02:15:15.250', label)
-		}
-		strictEqual(new OffsetDate(instant, {offset: 0}).offset, 0)
+	test('the default offset 0 is fixed: OffsetDate has no defaultOffset to change', () => {
+		strictEqual('defaultOffset' in OffsetDate, false)
 		strictEqual(new OffsetDate(new OffsetDate(instant, {offset: 9})).offset, 9)
-		strictEqual(before.offset, 0)
 	})
 
 	test('the copy constructor copies the instant and the offset into an independent object', () => {
@@ -198,7 +184,7 @@ describe('constructor', () => {
 		}
 	})
 
-	test('an offset that is not a finite number throws RangeError', t => {
+	test('an offset that is not a finite number throws RangeError', () => {
 		const offsets: number[] = [
 			NaN,
 			Infinity,
@@ -210,11 +196,6 @@ describe('constructor', () => {
 			throws(() => new OffsetDate(instant).setOffset(offset), RangeError, String(offset))
 			throws(() => new OffsetDate(instant).setTimezoneOffset(offset), RangeError, String(offset))
 		}
-		const {defaultOffset} = OffsetDate
-		t.after(() => OffsetDate.defaultOffset = defaultOffset)
-		// @ts-expect-error the default offset is a number, not undefined
-		OffsetDate.defaultOffset = undefined
-		throws(() => new OffsetDate(instant), RangeError)
 	})
 
 	test('objects that Date reads through toString or valueOf are values, and other objects are options', () => {

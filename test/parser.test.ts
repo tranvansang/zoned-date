@@ -92,24 +92,16 @@ describe('documented formats', () => {
 		['2021T05+13:45', utc, '2020-12-31T15:15:00.000Z'],
 	]))
 
-	test('without options a string is read at the default offset or time zone', t => {
-		const {defaultOffset} = OffsetDate
-		const {defaultTimezone} = ZonedDate
-		t.after(() => {
-			OffsetDate.defaultOffset = defaultOffset
-			ZonedDate.defaultTimezone = defaultTimezone
-		})
-		OffsetDate.defaultOffset = 9
-		ZonedDate.defaultTimezone = 'Asia/Tokyo'
-		pinClock(t, '2026-10-14T20:00:00Z') // 2026-10-15 05:00 at +09:00
+	test('without options a string is read at the offset 0 or in UTC', t => {
+		pinClock(t, '2026-10-14T20:00:00Z')
 		for (const [input, expected] of [
-			['2021-09-04T05:00', '2021-09-03T20:00:00.000Z'], // the README example
-			['2021-09-04T05:00Z', '2021-09-04T05:00:00.000Z'],
-			['05:00', '2026-10-14T20:00:00.000Z'],
-			['20:00Z', '2026-10-14T20:00:00.000Z'],
+			['2021-09-04T05:00', '2021-09-04T05:00:00.000Z'],
+			['2021-09-04T05:00+09:00', '2021-09-03T20:00:00.000Z'],
+			['05:00', '2026-10-14T05:00:00.000Z'],
+			['20:00+09:00', '2026-10-14T11:00:00.000Z'],
 		]) for (const date of [new OffsetDate(input), new ZonedDate(input)]) {
 			strictEqual(instant(date), expected, label(date, input))
-			strictEqual(date.offset, 9, label(date, input))
+			strictEqual(date.offset, 0, label(date, input))
 		}
 	})
 })

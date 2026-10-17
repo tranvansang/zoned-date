@@ -3,7 +3,7 @@ import {type DateLike, isDate, isZonedDate, oneDay, oneHour, parseString, resolv
 export type {DateLike, ValueSetter}
 
 export interface OffsetDateOptions {
-	/** UTC offset in hours. undefined or null: the offset of the copied OffsetDate, or else OffsetDate.defaultOffset */
+	/** UTC offset in hours. undefined or null: the offset of the copied OffsetDate, or else 0 */
 	offset?: number | null | undefined
 }
 
@@ -12,7 +12,6 @@ export interface OffsetDateOptions {
  * OffsetDate is assignable to Date; calls with the first signature's arguments get the instance.
  */
 export default class OffsetDate extends Date {
-	static defaultOffset = 0
 	static now() {
 		return Date.now()
 	}
@@ -29,7 +28,7 @@ export default class OffsetDate extends Date {
 	constructor(...args: unknown[]) {
 		const options = takeOptions<OffsetDateOptions>(args)
 		const [value] = args
-		const offset = toOffset(options?.offset ?? (args.length === 1 && isOffsetDate(value) ? value.getOffset() : OffsetDate.defaultOffset))
+		const offset = toOffset(options?.offset ?? (args.length === 1 && isOffsetDate(value) ? value.getOffset() : 0))
 		if (args.length === 0) super(Date.now()) // new Date()
 		else if (args.length > 1) super(utc(...args as number[]) - offset) // new Date(year, month, date, hours, minutes, seconds, ms)
 		else if (typeof value === 'string') super(timeOfString(value, offset)) // new Date(dateString)

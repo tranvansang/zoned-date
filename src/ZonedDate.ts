@@ -2,12 +2,20 @@ import {type DateLike, isZonedDate, makeDate, maxTime, modulo, oneDay, oneHour, 
 
 export type {DateLike, ValueSetter}
 
+/**
+ * Which instant a wallclock means when it occurs twice or not at all around a DST change, as in Temporal:
+ * https://tc39.es/proposal-temporal/docs/timezone.html#resolving-time-ambiguity-in-temporal
+ * - compatible: the earlier instant when the wallclock occurs twice, the later one when it is skipped
+ * - earlier: the earlier instant
+ * - later: the later instant
+ * - reject: neither; reading the instant throws RangeError
+ */
 export type Disambiguation = 'compatible' | 'earlier' | 'later' | 'reject'
 
 export interface ZonedDateOptions {
-	/** Time zone name. undefined or null: the time zone of the copied ZonedDate, or else ZonedDate.defaultTimezone */
+	/** Time zone name. undefined or null: the time zone of the copied ZonedDate, or else 'UTC' */
 	timezone?: string | null | undefined
-	/** undefined or null: the disambiguation of the copied ZonedDate, or else ZonedDate.defaultDisambiguation */
+	/** undefined or null: the disambiguation of the copied ZonedDate, or else 'compatible' */
 	disambiguation?: Disambiguation | null | undefined
 }
 
@@ -15,16 +23,6 @@ export interface ZonedDateOptions {
 const formatters = new WeakMap<typeof Intl.DateTimeFormat, {hourCycle: Intl.DateTimeFormatOptions; byTimezone: Record<string, Intl.DateTimeFormat>}>()
 
 export default class ZonedDate {
-	static defaultTimezone = 'UTC'
-	/**
-	 * Which instant a wallclock means when it occurs twice or not at all around a DST change, as in Temporal:
-	 * https://tc39.es/proposal-temporal/docs/timezone.html#resolving-time-ambiguity-in-temporal
-	 * - compatible: the earlier instant when the wallclock occurs twice, the later one when it is skipped
-	 * - earlier: the earlier instant
-	 * - later: the later instant
-	 * - reject: neither; reading the instant throws RangeError
-	 */
-	static defaultDisambiguation: Disambiguation = 'compatible'
 	static UTC(...args: [year: number, monthIndex?: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number]) {
 		return Date.UTC(...args)
 	}
@@ -61,7 +59,7 @@ export default class ZonedDate {
 			} else this.#copyForeign(value)
 			this.#timezone = value.getTimezone()
 			// zoned-date 0.1.3 leaves the disambiguation undefined without an options object
-			this.#disambiguation = value.getDisambiguation() ?? ZonedDate.defaultDisambiguation
+			this.#disambiguation = value.getDisambiguation() ?? 'compatible'
 			// only 'reject' leaves a wallclock without an instant
 			if (this.#time === undefined && this.#_disambiguation !== 'reject') this.#setWallclockTime(this.#unresolved!)
 			// a copy into another time zone keeps the wallclock
@@ -71,8 +69,8 @@ export default class ZonedDate {
 			return
 		}
 
-		this.#timezone = options?.timezone ?? ZonedDate.defaultTimezone
-		this.#disambiguation = options?.disambiguation ?? ZonedDate.defaultDisambiguation
+		this.#timezone = options?.timezone ?? 'UTC'
+		this.#disambiguation = options?.disambiguation ?? 'compatible'
 		if (args.length === 0) this.#time = new Date(Date.now()).getTime() // new Date()
 		else if (args.length > 1) this.#setWallclockTime(utc(...args as number[])) // new Date(year, month, date, hours, minutes, seconds, ms)
 		else if (typeof value === 'string') this.#setString(value) // new Date(dateString)
